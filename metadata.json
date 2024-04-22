@@ -1,0 +1,36 @@
+{   
+    "_NB": "Underwater / Aerial",
+    "image_type" : "Underwater",
+
+    "_NB": "Autonomous Surface Vehicle (ASV) / Unmanned Aerial Vehicle (UAV)",
+    "human_readable_platform" : "Autonomous Surface Vehicle",
+    "platform" : "ASV",
+    
+    "project_name": "Plancha",
+    "creators": [
+        { "name": "Matteo Contini",  "affiliation": "Ifremer", "orcid": "0009-0007-8665-6201" },
+        { "name": "Mohan Julien", "affiliation": "Ifremer", "orcid": "0000-0003-2808-1095" },
+        { "name": "Sylvain Bonhommeau", "affiliation": "Ifremer", "orcid": "0000-0002-0882-5918" },
+        { "name": "Julien Barde", "affiliation": "IRD", "orcid": "0000-0002-3519-6141" },
+        { "name": "Sylvain Poulain", "affiliation": "GISCAN", "orcid": "0009-0005-9789-9095" },
+        { "name": "Mervyn Ravitchandirane", "affiliation": "Ifremer" },
+        { "name": "Thomas Chevrier", "affiliation": "Ifremer", "orcid": "0009-0006-4108-5698" },
+        { "name": "Cam Ly Rintz", "affiliation": "Ifremer", "orcid": "0009-0005-0541-2332" },
+        { "name": "Leanne Carpentier", "affiliation": "Ifremer", "orcid": " 0009-0004-1796-3855" },
+        { "name": "Justine Talpaert Daudon", "affiliation": "UMR MARBEC", "orcid": "0000-0001-9582-451X" },
+        { "name": "Alexandre Boyer", "affiliation": "UMR MARBEC" },
+        { "name": "Alexis Joly", "affiliation": "INRIA", "orcid": "0000-0002-2161-9940" },
+        { "name": "Victor Illien", "affiliation": "Ifremer" }
+    ],
+    
+    "_NB": "open, restricted",
+    "access_right" : "open",
+    
+    "_NB": "Work with open, ",
+    "license": "cc-by-4.0",
+
+    "_NB": "Add place, human_readable_platform, platform ",
+    "keywords": ["Coral Reef", "Coral Reef Habitat", "Citizen Sciences", "Deep Learning", "Machine Learning", "Computer Vision", "Ecology", "Mapping", "Remote Sensing", "GeoAI"],
+    "grants": [{"id": "G2OI Interreg"}, {"id": "Ifremer"}, {"id": "IRD"}]
+    
+}
