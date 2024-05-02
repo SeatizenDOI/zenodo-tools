@@ -18,6 +18,7 @@ class PlanchaMetadata:
                 'creators': self.metadata_json["creators"],
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}],
                 'language': "eng"
+                # 'grants': self.metadata_json["grants"]
             }
         }
 

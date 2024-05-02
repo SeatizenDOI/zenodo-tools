@@ -15,3 +15,4 @@ Pour utiliser ce dépôt, il vous faut un fichier de config.json à la racine du
 
 - Faire la correspondance gbif du fichier d'annotation.
 - Ajouter un script qui permet de mettre à jour le zenodo metadata global ( définir ce qu'il faut mettre dedans )
+- Rajouter la possibilité de choisir ce que veut ajouter dans une mise à jour de version

@@ -16,7 +16,7 @@ class ZenodoUploader:
     def __init__(self, session_name, config_json):
         self.session_name = session_name
         self.deposit_id = None
-        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN"]
+        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_DEV_SEATIZEN"]
         self.ZENODO_LINK = config_json["ZENODO_LINK"]
         
         self.params = {'access_token': self.ACCESS_TOKEN}
@@ -63,9 +63,6 @@ class ZenodoUploader:
 
         # Update metadata.
         self.__zenodo_send_metadata(metadata)
-
-        # Publish version.
-        self.__zenodo_actions_publish()
     
     def edit_metadata(self, metadata):
         """ Update metadata of deposit_id """

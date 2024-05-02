@@ -13,14 +13,17 @@
         { "name": "Sylvain Bonhommeau", "affiliation": "Ifremer", "orcid": "0000-0002-0882-5918" },
         { "name": "Julien Barde", "affiliation": "IRD", "orcid": "0000-0002-3519-6141" },
         { "name": "Sylvain Poulain", "affiliation": "GISCAN", "orcid": "0009-0005-9789-9095" },
-        { "name": "Mervyn Ravitchandirane", "affiliation": "Ifremer" },
+        { "name": "Mervyn Ravitchandirane", "affiliation": "Ifremer", "orcid": "0009-0007-6170-0157" },
         { "name": "Thomas Chevrier", "affiliation": "Ifremer", "orcid": "0009-0006-4108-5698" },
         { "name": "Cam Ly Rintz", "affiliation": "Ifremer", "orcid": "0009-0005-0541-2332" },
         { "name": "Leanne Carpentier", "affiliation": "Ifremer", "orcid": " 0009-0004-1796-3855" },
         { "name": "Justine Talpaert Daudon", "affiliation": "UMR MARBEC", "orcid": "0000-0001-9582-451X" },
-        { "name": "Alexandre Boyer", "affiliation": "UMR MARBEC" },
+        { "name": "Alexandre Boyer", "affiliation": "UMR MARBEC", "orcid": "0009-0002-2787-1044" },
         { "name": "Alexis Joly", "affiliation": "INRIA", "orcid": "0000-0002-2161-9940" },
-        { "name": "Victor Illien", "affiliation": "Ifremer" }
+        { "name": "Victor Illien", "affiliation": "Ifremer", "orcid": "0009-0007-2143-8027" },
+        { "name": "Serge Bernard", "affiliation": "CNRS", "orcid": "0000-0003-1772-0592"},
+        { "name": "Arthur Lazennec", "affiliation": "Ifremer", "orcid": "0009-0007-9522-8049"},  
+        { "name": "Victor Russias", "affiliation": "Ifremer", "orcid": "0009-0004-6895-6751"}  
     ],
     
     "_NB": "open, restricted",
@@ -31,6 +34,6 @@
 
     "_NB": "Add place, human_readable_platform, platform ",
     "keywords": ["Coral Reef", "Coral Reef Habitat", "Citizen Sciences", "Deep Learning", "Machine Learning", "Computer Vision", "Ecology", "Mapping", "Remote Sensing", "GeoAI"],
-    "grants": [{"id": "G2OI Interreg"}, {"id": "Ifremer"}, {"id": "IRD"}]
+    "grants": [{"id": "100009111"}]
     
 }

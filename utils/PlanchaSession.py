@@ -3,7 +3,9 @@ import json
 import shutil
 import pycountry
 import pandas as pd
+from tqdm import tqdm
 from enum import Enum
+from time import time
 from pathlib import Path
 from zipfile import ZipFile
 from exiftool import ExifToolHelper
@@ -41,15 +43,15 @@ class PlanchaSession:
         for folder in ["SENSORS", "DCIM"]:
             self.__zip_raw(folder)
     
-    def prepare_processed_data(self, folders_to_zip):
+    def prepare_processed_data(self, processed_folder, needFrames=False):
         self.cleanup()
         print("-- Prepare processed data... ")
 
-        self.__zip_raw("GPS")
-        self.__zip_raw("METADATA")
-        
-        for folder in folders_to_zip:
-           self.__zip_raw("PROCESSED_DATA/"+folder)
+        for folder in processed_folder:
+            self.__zip_raw(folder)
+
+        if needFrames:
+            self.__zip_processed_frames()
 
         for file in self.session_path.iterdir():
             if file.suffix == ".pdf":
@@ -61,10 +63,39 @@ class PlanchaSession:
         raw_folder = Path(self.session_path, folder)
         if Path.exists(raw_folder) and raw_folder.is_dir() and len(list(raw_folder.iterdir())) > 0:
             print(f"Preparing {folder} folder")
+            start_t = time()
             shutil.make_archive(zip_folder, "zip", raw_folder)
-            print(f"Successful zipped {folder} folder\n")
+            print(f"Successful zipped {folder} folder in {time() - start_t} sec\n")
         else:
             print(f"[WARNING] {folder} folder not found or empty for {self.session_name}\n")
+    
+    def __zip_processed_frames(self):
+        """ Zip frames folder without useless frames """
+        frames_zip_path = Path(self.temp_folder, "PROCESSED_DATA_FRAMES.zip")
+        frames_folder = Path(self.session_path, "PROCESSED_DATA/FRAMES")
+        predictions_gps = Path(self.session_path, "METADATA/predictions_gps.csv")
+
+        if not Path.exists(predictions_gps):
+            print(f"No predictions_gps found for session {self.session_name}\n")
+            return
+
+        df_predictions_gps = pd.read_csv(predictions_gps)
+
+        if len(df_predictions_gps) == 0: 
+            print(f"Predictions GPS empty for session {self.session_name}\n")
+            return
+
+        filenames = df_predictions_gps["FileName"].to_list()
+        if Path.exists(frames_folder) and frames_folder.is_dir() and len(list(frames_folder.iterdir())) > 0:
+            print(f"Preparing FRAMES folder")
+            with ZipFile(frames_zip_path, "w") as zip_object:
+                for file in tqdm(sorted(list(frames_folder.iterdir()))):
+                    if file.name in filenames:
+                        zip_object.write(file, Path(file.parent.name, file.name))
+            print(f"Successful zipped FRAMES folder\n")
+        else:
+            print(f"[WARNING] Frames folder not found or empty for {self.session_name}\n")
+
 
     def __zip_gps_raw(self):
         """ Zip all file in gps folder. """
