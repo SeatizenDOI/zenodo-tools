@@ -311,7 +311,7 @@ class PlanchaSession:
             return ""
     
     def get_prog_json(self):
-        prog_path = Path(self.session_path, "PROCESSED_DATA", "BATHY", "prog_config.json")
+        prog_path = Path(self.session_path, "METADATA", "prog_config.json")
         if not Path.exists(prog_path): return None
 
         with open(prog_path, "r") as f:

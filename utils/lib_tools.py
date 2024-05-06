@@ -59,7 +59,7 @@ def get_folders_from_output(opt):
     """ Parse input for processed folder """
     if opt.upload_processeddata == "": return [], False
 
-    folder_to_upload, needFrames = [], True
+    folder_to_upload, needFrames = [], False
     for letter in opt.upload_processeddata:
         if letter == "f": needFrames = True
         elif letter == "m": folder_to_upload.append("METADATA")

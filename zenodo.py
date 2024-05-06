@@ -9,7 +9,6 @@ from utils.PlanchaMetadata import PlanchaMetadata
 from utils.lib_tools import get_list_sessions, get_folders_from_output
 
 TMP_PATH = "/tmp"
-ROOT_FOLDER = Path("/home/bioeos/Documents/Bioeos/plancha-session")
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-tools", description="Workflow to upload raw data and processed data with metadata")
@@ -22,8 +21,8 @@ def parse_args():
 
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Folder of session")
-    parser.add_argument("-pses", "--path_session", default="/home/bioeos/Documents/Bioeos/plancha-session/20231204_REU-TROUDEAU_ASV-2_01", help="One session")
-    parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/csv_sessions.csv", help="Session from csv file")
+    parser.add_argument("-pses", "--path_session", default="/home/bioeos/Documents/Bioeos/plancha-session/20230430_MDG-NOSYVE_MASK-1_00/", help="One session")
+    parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/aldabra.csv", help="Session from csv file")
 
     # Data type to upload.
     parser.add_argument("-ur", "--upload-rawdata", action="store_true", help="Upload raw data from a session")
@@ -36,10 +35,6 @@ def parse_args():
     return parser.parse_args()
 
 def main(opt):
-
-    if not Path.exists(ROOT_FOLDER):
-        print(f"Root folder doesn't exist")
-        return
 
     # Open json file with metadata of the session.
     with open('./metadata.json') as json_file:
@@ -77,12 +72,16 @@ def main(opt):
             
             if opt.upload_processeddata:
                 # Processed data
-                plancha_session.prepare_processed_data(get_folders_from_output(opt))
+                folders, needFrames = get_folders_from_output(opt)
+                plancha_session.prepare_processed_data(folders, needFrames)
                 processed_metadata = plancha_metadata.build_for_processed_data()
                 uploader.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata)
                 plancha_session.cleanup()
             
             if opt.update_metadata:
+                if uploader.deposit_id == None:
+                    print("With no id, we cannot update our data, continue")
+                    continue
                 processed_metadata = plancha_metadata.build_for_processed_data()
                 uploader.edit_metadata(processed_metadata)
         
@@ -90,6 +89,9 @@ def main(opt):
             print(traceback.format_exc(), end="\n\n")
 
             sessions_fail.append(session_path.name)
+
+            # Avoid tmp folder over charge
+            plancha_session.cleanup()
 
     # Stat
     print("\nEnd of process. On {} sessions, {} fails. ".format(len(list_session), len(sessions_fail)))

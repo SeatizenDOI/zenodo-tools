@@ -63,6 +63,9 @@ class ZenodoUploader:
 
         # Update metadata.
         self.__zenodo_send_metadata(metadata)
+        
+        # Publish.
+        self.__zenodo_actions_publish()
     
     def edit_metadata(self, metadata):
         """ Update metadata of deposit_id """
