@@ -3,3 +3,4 @@ darwincore_mapping
 old_code
 __pycache__
 config.json
+csv_inputs

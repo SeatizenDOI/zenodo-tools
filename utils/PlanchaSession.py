@@ -5,10 +5,13 @@ import pycountry
 import pandas as pd
 from tqdm import tqdm
 from enum import Enum
-from time import time
 from pathlib import Path
 from zipfile import ZipFile
+from datetime import datetime
 from exiftool import ExifToolHelper
+
+from .PlanchaZipper import PlanchaZipper
+from .constants import MAXIMAL_DEPOSIT_FILE_SIZE
 
 class BaseType(Enum):
     RGP = "RGP Station from IGN"
@@ -32,16 +35,19 @@ class PlanchaSession:
         self.temp_folder.mkdir(parents=True, exist_ok=True)
         
         # Compute informations.
-        self.place, self.date, self.country = None, None, None
+        self.place, self.date, self.country, self.platform = None, None, None, None
         self.compute_basics_info()
     
     def prepare_raw_data(self):
         self.cleanup()
         print("-- Prepare raw data... ")
         self.__zip_gps_raw()
-
-        for folder in ["SENSORS", "DCIM"]:
-            self.__zip_raw(folder)
+        self.__zip_dcim()
+        self.__zip_raw("SENSORS")
+        
+        print("-- Sort and move to sub folder if needed... ")
+        return self.move_into_subfolder_if_needed()
+        
     
     def prepare_processed_data(self, processed_folder, needFrames=False):
         self.cleanup()
@@ -61,13 +67,36 @@ class PlanchaSession:
         """ Zip all file in folder. """
         zip_folder = Path(self.temp_folder, folder.replace("/", "_"))
         raw_folder = Path(self.session_path, folder)
-        if Path.exists(raw_folder) and raw_folder.is_dir() and len(list(raw_folder.iterdir())) > 0:
-            print(f"Preparing {folder} folder")
-            start_t = time()
-            shutil.make_archive(zip_folder, "zip", raw_folder)
-            print(f"Successful zipped {folder} folder in {time() - start_t} sec\n")
-        else:
+        
+        if not Path.exists(raw_folder) or not raw_folder.is_dir() or not len(list(raw_folder.iterdir())) > 0:
             print(f"[WARNING] {folder} folder not found or empty for {self.session_name}\n")
+            return
+        
+        t_start = datetime.now()
+        print(f"Preparing {folder} folder")
+        shutil.make_archive(zip_folder, "zip", raw_folder)
+        print(f"Successful zipped {folder} folder in {datetime.now() - t_start} sec\n")
+    
+    def __zip_dcim(self):
+        """ Zip all file in dcim folder. """
+        dcim_folder = Path(self.session_path, "DCIM")
+        dcim_files = sorted(list(dcim_folder.iterdir()))
+        
+        if not Path.exists(dcim_folder) or not dcim_folder.is_dir() or not len(dcim_files) > 0:
+            print(f"[WARNING] DCIM folder not found or empty for {self.session_name}\n")
+            return
+        
+        t_start = datetime.now()
+        print(f"Preparing DCIM folder")
+        zipper = PlanchaZipper(Path(self.temp_folder, "DCIM.zip"))
+        for file in dcim_files:
+            if file.is_dir() and "GOPRO" in file.name:
+                for gopro_file in sorted(list(file.iterdir())):
+                    zipper.add_file(gopro_file, Path(gopro_file.parent.name, gopro_file.name))
+            else:
+                zipper.add_file(file, file.name)
+        zipper.close()
+        print(f"Successful zipped DCIM folder in {datetime.now() - t_start} split in {zipper.nb_zip_file} archive\n")
     
     def __zip_processed_frames(self):
         """ Zip frames folder without useless frames """
@@ -85,16 +114,18 @@ class PlanchaSession:
             print(f"Predictions GPS empty for session {self.session_name}\n")
             return
 
-        filenames = df_predictions_gps["FileName"].to_list()
-        if Path.exists(frames_folder) and frames_folder.is_dir() and len(list(frames_folder.iterdir())) > 0:
-            print(f"Preparing FRAMES folder")
-            with ZipFile(frames_zip_path, "w") as zip_object:
-                for file in tqdm(sorted(list(frames_folder.iterdir()))):
-                    if file.name in filenames:
-                        zip_object.write(file, Path(file.parent.name, file.name))
-            print(f"Successful zipped FRAMES folder\n")
-        else:
+        if not Path.exists(frames_folder) or not frames_folder.is_dir() or len(list(frames_folder.iterdir())) == 0:
             print(f"[WARNING] Frames folder not found or empty for {self.session_name}\n")
+            return 
+        
+        t_start = datetime.now()
+        filenames = df_predictions_gps["FileName"].to_list() # CSV without useless images
+        print(f"Preparing FRAMES folder")
+        with ZipFile(frames_zip_path, "w") as zip_object:
+            for file in tqdm(sorted(list(frames_folder.iterdir()))):
+                if file.name in filenames:
+                    zip_object.write(file, Path(file.parent.name, file.name))
+        print(f"Successful zipped FRAMES folder in {datetime.now() - t_start}\n")
 
 
     def __zip_gps_raw(self):
@@ -103,21 +134,31 @@ class PlanchaSession:
         gps_base_folder = Path(self.session_path, "GPS/BASE")
         gps_device_folder = Path(self.session_path, "GPS/DEVICE")
 
-        if Path.exists(gps_base_folder) and gps_base_folder.is_dir() and Path.exists(gps_device_folder) and gps_device_folder.is_dir():
-            print("Preparing GPS folder")
-            with ZipFile(gps_zip_path, "w") as zip_object:
-                # Device folder
-                for file in sorted(list(gps_device_folder.iterdir())):
-                    if file.suffix not in [".zip", ".gpx"]: continue
-                    zip_object.write(file, Path(file.parent.name, file.name))
-                
-                # Base folder
-                for file in sorted(list(gps_base_folder.iterdir())):
-                    if file.suffix not in [".o", ".zip"]: continue
-                    zip_object.write(file, Path(file.parent.name, file.name))
-            print("Successful zipped GPS folder\n")
-        else:
+        if not Path.exists(gps_base_folder) or not gps_base_folder.is_dir() or not Path.exists(gps_device_folder) or not gps_device_folder.is_dir():
             print(f"[WARNING] GPS folder not found for {self.session_name}\n")
+            return 
+        
+        print("Preparing GPS folder")
+        devices_file = sorted(list(gps_device_folder.iterdir()))
+        base_files = sorted(list(gps_base_folder.iterdir()))
+
+        if len(devices_file) == 0 and len(base_files) == 0:
+            print(f"[WARNING] GPS folder empty\n")
+            return
+        
+        t_start = datetime.now()
+        with ZipFile(gps_zip_path, "w") as zip_object:
+            # Device folder
+            for file in devices_file:
+                if file.suffix not in [".zip", ".gpx"]: continue
+                zip_object.write(file, Path(file.parent.name, file.name))
+            
+            # Base folder
+            for file in base_files:
+                if file.suffix not in [".o", ".zip"]: continue
+                zip_object.write(file, Path(file.parent.name, file.name))
+        print(f"Successful zipped GPS folder in {datetime.now() - t_start}\n")
+        
     
     def __set_place(self):
         place = self.session_name.split("_")[1].split("-")
@@ -126,26 +167,65 @@ class PlanchaSession:
             self.country = self.country.name.lower().title()
         else:
             print("[WARNING] Error in country code")
-        self.place = place[-1].lower().title()
+        self.place = "-".join([a.lower().title() for a in place[1:]])
 
     def __set_date(self):
         date = self.session_name.split("_")[0]
         if not date.isnumeric() or len(date) != 8: print("[WARNING] Error in session name")
-        self.date = date
+        self.date = f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
+    
+    def __set_platform(self):
+        self.platform = self.session_name.split("_")[2].split("-")[0].upper()
 
     def compute_basics_info(self):
         self.__set_place()
         self.__set_date()
+        self.__set_platform()
 
     def cleanup(self):
         """ Remove all generated zipped file. """
         if not Path.exists(self.temp_folder) or not self.temp_folder.is_dir(): return
 
         for file in self.temp_folder.iterdir():
-            print(f"[INFO] Deleting {file}")
-            file.unlink()
+            if file.is_dir():
+                for subfile in file.iterdir():
+                    print(f"[INFO] Deleting {file}")
+                    subfile.unlink()
+                file.rmdir()
+            else:
+                print(f"[INFO] Deleting {file}")
+                file.unlink()
     
-    # Return True if ppk file else False
+    
+    def move_into_subfolder_if_needed(self):
+        zip_file_with_size = {}
+        for file in self.temp_folder.iterdir():
+            file_size = round(os.path.getsize(str(file)) / 1000000000, 3)
+            zip_file_with_size[str(file)] = file_size
+
+        # Total size of zip file can fit into one zenodo version
+        if sum([zip_file_with_size[file] for file in zip_file_with_size]) < MAXIMAL_DEPOSIT_FILE_SIZE:
+            return [self.temp_folder]
+        
+        # We need to move file to subdir
+        cum_size, nb_ses = 0, 1
+        f_to_move = Path(self.temp_folder, "RAW_DATA")
+        f_to_move.mkdir(exist_ok=True)
+        folders_to_upload = [f_to_move]
+
+        for filename, size in sorted(zip_file_with_size.items()):
+            if size + cum_size >= MAXIMAL_DEPOSIT_FILE_SIZE:
+                nb_ses += 1
+                f_to_move = Path(self.temp_folder, f"RAW_DATA_{nb_ses}")
+                f_to_move.mkdir(exist_ok=True)
+                folders_to_upload.append(f_to_move)
+                cum_size = size
+            else:
+                cum_size += size
+            shutil.move(filename, Path(f_to_move, Path(filename).name))
+        
+        return folders_to_upload
+
     def check_ppk(self):
         """ True or false if session is processed with ppk """
         gps_device_path = Path(self.session_path, "GPS", "DEVICE")

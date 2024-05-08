@@ -16,31 +16,31 @@ class PlanchaMetadata:
                 'keywords': self.__build_keywords(),
                 'version': "RAW_DATA",
                 'creators': self.metadata_json["creators"],
-                'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}],
-                'language': "eng"
-                # 'grants': self.metadata_json["grants"]
+                'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
+                'language': "eng",
+                'contributors': self.metadata_json['contributors']
             }
         }
 
         return data
 
     def __build_title(self):
-        hp = self.metadata_json["human_readable_platform"]
+        hp = self.metadata_json["platform"][self.plancha_session.platform] if self.plancha_session.platform in self.metadata_json["platform"] else "No key for platform"
         type = self.metadata_json["image_type"]
         place = self.plancha_session.place
         country = self.plancha_session.country if self.plancha_session.country else "Somewhere"
         date = self.plancha_session.date
 
-        return f"{type} images collected by {hp} in {place}, {country} - {date}"
+        return f"{type} images collected by an {hp} in {place}, {country} - {date}"
 
     
     def __build_keywords(self):
+        hp = [self.metadata_json["platform"][self.plancha_session.platform]] if self.plancha_session.platform in self.metadata_json["platform"] else []
         keywords = self.metadata_json["keywords"] + [
             self.plancha_session.country, 
             self.metadata_json["project_name"],
-            self.metadata_json["human_readable_platform"],
-            self.metadata_json["platform"]
-        ]
+            self.plancha_session.platform
+        ] + hp
         return sorted(keywords)
     
     def build_for_processed_data(self):
@@ -50,12 +50,13 @@ class PlanchaMetadata:
                 'upload_type': 'dataset',
                 'keywords': self.__build_keywords(),
                 'creators': self.metadata_json["creators"],
-                'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}],
+                'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
                 'language': "eng",
                 'description': self.__build_processed_description(),
                 'access_right': 'open',
                 'version': "PROCESSED_DATA",
-                'license': self.metadata_json["license"]
+                'license': self.metadata_json["license"],
+                'contributors': self.metadata_json['contributors']
             }
         }
 
@@ -73,22 +74,27 @@ class PlanchaMetadata:
         haveSensorFile = self.plancha_session.check_sensor_file()
         isBathyGenerated = self.plancha_session.get_bathy_stat()
 
-        hp = self.metadata_json["human_readable_platform"]
+        hp = self.metadata_json["platform"][self.plancha_session.platform] if self.plancha_session.platform in self.metadata_json["platform"] else "No key for platform"
         place = self.plancha_session.place
         country = self.plancha_session.country if self.plancha_session.country else "Somewhere"
         date = self.plancha_session.date
 
         return f"""
 
-                    <i>This dataset was collected by {hp} in {place} {country}, {date}.</i> <br>
+                    <i>This dataset was collected by an {hp} in {place} {country}, on {date}.</i> <br>
+
+                    <br><br>Underwater or aerial images collected by scientists or citizens can have a wide variety of use for science, management, or conservation.
+                    These images can be annotated and shared to train IA models which can in turn predict the objects on the images.
+                    We provide a set of tools (hardware and software) to collect marine data, predict species or habitat, and provide maps.<br>
+        
 
                     <h2>Image acquisition</h2>
                     {self.__get_image_acquistion_text()}
                                        
                     <h2> GPS information: </h2>
-                    Base : {basetype.value} <br>
+                    {"The data was processed with a PPK workflow to achieve centimeter-level GPS accuracy. <br>" if isPPK else ""}
+                    Base : {"Files coming from rtk a GPS-fixed station or any static positioning instrument which can provide with correction frames." if basetype != BaseType.NONE else basetype.value} <br>
                     Device GPS : {"GPX file from Garmin watch" if isGPX else "Emlid Reach M2"} <br>
-                    {"The data was processed with a PPK workflow to achieve centimeter GPS accuracy. <br>" if isPPK else ""}
                     Quality of our data - Q1: {q1} %, Q2: {q2} %, Q5: {q5} % <br>
 
                     <h2> Bathymetry </h2>
@@ -96,9 +102,10 @@ class PlanchaMetadata:
                     {self.__get_sensor_text() if haveSensorFile else "No sensor file for this session."}
                     {(self.__get_bathymetry_text() if isBathyGenerated else "No bathy file, something failed during process.<br>") if haveSensorFile else ""}                  
 
-
                     <h2> Generic folder structure </h2>
                     {self.__get_tree()}
+
+                    <br>All the codes to extract and produce the data in the "Processed" version of the dataset are available at <a href="https://github.com/SeatizenDOI" target="_blank">SeatizenDOI</a>
                 """
     
     def __get_image_acquistion_text(self):
@@ -112,14 +119,15 @@ class PlanchaMetadata:
         j_name, j_useful, j_useless = self.plancha_session.get_jacques_stat()
         huggingface_name = self.plancha_session.get_hugging_face()
         link_hugging = "https://huggingface.co/"+huggingface_name.replace("lombardata_","lombardata/")
+        fps = self.plancha_session.get_prog_json()["dcim"]["frames_per_second"]
 
         if isVideo == DCIMType.NONE: return "No image or video acquisition for this session. <br>"
 
         return f"""
-                This session have {size_media} Go of {isVideo.value}, which were trimmed in {nb_frames} frames. <br> 
+                This session has {size_media} GB of {isVideo.value}, which were trimmed into {nb_frames} frames (at {fps} fps). <br> 
                 The frames are {'' if isGeoreferenced else 'not'} georeferenced. <br>
-                {j_useful}% of these are useful and {j_useless}% are useless, according to predictions made by <a href="{j_name}" target="_blank">Jacques model</a>. <br>
-                Multilabel predictions have been made on useful frames thanks to <a href="{link_hugging}" target="_blank">DinoVd'eau</a> model. <br>
+                {j_useful}% of these extracted images are useful and {j_useless}% are useless, according to predictions made by <a href="{j_name}" target="_blank">Jacques model</a>. <br>
+                Multilabel predictions have been made on useful frames using <a href="{link_hugging}" target="_blank">DinoVd'eau</a> model. <br>
             """
     
     
@@ -146,14 +154,14 @@ class PlanchaMetadata:
 
         return f"""
                 {"We only keep the values which have a GPS correction in Q1.<br>" if prog_json["gps"]["filt_rtkfix"] else ""}
-                {"We keep the points that are between the mission waypoints.<br>" if prog_json["gps"]["filt_waypoint"] else ""}
+                {"We keep the points that are the waypoints.<br>" if prog_json["gps"]["filt_waypoint"] else ""}
 
-                We keep the raw data between {prog_json["bathy"]["dpth_range"]["min"]}m and {prog_json["bathy"]["dpth_range"]["max"]}m. <br>
-                The data are first referenced against the {prog_json["gps"]["utm_ellips"]} ellipsoid. {"Then we apply the local geoid." if prog_json["bathy"]["use_geoid"] else ""}<br>
-                At the end of processing, the data is projected into a homogeneous grid to create a raster and shapefiles. <br>
-                The size of the grid cells is {prog_json["mesh"]["spacing_m"]}m. <br>
-                The previous files were generated by {prog_json["mesh"]["method"]} interpolation.  The 3D reconstruction algorithm is {prog_json["mesh"]["3Dalgo"]}. <br>
+                We keep the raw data where depth was estimated between {prog_json["bathy"]["dpth_range"]["min"]} m and {prog_json["bathy"]["dpth_range"]["max"]} m deep. <br>
+                The data are first referenced against the {prog_json["gps"]["utm_ellips"]} ellipsoid. {"Then we apply the local geoid if available." if prog_json["bathy"]["use_geoid"] else ""}<br>
+                At the end of processing, the data are projected into a homogeneous grid to create a raster and a shapefiles. <br>
+                The size of the grid cells is {prog_json["mesh"]["spacing_m"]} m. <br>
+                The raster and shapefiles are generated by {prog_json["mesh"]["method"]} interpolation. The 3D reconstruction algorithm is {prog_json["mesh"]["3Dalgo"]}. <br>
             """
     
     def __get_sensor_text(self):
-        return f"The data were acquired with a single-beam echosounder {self.plancha_session.get_echo_sounder_name()}. <br>"
+        return f"The data are collected using a single-beam echosounder {self.plancha_session.get_echo_sounder_name()}. <br>"
