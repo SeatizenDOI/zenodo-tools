@@ -72,6 +72,9 @@ def main(opt):
             uploader = ZenodoUploader(plancha_session.session_name, config_json)
 
             if opt.upload_rawdata:
+                if uploader.deposit_id != None:
+                    print(f"We already have a deposit with the same urn: https://zenodo.org/records/{uploader.deposit_id}")
+                    continue
                 # Prepape raw data
                 folders_to_upload = plancha_session.prepare_raw_data()
                 raw_metadata = plancha_metadata.build_for_raw()
@@ -96,8 +99,24 @@ def main(opt):
                 if uploader.deposit_id == None:
                     print("With no id, we cannot update our data, continue")
                     continue
+                
+                raw_data_ids, processed_data_ids = uploader.get_all_version_ids_for_deposit()
+
+                # Update metadata for raw data
+                print("-- Editing raw data version")
+                raw_metadata = plancha_metadata.build_for_raw()
+                for id in raw_data_ids:
+                    print(f"Working with id {id}")
+                    uploader.deposit_id = id
+                    uploader.edit_metadata(raw_metadata)
+                
+                # Update metadata for processed data
+                print("-- Editing processed data version")
                 processed_metadata = plancha_metadata.build_for_processed_data()
-                uploader.edit_metadata(processed_metadata)
+                for id in processed_data_ids:
+                    print(f"Working with id {id}")
+                    uploader.deposit_id = id
+                    uploader.edit_metadata(processed_metadata)
         
         except Exception:
             print(traceback.format_exc(), end="\n\n")

@@ -1,7 +1,13 @@
+import os
 import json
 import requests
+import traceback
 from pathlib import Path
 
+from tqdm import tqdm
+from tqdm.utils import CallbackIOWrapper
+
+from .constants import MAX_RETRY_TO_UPLOAD_FILE, NB_VERSION_TO_FETCH
 from .ZenodoErrorHandler import ZenodoErrorHandler, ParsingReturnType
 
 RESTRICTED_FILES = ["DCIM"]
@@ -12,8 +18,8 @@ class ZenodoUploader:
     def __init__(self, session_name, config_json):
         self.session_name = session_name
         self.deposit_id = None
-        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_ZENODO_SEATIZEN"]
-        self.ZENODO_LINK = config_json["ZENODO_LINK"]
+        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_DEV_SEATIZEN"]
+        self.ZENODO_LINK = config_json["ZENODO_DEV_LINK"]
         
         self.params = {'access_token': self.ACCESS_TOKEN}
         self.headers = {"Content-Type": "application/json"}
@@ -152,9 +158,22 @@ class ZenodoUploader:
         
         for file in path_tmp.iterdir():
             print(f"Send file {file.name}")
-            with open(file, "rb") as f:
-                requests.put(f"{bucket_url}/{file.name}", data=f, params=self.params)
-    
+            isSend, max_try = False, 0
+            while not isSend:
+                try:
+                    file_size = os.stat(file).st_size
+                    with open(file, "rb") as f:
+                        with tqdm(total=file_size, unit="B", unit_scale=True, unit_divisor=1024) as t:
+                            wrapped_file = CallbackIOWrapper(t.update, f, "read")
+                            requests.put(f"{bucket_url}/{file.name}", data=wrapped_file, params=self.params)
+                    isSend = True
+                except KeyboardInterrupt:
+                    isSend = True
+                    raise NameError("Stop upload")
+                except:
+                    print(traceback.format_exc(), end="\n\n")
+                    max_try += 1
+                    if max_try >= MAX_RETRY_TO_UPLOAD_FILE: raise NameError("Abort due to max try")
 
     def set_deposit_id(self):
         """ Find deposit id with identifiers equal to session_name. If more than one deposit have the same session_name return None """
@@ -178,6 +197,29 @@ class ZenodoUploader:
         else:
             self.deposit_id = ids[0]
 
+    def get_all_version_ids_for_deposit(self):
+        """ Return a list of ids for raw data version and a list of id for processed data version for a specific session"""
+        conceptrecid = self.__get_conceptrecid_specific_deposit()
+        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, "all_versions": True, 'q': f"conceptrecid:{conceptrecid}"})
+
+        if len(r.json()) == 0:
+            raise NameError("No global id found")
+
+        raw_data_ids, processed_data_ids = [], []
+        for deposit in r.json():
+            if "RAW_DATA" in deposit["metadata"]["version"]:
+                raw_data_ids.append(deposit["id"])
+            elif "PROCESSED_DATA" in deposit["metadata"]["version"]:
+                processed_data_ids.append(deposit["id"])
+            else:
+                print(f"No match for version {deposit['metadata']['version']}")
+        return raw_data_ids, processed_data_ids
+        
+
+    def __get_conceptrecid_specific_deposit(self):
+        """ Extract conceptrecid from a deposit"""
+        r = requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}?access_token={self.ACCESS_TOKEN}")
+        return r.json()["conceptrecid"]
 
     def get_session_info_by_id(self, deposit_id):
         """ Get deposit information with its id """
@@ -191,8 +233,8 @@ class ZenodoUploader:
     
     def clean_draft_no_version(self):
         """ Delete all draft version. """
-        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': 250})
-        for i, deposit in enumerate(r.json()):
+        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH})
+        for deposit in r.json():
             try:
                 if deposit["state"] == "unsubmitted" and deposit["submitted"] == False and deposit["title"] == "":
                     print("Delete draft version")

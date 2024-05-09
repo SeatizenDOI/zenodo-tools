@@ -8,7 +8,8 @@
         "UAV": "Unmanned Aerial Vehicle",
         "SCUBA": "Scuba diving",
         "MASK": "Mask",
-        "KITE": "Kite surf"
+        "KITE": "Kite surf",
+        "PADDLE": "Paddle"
     },
     
     "project_name": "Plancha",
