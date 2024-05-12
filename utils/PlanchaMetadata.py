@@ -6,6 +6,7 @@ class PlanchaMetadata:
         self.plancha_session = plancha_session
         self.metadata_json = metadata_json
 
+
     def build_for_raw(self):
         data = {
             'metadata': {
@@ -18,31 +19,12 @@ class PlanchaMetadata:
                 'creators': self.metadata_json["creators"],
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
                 'language': "eng",
-                'contributors': self.metadata_json['contributors']
+                'contributors': self.metadata_json['contributors'],
+                'access_conditions': "Everyone who ask"
             }
         }
-
         return data
 
-    def __build_title(self):
-        hp = self.metadata_json["platform"][self.plancha_session.platform] if self.plancha_session.platform in self.metadata_json["platform"] else "No key for platform"
-        type = self.metadata_json["image_type"]
-        place = self.plancha_session.place
-        country = self.plancha_session.country if self.plancha_session.country else "Somewhere"
-        date = self.plancha_session.date
-
-        return f"{type} images collected by an {hp} in {place}, {country} - {date}"
-
-    
-    def __build_keywords(self):
-        hp = [self.metadata_json["platform"][self.plancha_session.platform]] if self.plancha_session.platform in self.metadata_json["platform"] else []
-        keywords = self.metadata_json["keywords"] + [
-            self.plancha_session.country, 
-            self.metadata_json["project_name"],
-            self.plancha_session.platform
-        ] + hp
-        return sorted(keywords)
-    
     def build_for_processed_data(self):
         data = {
             'metadata': {
@@ -59,9 +41,28 @@ class PlanchaMetadata:
                 'contributors': self.metadata_json['contributors']
             }
         }
-
         return data
-    
+
+    def __build_title(self):
+        hp = self.metadata_json["platform"][self.plancha_session.platform] if self.plancha_session.platform in self.metadata_json["platform"] else "No key for platform"
+        type = self.metadata_json["image_type"]
+        place = self.plancha_session.place
+        country = self.plancha_session.country if self.plancha_session.country else "Somewhere"
+        date = self.plancha_session.date
+
+        return f"{type} images collected by an {hp} in {place}, {country} - {date}"
+
+
+    def __build_keywords(self):
+        hp = [self.metadata_json["platform"][self.plancha_session.platform]] if self.plancha_session.platform in self.metadata_json["platform"] else []
+        keywords = self.metadata_json["keywords"] + [
+            self.plancha_session.country, 
+            self.metadata_json["project_name"],
+            self.plancha_session.platform
+        ] + hp
+        return sorted(keywords)
+
+
     def __build_processed_description(self):
 
         # Find if we do ppk
@@ -107,7 +108,8 @@ class PlanchaMetadata:
 
                     <br>All the codes to extract and produce the data in the "Processed" version of the dataset are available at <a href="https://github.com/SeatizenDOI" target="_blank">SeatizenDOI</a>
                 """
-    
+
+
     def __get_image_acquistion_text(self):
         # Check for video
         isVideo, size_media = self.plancha_session.is_video_or_images()
@@ -119,7 +121,10 @@ class PlanchaMetadata:
         j_name, j_useful, j_useless = self.plancha_session.get_jacques_stat()
         huggingface_name = self.plancha_session.get_hugging_face()
         link_hugging = "https://huggingface.co/"+huggingface_name.replace("lombardata_","lombardata/")
-        fps = self.plancha_session.get_prog_json()["dcim"]["frames_per_second"]
+        
+        prog_json = self.plancha_session.get_prog_json()
+        if prog_json == None: return None
+        fps = prog_json["dcim"]["frames_per_second"]
 
         if isVideo == DCIMType.NONE: return "No image or video acquisition for this session. <br>"
 
@@ -129,8 +134,8 @@ class PlanchaMetadata:
                 {j_useful}% of these extracted images are useful and {j_useless}% are useless, according to predictions made by <a href="{j_name}" target="_blank">Jacques model</a>. <br>
                 Multilabel predictions have been made on useful frames using <a href="{link_hugging}" target="_blank">DinoVd'eau</a> model. <br>
             """
-    
-    
+
+  
     def __get_tree(self):
         return """
             YYYYMMDD_COUNTRYCODE-optionalplace_device_session-number <br>
@@ -146,7 +151,8 @@ class PlanchaMetadata:
             │   └── PHOTOGRAMMETRY :  destination folder for reconstructed models in photogrammetry. <br>
             └── SENSORS : folder to store files coming from other sources (bathymetry data from the echosounder, log file from the autopilot,  mission plan etc.). <br>      
             """
-    
+
+
     def __get_bathymetry_text(self):
 
         prog_json = self.plancha_session.get_prog_json()
@@ -162,6 +168,7 @@ class PlanchaMetadata:
                 The size of the grid cells is {prog_json["mesh"]["spacing_m"]} m. <br>
                 The raster and shapefiles are generated by {prog_json["mesh"]["method"]} interpolation. The 3D reconstruction algorithm is {prog_json["mesh"]["3Dalgo"]}. <br>
             """
-    
+
+
     def __get_sensor_text(self):
         return f"The data are collected using a single-beam echosounder {self.plancha_session.get_echo_sounder_name()}. <br>"

@@ -13,6 +13,7 @@ class PlanchaZipper:
 
         self.tot_zip_size, self.nb_zip_file = 0, 1
 
+
     def add_file(self, file, output_struc_file):
         file_size = round(os.path.getsize(str(file)) / 1000000000, 6)
         if file_size + self.tot_zip_size > MAXIMAL_DEPOSIT_FILE_SIZE:
@@ -24,6 +25,7 @@ class PlanchaZipper:
         else:
             self.tot_zip_size += file_size
         self.zip.write(file, output_struc_file)
+
 
     def close(self):
         self.zip.close()

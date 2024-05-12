@@ -37,8 +37,10 @@ class PlanchaSession:
         # Compute informations.
         self.place, self.date, self.country, self.platform = None, None, None, None
         self.compute_basics_info()
-    
+
+
     def prepare_raw_data(self):
+        """ Zip all file in a tmp folder. """
         self.cleanup()
         print("-- Prepare raw data... ")
         self.__zip_gps_raw()
@@ -50,6 +52,7 @@ class PlanchaSession:
         
     
     def prepare_processed_data(self, processed_folder, needFrames=False):
+        """ Zip all processed data in tmp folder. """
         self.cleanup()
         print("-- Prepare processed data... ")
 
@@ -60,8 +63,9 @@ class PlanchaSession:
             self.__zip_processed_frames()
 
         for file in self.session_path.iterdir():
-            if file.suffix == ".pdf":
+            if file.suffix == ".pdf": # !FIXME Allow all kind of file.
                 shutil.copy(file, Path(self.temp_folder, file.name))
+
 
     def __zip_raw(self, folder):
         """ Zip all file in folder. """
@@ -76,7 +80,8 @@ class PlanchaSession:
         print(f"Preparing {folder} folder")
         shutil.make_archive(zip_folder, "zip", raw_folder)
         print(f"Successful zipped {folder} folder in {datetime.now() - t_start} sec\n")
-    
+
+
     def __zip_dcim(self):
         """ Zip all file in dcim folder. """
         dcim_folder = Path(self.session_path, "DCIM")
@@ -97,7 +102,8 @@ class PlanchaSession:
                 zipper.add_file(file, file.name)
         zipper.close()
         print(f"Successful zipped DCIM folder in {datetime.now() - t_start} split in {zipper.nb_zip_file} archive\n")
-    
+
+
     def __zip_processed_frames(self):
         """ Zip frames folder without useless frames """
         frames_zip_path = Path(self.temp_folder, "PROCESSED_DATA_FRAMES.zip")
@@ -161,6 +167,7 @@ class PlanchaSession:
         
     
     def __set_place(self):
+        """ Set country and place as variable. """
         place = self.session_name.split("_")[1].split("-")
         self.country = pycountry.countries.get(alpha_3=place[0])
         if self.country != None:
@@ -169,18 +176,25 @@ class PlanchaSession:
             print("[WARNING] Error in country code")
         self.place = "-".join([a.lower().title() for a in place[1:]])
 
+
     def __set_date(self):
+        """ Set data as variable. """
         date = self.session_name.split("_")[0]
         if not date.isnumeric() or len(date) != 8: print("[WARNING] Error in session name")
         self.date = f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
     
+
     def __set_platform(self):
+        """ Set platform as variable. """
         self.platform = self.session_name.split("_")[2].split("-")[0].upper()
 
+
     def compute_basics_info(self):
+        """ Compute basics information to avoid complication. """
         self.__set_place()
         self.__set_date()
         self.__set_platform()
+
 
     def cleanup(self):
         """ Remove all generated zipped file. """
@@ -226,6 +240,7 @@ class PlanchaSession:
         
         return folders_to_upload
 
+
     def check_ppk(self):
         """ True or false if session is processed with ppk """
         gps_device_path = Path(self.session_path, "GPS", "DEVICE")
@@ -238,6 +253,7 @@ class PlanchaSession:
                 return True
         return False
 
+
     def read_and_extract_percentage(self, file):
         """ Extract and return Q1, Q2, Q5 %"""
         df = pd.read_csv(file, sep=",")
@@ -248,6 +264,7 @@ class PlanchaSession:
         q5 = round(len(df[df["fix"] == 5]) * 100 / len(df), 2)
 
         return q1, q2, q5
+
 
     # Return percentage for Q1, Q2, Q5
     def get_percentage(self, isPPK):
@@ -268,6 +285,7 @@ class PlanchaSession:
         
         return 0, 0, 0
 
+
     def get_base_type(self):
         """ Return the base used """
         gps_base_path = Path(self.session_path, "GPS", "BASE")
@@ -286,6 +304,7 @@ class PlanchaSession:
         
         return BaseType.NONE
 
+
     def check_gpx(self):
         """ Return true is gpx file"""
         gps_device_path = Path(self.session_path, "GPS", "DEVICE")
@@ -297,7 +316,9 @@ class PlanchaSession:
                 return True
         return False
 
+
     def check_sensor_file(self):
+        """ Return true or false if sensor file exist. """
         sensor_path = Path(self.session_path, "SENSORS")
         if not Path.exists(sensor_path) or not sensor_path.is_dir():
             return False
@@ -307,14 +328,18 @@ class PlanchaSession:
                 return True
         return False
 
+
     def get_bathy_stat(self):
+        """ Return true or false if bathy workflow succeed. """
         bathy_path = Path(self.session_path, "PROCESSED_DATA", "BATHY")
         if not Path.exists(bathy_path) or not bathy_path.is_dir():
             return False
 
         return len(list(bathy_path.iterdir())) > 20 # Assumed if we have less than 20 files, we don't have processed bathy
 
+
     def is_video_or_images(self):
+        """ Return media type of raw data. """
         dcim_path = Path(self.session_path, "DCIM")
         if not Path.exists(dcim_path) or not dcim_path.is_dir():
             return DCIMType.NONE, 0
@@ -328,6 +353,7 @@ class PlanchaSession:
 
         return isVideoOrImagesOrNothing, 0 if isVideoOrImagesOrNothing == DCIMType.NONE else self.get_file_dcim_size([".mp4"] if isVideoOrImagesOrNothing == DCIMType.VIDEO else [".jpg", ".jpeg"])
 
+
     def get_file_dcim_size(self, extension):
         """ Return Sum of filesize """
         dcim_path = Path(self.session_path, "DCIM")
@@ -339,7 +365,9 @@ class PlanchaSession:
                 size += round(os.path.getsize(str(file)) / 1000000000, 1)
         return size
 
+    #! FIXME use relative path and predictions_gps
     def check_frames(self):
+        """ Check if we have split some frames and if they are georefenreced. """
         frames_path = Path(self.session_path, "PROCESSED_DATA", "FRAMES")
         if not Path.exists(frames_path) or not frames_path.is_dir():
             return 0, False
@@ -354,7 +382,9 @@ class PlanchaSession:
 
         return nb_frames, isGeoreferenced
 
+
     def get_jacques_stat(self):
+        """ Get jacques model name and return proportion of useful/useless. """
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
         if not Path.exists(IA_path) or not IA_path.is_dir():
             return "", 0, 0
@@ -370,7 +400,9 @@ class PlanchaSession:
         
         return jacques_name, useful, useless
 
+
     def get_hugging_face(self):
+        """ Return hugging face model name"""
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
         if not Path.exists(IA_path) or not IA_path.is_dir():
             return ""
@@ -380,8 +412,10 @@ class PlanchaSession:
                 return file.name.replace(self.session_name + "_", "").replace(".csv", "")
 
         return ""
-    
+
+
     def get_echo_sounder_name(self):
+        """ Return echo sounder name based on ASV number. """
         asv_number = int(self.session_name.split("_")[2].replace("ASV-", ""))
         if asv_number == 1:
             return '<a href="https://www.echologger.com/products/single-frequency-echosounder-deep" _target="blank">ETC 400</a>'
@@ -389,11 +423,26 @@ class PlanchaSession:
             return '<a href="https://ceruleansonar.com/products/sounder-s500" _target="blank">S500</a>'
         else:
             return ""
-    
+
+
     def get_prog_json(self):
+        """ Return plancha config of the session. """
         prog_path = Path(self.session_path, "METADATA", "prog_config.json")
         if not Path.exists(prog_path): return None
 
         with open(prog_path, "r") as f:
             prog_config = json.load(f)
         return prog_config
+
+
+    def get_predictions_gps(self):
+        """ Return predictions_gps content else None if empty or not exist or all point are in the same place. """
+        predictions_gps_path = Path(self.session_path, "METADATA", "predictions_gps.csv")
+        if not Path.exists(predictions_gps_path): return None
+
+        predictions_gps = pd.read_csv(predictions_gps)
+        if len(predictions_gps) == 0: return None # No predictions
+        if "GPSLongitude" not in predictions_gps or "GPSLatitude" not in predictions_gps: return None # No GPS coordinate
+        if predictions_gps["GPSLatitude"].std() == 0.0 or predictions_gps["GPSLongitude"].std() == 0.0: return None # All frames have the same gps coordinate
+
+        return predictions_gps

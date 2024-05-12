@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import traceback
+import time
 from pathlib import Path
 
 from tqdm import tqdm
@@ -18,14 +19,15 @@ class ZenodoUploader:
     def __init__(self, session_name, config_json):
         self.session_name = session_name
         self.deposit_id = None
-        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_DEV_SEATIZEN"]
-        self.ZENODO_LINK = config_json["ZENODO_DEV_LINK"]
+        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_ZENODO_SEATIZEN"]
+        self.ZENODO_LINK = config_json["ZENODO_LINK"]
         
         self.params = {'access_token': self.ACCESS_TOKEN}
         self.headers = {"Content-Type": "application/json"}
 
         self.set_deposit_id() # Try to get current id of the session.
-       
+
+
     def create_deposit_on_zenodo(self, session_tmp_folder, metadata):
         """
             session_tmp_folder: Upload all file in tmp folder
@@ -43,7 +45,8 @@ class ZenodoUploader:
 
         # Publish version.
         self.__zenodo_actions_publish()
-    
+
+
     def add_new_version_to_deposit(self, temp_folder, metadata):
         print("-- Upload new data for existing version... ")
         # Get actual state of the deposit.
@@ -68,7 +71,8 @@ class ZenodoUploader:
         
         # Publish.
         self.__zenodo_actions_publish()
-    
+
+
     def edit_metadata(self, metadata):
         """ Update metadata of deposit_id """
         # Get actual state of the deposit.
@@ -88,16 +92,29 @@ class ZenodoUploader:
         # Publish metadata.
         self.__zenodo_actions_publish()
 
+
     def __get_single_deposit(self):
         """ Get data from a deposit (last version). """
         r = requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}?access_token={self.ACCESS_TOKEN}")
         self.deposit_id = r.json()["id"]
         return r.json()
 
+    def list_files(self):
+        """ List all files for a session. """
+        return requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}/files?access_token={self.ACCESS_TOKEN}").json()
+    
+    
+    def get_file_data(self, link, output_file):
+        """ Save file at output_file path. """
+        r = requests.get(f"{link}", params={'access_token': self.ACCESS_TOKEN}, stream=True)
+        with open(output_file, mode="wb") as file:
+            for chunk in r.iter_content(chunk_size=10 * 1024):
+                file.write(chunk)
+
     def __remove_restricted_files(self):
         """ Remove restricted file before publish new version. """
         print("Removing restricted files")
-        files = requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}/files?access_token={self.ACCESS_TOKEN}").json()
+        files = self.list_files()
 
         for file in files:
             file_name = file["filename"].replace(".zip", "").replace("PROCESSED_DATA_", "") # Remove .zip and middle folder name.
@@ -114,31 +131,36 @@ class ZenodoUploader:
         self.deposit_id = ZenodoErrorHandler.parse(r, ParsingReturnType.NONE)
         return r.json()["links"]["bucket"]
 
+
     def __zenodo_actions_discard(self):
         """ Discard change of current version. """
         print("Discard change of current version")
         r = requests.post(f"{self.ZENODO_LINK}/{self.deposit_id}/actions/discard", params=self.params, json={}, headers=self.headers)
         ZenodoErrorHandler.parse(r, ParsingReturnType.NONE)
 
+
     def __zenodo_actions_newversion(self):
         """ Create new version. Return the bucket_url to upload new files. """
-        print("Create new version")
+        print("Create new version.")
         r = requests.post(f"{self.ZENODO_LINK}/{self.deposit_id}/actions/newversion", params=self.params, json={}, headers=self.headers)
         self.deposit_id = ZenodoErrorHandler.parse(r, ParsingReturnType.NONE)
         return r.json()["links"]["bucket"]
-    
+
+
     def __zenodo_actions_edit(self):
         """ Edit current version. """
-        print("Edit current version")
+        print("Edit current version.")
         r = requests.post(f"{self.ZENODO_LINK}/{self.deposit_id}/actions/edit", params=self.params, json={}, headers=self.headers)
         ZenodoErrorHandler.parse(r, ParsingReturnType.NONE)
     
+
     def __zenodo_actions_publish(self):
         """ Publish current version. Warning cannot remove file after publish. """
         r = requests.post(f"{self.ZENODO_LINK}/{self.deposit_id}/actions/publish", params={'access_token': self.ACCESS_TOKEN})
         self.deposit_id = ZenodoErrorHandler.parse(r)
-        print("Version published")
-    
+        print("Version published.")
+
+
     def __zenodo_send_metadata(self, metadata):
         """ Upload metadata for a zenodo version. """
         r = requests.put(f'{self.ZENODO_LINK}/{self.deposit_id}',
@@ -147,6 +169,7 @@ class ZenodoUploader:
                         headers=self.params
                     )
         ZenodoErrorHandler.parse(r, ParsingReturnType.NONE)
+
 
     def __zenodo_upload_files(self, tmp_folder, bucket_url):
         """ Upload a folder of file to specific version. Warning, don't check if the total size is < 50 Go (Zenodo limit)"""
@@ -174,6 +197,8 @@ class ZenodoUploader:
                     print(traceback.format_exc(), end="\n\n")
                     max_try += 1
                     if max_try >= MAX_RETRY_TO_UPLOAD_FILE: raise NameError("Abort due to max try")
+                    time.sleep(0.5)
+
 
     def set_deposit_id(self):
         """ Find deposit id with identifiers equal to session_name. If more than one deposit have the same session_name return None """
@@ -197,9 +222,10 @@ class ZenodoUploader:
         else:
             self.deposit_id = ids[0]
 
+
     def get_all_version_ids_for_deposit(self):
         """ Return a list of ids for raw data version and a list of id for processed data version for a specific session"""
-        conceptrecid = self.__get_conceptrecid_specific_deposit()
+        conceptrecid = self.get_conceptrecid_specific_deposit()
         r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, "all_versions": True, 'q': f"conceptrecid:{conceptrecid}"})
 
         if len(r.json()) == 0:
@@ -216,20 +242,11 @@ class ZenodoUploader:
         return raw_data_ids, processed_data_ids
         
 
-    def __get_conceptrecid_specific_deposit(self):
+    def get_conceptrecid_specific_deposit(self):
         """ Extract conceptrecid from a deposit"""
         r = requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}?access_token={self.ACCESS_TOKEN}")
         return r.json()["conceptrecid"]
-
-    def get_session_info_by_id(self, deposit_id):
-        """ Get deposit information with its id """
-        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN})
-        for deposit in r.json():
-            try:
-                if deposit["id"] == deposit_id:
-                    print(deposit)
-            except:
-                continue
+    
     
     def clean_draft_no_version(self):
         """ Delete all draft version. """
