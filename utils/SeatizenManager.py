@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
+from .lib_tools import md5
 from .ZenodoAPI import ZenodoAPI
 from .constants import TMP_PATH_MANAGER, SEATIZEN_MANAGER_FILES, SESSION_DOI_CSV, METADATA_IMAGE_CSV
 
@@ -20,6 +21,9 @@ class SeatizenManager:
 
         # Create tmp folder.
         self.tmp_folder.mkdir(exist_ok=True, parents=True)
+        
+        # Delete all previous file in case we have past files.
+        self.clean_tmp_folder()
 
         # Get all files we want to update
         for file in self.zenodoAPI.list_files():
@@ -28,6 +32,12 @@ class SeatizenManager:
 
             self.f_path[filename] = Path(self.tmp_folder, filename) # Save path for filename
             self.zenodoAPI.zenodo_download_file(file["links"]["download"], self.f_path[filename]) # Download the file in tmp directory
+            # Retry while checksum is different.
+            while md5(self.f_path[filename]) != file["checksum"]:
+                print(f"[WARNING] Checksum error when downloading {filename}. We retry.")
+                self.f_path[filename].unlink()
+                self.zenodoAPI.zenodo_download_file(file["links"]["download"], self.f_path[filename])
+
             self.f_is_changed[filename] = False # Init change variable at false
             self.files[filename] = pd.read_csv(self.f_path[filename]) # Get data
         

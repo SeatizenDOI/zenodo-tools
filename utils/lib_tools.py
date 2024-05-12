@@ -1,4 +1,5 @@
 import enum
+import hashlib
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -104,3 +105,11 @@ def get_session_name_doi_from_opt(opt):
                 list_name_doi.append((name, doi))
 
     return list_name_doi
+
+def md5(fname):
+    """ Return md5 checksum of a file. """
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()

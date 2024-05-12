@@ -1,16 +1,15 @@
 import os
 import json
-import wget
+import time
 import requests
 import traceback
-import time
 from pathlib import Path
 
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 
-from .constants import MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE, NB_VERSION_TO_FETCH
 from .ZenodoErrorHandler import ZenodoErrorHandler, ParsingReturnType
+from .constants import MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE, NB_VERSION_TO_FETCH
 
 class ZenodoAPI:
     
@@ -68,7 +67,7 @@ class ZenodoAPI:
         self.__zenodo_send_metadata(metadata)
         
         # Publish.
-        # self.__zenodo_actions_publish()
+        self.__zenodo_actions_publish()
 
 
     def edit_metadata(self, metadata):
@@ -111,8 +110,8 @@ class ZenodoAPI:
                 r = requests.get(f"{link}", params={'access_token': self.ACCESS_TOKEN}, stream=True)
                 total = int(r.headers.get('content-length', 0))
 
-                with open(output_file, 'wb') as file, tqdm(total=total, unit='B', unit_scale=True, unit_divisor=1024) as bar:
-                    for data in r.iter_content(chunk_size=1024):
+                with open(output_file, 'wb') as file, tqdm(total=total, unit='B', unit_scale=True) as bar:
+                    for data in r.iter_content(chunk_size=1000):
                         size = file.write(data)
                         bar.update(size)
                 
@@ -204,7 +203,7 @@ class ZenodoAPI:
                 try:
                     file_size = os.stat(file).st_size
                     with open(file, "rb") as f:
-                        with tqdm(total=file_size, unit="B", unit_scale=True, unit_divisor=1024) as t:
+                        with tqdm(total=file_size, unit="B", unit_scale=True) as t:
                             wrapped_file = CallbackIOWrapper(t.update, f, "read")
                             requests.put(f"{bucket_url}/{file.name}", data=wrapped_file, params=self.params)
                     isSend = True

@@ -4,11 +4,11 @@ import traceback
 from pathlib import Path
 
 from utils.constants import TMP_PATH
+from utils.ZenodoAPI import ZenodoAPI
+from utils.lib_tools import get_list_sessions
 from utils.PlanchaSession import PlanchaSession
 from utils.SeatizenManager import SeatizenManager
-from utils.ZenodoAPI import ZenodoAPI
 
-from utils.lib_tools import get_list_sessions
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-manager", description="Workflow to manage global deposit")
@@ -50,7 +50,7 @@ def main(opt):
 
     for session_path in list_session[index_start:]:
         session_path = Path(session_path)
-        break
+
         try:
             if not Path.exists(session_path):
                 print(f"Session not found for {session_path.name}")

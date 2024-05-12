@@ -3,10 +3,10 @@ import argparse
 import traceback
 from pathlib import Path
 
-from utils.constants import TMP_PATH, RESTRICTED_FILES
-from utils.PlanchaSession import PlanchaSession
 from utils.ZenodoAPI import ZenodoAPI
+from utils.PlanchaSession import PlanchaSession
 from utils.PlanchaMetadata import PlanchaMetadata
+from utils.constants import TMP_PATH, RESTRICTED_FILES
 from utils.lib_tools import get_list_sessions, get_processed_folders_to_upload
 
 def parse_args():

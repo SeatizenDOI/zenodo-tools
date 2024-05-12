@@ -19,7 +19,9 @@ def parse_args():
     # Path of output.
     parser.add_argument("-pout", "--path_folder_out", default="/tmp", help="Output folder to rebuild sessions")
 
-    # 
+    # Data type to download.
+    parser.add_argument("-dr", "--download-rawdata", action="store_true", help="Download raw data from a session")
+    parser.add_argument("-dp", "--download-processed_data", action="store_true", help="Download processed data from a session")
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
@@ -38,17 +40,15 @@ def main(opt):
     index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_name_doi) else 0
 
     for i, (session_name, doi) in enumerate(list_name_doi[index_start:]):
+        """
+            On cherche à reconstruire une session brute ou non.
 
-        # It's more easier to work with doi
-        if doi == None and session_name == None:
-            print(f"-- [WARNING] No doi or name found at line {i+2}") # Start counting at 1 and omit csv header
-            continue
+            Si on passe juste un name ou un conceptrecid
+                => Dernière session processed_data si elle existe
+            Si on passe un id en particulier
+                => Processed data renseigner et si c'est un id de raw data, dernier processed data s'il existe
         
-        # We need to retrieve the parent id of the
-        if session_name and doi == None:
-            pass
-        print(session_name, doi)
-
+        """
         try:
             pass
         
