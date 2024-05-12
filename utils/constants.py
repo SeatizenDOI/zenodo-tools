@@ -1,6 +1,14 @@
 TMP_PATH = "/media/bioeos/F/tmp/"
+RESTRICTED_FILES = ["DCIM"]
 
-# Zenodo constant
+# Zenodo constants for seatizen manager
+TMP_PATH_MANAGER = "/tmp/SeatizenManager/"
+SESSION_DOI_CSV = "session_doi.csv"
+METADATA_IMAGE_CSV = "metadata_image.csv"
+GPS_ZIP = "GPS.zip"
+SEATIZEN_MANAGER_FILES = [SESSION_DOI_CSV, METADATA_IMAGE_CSV, GPS_ZIP]
+
+# Zenodo constant for upload
 MAXIMAL_DEPOSIT_FILE_SIZE = 50 # GB
-MAX_RETRY_TO_UPLOAD_FILE = 20
+MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE = 20
 NB_VERSION_TO_FETCH = 500

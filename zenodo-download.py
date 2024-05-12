@@ -1,21 +1,8 @@
 import json
 import argparse
 import traceback
-from pathlib import Path
-import requests
 
-from utils.constants import TMP_PATH
-from utils.PlanchaSession import PlanchaSession
-from utils.ZenodoUploader import ZenodoUploader
-from utils.PlanchaMetadata import PlanchaMetadata
 from utils.lib_tools import get_session_name_doi_from_opt
-
-"""
-conceptrecid:11162064
-id:11162065
-urn:20231208_REU-ST-LEU_ASV-1_01 
-
-"""
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-download", description="Workflow to download raw data and processed data with metadata")
@@ -31,6 +18,8 @@ def parse_args():
 
     # Path of output.
     parser.add_argument("-pout", "--path_folder_out", default="/tmp", help="Output folder to rebuild sessions")
+
+    # 
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")

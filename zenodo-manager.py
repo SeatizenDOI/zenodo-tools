@@ -6,7 +6,7 @@ from pathlib import Path
 from utils.constants import TMP_PATH
 from utils.PlanchaSession import PlanchaSession
 from utils.SeatizenManager import SeatizenManager
-from utils.ZenodoUploader import ZenodoUploader
+from utils.ZenodoAPI import ZenodoAPI
 
 from utils.lib_tools import get_list_sessions
 
@@ -32,12 +32,16 @@ def parse_args():
 
 def main(opt):
     
+    # Open json file with metadata of the session.
+    with open('./metadata.json') as json_file:
+        metadata_json = json.load(json_file)
+
     # Open json file with zenodo token.
     with open('./config.json') as json_file:
         config_json = json.load(json_file)
 
     # Load metadata manager
-    seatizenManager = SeatizenManager(config_json)
+    seatizenManager = SeatizenManager(config_json, metadata_json)
 
     # Stat
     sessions_fail = []
@@ -46,7 +50,7 @@ def main(opt):
 
     for session_path in list_session[index_start:]:
         session_path = Path(session_path)
-
+        break
         try:
             if not Path.exists(session_path):
                 print(f"Session not found for {session_path.name}")
@@ -57,9 +61,9 @@ def main(opt):
             
             # Update session_doi.csv
             print("-- Add doi in session_doi.csv.")
-            uploader = ZenodoUploader(plancha_session.session_name, config_json)
-            if uploader.deposit_id:
-                seatizenManager.add_to_session_doi(plancha_session.session_name, uploader.get_conceptrecid_specific_deposit())
+            zenodoAPI = ZenodoAPI(plancha_session.session_name, config_json)
+            if zenodoAPI.deposit_id:
+                seatizenManager.add_to_session_doi(plancha_session.session_name, zenodoAPI.get_conceptrecid_specific_deposit())
             else:
                 print("[WARNING] Session without conceptid, may be in draft or not on zenodo.")
 
@@ -70,9 +74,7 @@ def main(opt):
                 seatizenManager.add_to_metadata_image(predictions_gps)
             else:
                 print("[WARNING] No decent image metadata to upload.")
-           
-        
-            break
+
         except Exception:
             print(traceback.format_exc(), end="\n\n")
 

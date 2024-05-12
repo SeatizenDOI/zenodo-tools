@@ -1,5 +1,6 @@
 import os
 import json
+import wget
 import requests
 import traceback
 import time
@@ -8,19 +9,16 @@ from pathlib import Path
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 
-from .constants import MAX_RETRY_TO_UPLOAD_FILE, NB_VERSION_TO_FETCH
+from .constants import MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE, NB_VERSION_TO_FETCH
 from .ZenodoErrorHandler import ZenodoErrorHandler, ParsingReturnType
 
-RESTRICTED_FILES = ["DCIM"]
-
-class ZenodoUploader:
+class ZenodoAPI:
     
-
     def __init__(self, session_name, config_json):
         self.session_name = session_name
         self.deposit_id = None
-        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_ZENODO_SEATIZEN"]
-        self.ZENODO_LINK = config_json["ZENODO_LINK"]
+        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_DEV_SEATIZEN"]
+        self.ZENODO_LINK = config_json["ZENODO_DEV_LINK"]
         
         self.params = {'access_token': self.ACCESS_TOKEN}
         self.headers = {"Content-Type": "application/json"}
@@ -47,7 +45,7 @@ class ZenodoUploader:
         self.__zenodo_actions_publish()
 
 
-    def add_new_version_to_deposit(self, temp_folder, metadata):
+    def add_new_version_to_deposit(self, temp_folder, metadata, restricted_files = []):
         print("-- Upload new data for existing version... ")
         # Get actual state of the deposit.
         deposit = self.__get_single_deposit()
@@ -61,7 +59,7 @@ class ZenodoUploader:
         bucket_url = self.__zenodo_actions_newversion()
         
         # Remove restricted file.
-        self.__remove_restricted_files()
+        self.__remove_restricted_files(restricted_files)
 
         # Upload new files.
         self.__zenodo_upload_files(temp_folder, bucket_url)
@@ -70,7 +68,7 @@ class ZenodoUploader:
         self.__zenodo_send_metadata(metadata)
         
         # Publish.
-        self.__zenodo_actions_publish()
+        # self.__zenodo_actions_publish()
 
 
     def edit_metadata(self, metadata):
@@ -104,21 +102,41 @@ class ZenodoUploader:
         return requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}/files?access_token={self.ACCESS_TOKEN}").json()
     
     
-    def get_file_data(self, link, output_file):
-        """ Save file at output_file path. """
-        r = requests.get(f"{link}", params={'access_token': self.ACCESS_TOKEN}, stream=True)
-        with open(output_file, mode="wb") as file:
-            for chunk in r.iter_content(chunk_size=10 * 1024):
-                file.write(chunk)
+    def zenodo_download_file(self, link, output_file):
+        """ Download file at output_file path. """
 
-    def __remove_restricted_files(self):
+        isDownload, max_try = False, 0
+        while not isDownload:
+            try:
+                r = requests.get(f"{link}", params={'access_token': self.ACCESS_TOKEN}, stream=True)
+                total = int(r.headers.get('content-length', 0))
+
+                with open(output_file, 'wb') as file, tqdm(total=total, unit='B', unit_scale=True, unit_divisor=1024) as bar:
+                    for data in r.iter_content(chunk_size=1024):
+                        size = file.write(data)
+                        bar.update(size)
+                
+                isDownload = True
+            except KeyboardInterrupt:
+                raise NameError("Stop iteration")
+            except:
+                print(traceback.format_exc(), end="\n\n")
+                max_try += 1
+                if max_try >= MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE: raise NameError("Abort due to max try")
+                time.sleep(0.5)
+
+
+    def __remove_restricted_files(self, restricted_files):
         """ Remove restricted file before publish new version. """
+        
+        if len(restricted_files) == 0: return # No file to filter
+
         print("Removing restricted files")
         files = self.list_files()
 
         for file in files:
             file_name = file["filename"].replace(".zip", "").replace("PROCESSED_DATA_", "") # Remove .zip and middle folder name.
-            for f in RESTRICTED_FILES: 
+            for f in restricted_files: 
                 if f in file_name: # Exemple: DCIM in DCIM_2
                     requests.delete(f'{self.ZENODO_LINK}/{self.deposit_id}/files/{file["id"]}', params={'access_token': self.ACCESS_TOKEN})
                     continue # Get out of for because no need to check extra match if we have already delete file
@@ -191,12 +209,11 @@ class ZenodoUploader:
                             requests.put(f"{bucket_url}/{file.name}", data=wrapped_file, params=self.params)
                     isSend = True
                 except KeyboardInterrupt:
-                    isSend = True
                     raise NameError("Stop upload")
                 except:
                     print(traceback.format_exc(), end="\n\n")
                     max_try += 1
-                    if max_try >= MAX_RETRY_TO_UPLOAD_FILE: raise NameError("Abort due to max try")
+                    if max_try >= MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE: raise NameError("Abort due to max try")
                     time.sleep(0.5)
 
 

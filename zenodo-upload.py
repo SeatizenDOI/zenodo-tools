@@ -3,9 +3,9 @@ import argparse
 import traceback
 from pathlib import Path
 
-from utils.constants import TMP_PATH
+from utils.constants import TMP_PATH, RESTRICTED_FILES
 from utils.PlanchaSession import PlanchaSession
-from utils.ZenodoUploader import ZenodoUploader
+from utils.ZenodoAPI import ZenodoAPI
 from utils.PlanchaMetadata import PlanchaMetadata
 from utils.lib_tools import get_list_sessions, get_processed_folders_to_upload
 
@@ -48,8 +48,8 @@ def main(opt):
     # Action on zenodo without specific session
     if opt.enable_nothing:
         if opt.clean_draft:
-            uploader = ZenodoUploader("", config_json)
-            uploader.clean_draft_no_version()
+            zenodoAPI = ZenodoAPI("", config_json)
+            zenodoAPI.clean_draft_no_version()
         return 
     
     # Stat
@@ -69,11 +69,11 @@ def main(opt):
             
             plancha_session = PlanchaSession(session_path, TMP_PATH)
             plancha_metadata = PlanchaMetadata(plancha_session, metadata_json)
-            uploader = ZenodoUploader(plancha_session.session_name, config_json)
+            zenodoAPI = ZenodoAPI(plancha_session.session_name, config_json)
 
             if opt.upload_rawdata:
-                if uploader.deposit_id != None:
-                    print(f"We already have a deposit with the same urn: https://zenodo.org/records/{uploader.deposit_id}")
+                if zenodoAPI.deposit_id != None:
+                    print(f"We already have a deposit with the same urn: https://zenodo.org/records/{zenodoAPI.deposit_id}")
                     continue
                 # Prepape raw data
                 folders_to_upload = plancha_session.prepare_raw_data()
@@ -81,10 +81,10 @@ def main(opt):
 
                 for i, folder_to_upload in enumerate(folders_to_upload):
                     if i == 0:
-                        uploader.create_deposit_on_zenodo(folder_to_upload, raw_metadata) # RAW_DATA
+                        zenodoAPI.create_deposit_on_zenodo(folder_to_upload, raw_metadata) # RAW_DATA
                     else:
                         raw_metadata["metadata"]["version"] = f"RAW_DATA_{i+1}"
-                        uploader.add_new_version_to_deposit(folder_to_upload, raw_metadata) # RAW_DATA_2, RAW_DATA_3, ...
+                        zenodoAPI.add_new_version_to_deposit(folder_to_upload, raw_metadata, RESTRICTED_FILES) # RAW_DATA_2, RAW_DATA_3, ...
                 plancha_session.cleanup()
             
             if opt.upload_processeddata:
@@ -92,31 +92,31 @@ def main(opt):
                 folders, needFrames = get_processed_folders_to_upload(opt)
                 plancha_session.prepare_processed_data(folders, needFrames)
                 processed_metadata = plancha_metadata.build_for_processed_data()
-                uploader.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata)
+                zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, RESTRICTED_FILES)
                 plancha_session.cleanup()
             
             if opt.update_metadata:
-                if uploader.deposit_id == None:
+                if zenodoAPI.deposit_id == None:
                     print("With no id, we cannot update our data, continue")
                     continue
                 
-                raw_data_ids, processed_data_ids = uploader.get_all_version_ids_for_deposit()
+                raw_data_ids, processed_data_ids = zenodoAPI.get_all_version_ids_for_deposit()
 
                 # Update metadata for raw data
                 print("-- Editing raw data version")
                 raw_metadata = plancha_metadata.build_for_raw()
                 for id in raw_data_ids:
                     print(f"Working with id {id}")
-                    uploader.deposit_id = id
-                    uploader.edit_metadata(raw_metadata)
+                    zenodoAPI.deposit_id = id
+                    zenodoAPI.edit_metadata(raw_metadata)
                 
                 # Update metadata for processed data
                 print("-- Editing processed data version")
                 processed_metadata = plancha_metadata.build_for_processed_data()
                 for id in processed_data_ids:
                     print(f"Working with id {id}")
-                    uploader.deposit_id = id
-                    uploader.edit_metadata(processed_metadata)
+                    zenodoAPI.deposit_id = id
+                    zenodoAPI.edit_metadata(processed_metadata)
         
         except Exception:
             print(traceback.format_exc(), end="\n\n")
