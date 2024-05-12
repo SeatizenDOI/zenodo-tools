@@ -1,4 +1,5 @@
 import enum
+import numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -8,7 +9,7 @@ class Sources(enum.Enum):
     SESSION = 2
 
 def get_mode_from_opt(opt) -> Sources:
-    """ Retrive mode from input option """
+    """ Retrieve mode from input option """
     mode = None
 
     if opt.enable_csv: 
@@ -55,7 +56,7 @@ def get_list_sessions(opt) -> list:
 
     return list_sessions
 
-def get_folders_from_output(opt):
+def get_processed_folders_to_upload(opt):
     """ Parse input for processed folder """
     if opt.upload_processeddata == "": return [], False
 
@@ -69,3 +70,37 @@ def get_folders_from_output(opt):
     
     return folder_to_upload, needFrames
 
+def get_session_name_doi_from_opt(opt):
+    """ Return a list who contains tuple (name, doi)"""
+
+    def clean_doi(doi):
+        if doi in ["", None, np.nan]: return None
+
+        # In case user take the whole url 
+        if "zenodo." in doi:
+            doi = doi.split("zenodo.")[1]
+        return doi
+    
+    def clean_name(name):
+        if name in ["", None, np.nan]: return None
+        return name.replace("urn:", "")
+
+    list_name_doi = []
+    if opt.enable_doi:
+        doi = clean_doi(opt.enable_doi)
+        list_name_doi.append((None, doi))
+    
+    if opt.enable_name:
+        name = clean_name(opt.enable_name)
+        list_name_doi.append((name, None))
+    
+    if opt.enable_csv:
+        csv_path = Path(opt.path_csv_file)
+        if Path.exists(csv_path):
+            df = pd.read_csv(csv_path)
+            for _, row in df.iterrows():
+                name = clean_name(row["session_name"]) if "session_name" in row else None
+                doi = clean_doi(row["doi"]) if "doi" in row else None
+                list_name_doi.append((name, doi))
+
+    return list_name_doi
