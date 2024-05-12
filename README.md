@@ -26,24 +26,24 @@ Exemple :
 
 Si nous avons ces fichiers à envoyer
 ```txt
-    DCIM.zip # 50 Go
-    DCIM_2.zip # 19 Go
-    GPS.zip # 170 Mo
-    SENSORS.zip # 2 Go
+DCIM.zip # 50 Go
+DCIM_2.zip # 19 Go
+GPS.zip # 170 Mo
+SENSORS.zip # 2 Go
 ```
 
 Sur zenodo cela correspondra à :
 version RAW_DATA 
 
 ```txt
-    DCIM.zip
+DCIM.zip
 ```
 version RAW_DATA_2
 
 ```txt
-    DCIM_2.zip
-    GPS.zip
-    SENSORS.zip
+DCIM_2.zip
+GPS.zip
+SENSORS.zip
 ```
 
 - les données calculées (PROCESSED_DATA)
@@ -55,8 +55,22 @@ En revanche, rien n
 
 - Faire la correspondance gbif du fichier d'annotation.
 - Ajouter un script qui permet de mettre à jour le zenodo metadata global ( définir ce qu'il faut mettre dedans )
-- Rajouter la possibilité de choisir ce que veut ajouter dans une mise à jour de version
-
 - Trier les créateurs / collaborateurs
 
-- Script update metadata for all raw or all processed version
+
+## Question pour zenodo 
+
+- Lier un logiciel dans la catégotie software
+- Ajouter les funders personnalisés
+- Comment marche la fonction access_conditions => Eviter d'accorder l'accès pour plusieurs sessions manuellement
+- Est-ce que les tokens de sessions ont vraiment des restrictions => création et mise à jour de version pour chaque utilisateur
+- Meilleure moyen pour automatiser le téléchargement de données pour les personnes autorisés ?
+
+
+## Deposit général
+
+- session_doi.csv
+
+Contient deux colonnes : nom de la session, doi pointant vers la dernière version du deposit associé à la session
+
+- 
