@@ -100,7 +100,7 @@ def main(opt):
                     print("With no id, we cannot update our data, continue")
                     continue
                 
-                raw_data_ids, processed_data_ids = zenodoAPI.get_all_version_ids_for_deposit()
+                raw_data_ids, processed_data_ids = zenodoAPI.get_all_version_ids_for_deposit(zenodoAPI.get_conceptrecid_specific_deposit())
 
                 # Update metadata for raw data
                 print("-- Editing raw data version")

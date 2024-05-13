@@ -48,8 +48,6 @@ SENSORS.zip
 
 - les données calculées (PROCESSED_DATA)
 
-En revanche, rien n
-
 
 ## TODO
 
@@ -58,19 +56,7 @@ En revanche, rien n
 - Trier les créateurs / collaborateurs
 
 
-## Question pour zenodo 
-
-- Lier un logiciel dans la catégotie software
-- Ajouter les funders personnalisés
-- Comment marche la fonction access_conditions => Eviter d'accorder l'accès pour plusieurs sessions manuellement
-- Est-ce que les tokens de sessions ont vraiment des restrictions => création et mise à jour de version pour chaque utilisateur
-- Meilleure moyen pour automatiser le téléchargement de données pour les personnes autorisés ?
-
-
 ## Deposit général
 
 - session_doi.csv
-
 Contient deux colonnes : nom de la session, doi pointant vers la dernière version du deposit associé à la session
-
-- 

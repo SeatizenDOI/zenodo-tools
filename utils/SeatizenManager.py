@@ -55,7 +55,7 @@ class SeatizenManager:
         self.f_is_changed[SESSION_DOI_CSV] = True
 
 
-    def save_and_published(self):
+    def save_and_publish(self):
         """ Save all data if changed and create a new version. """
         # Export files.
         for filename in self.f_is_changed:

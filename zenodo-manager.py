@@ -85,8 +85,8 @@ def main(opt):
     if (len(sessions_fail)):
         [print("\t* " + session_name) for session_name in sessions_fail]
     
-    # Save and published change.
-    seatizenManager.save_and_published()
+    # Save and publish change.
+    seatizenManager.save_and_publish()
 
 if __name__ == "__main__":
     opt = parse_args()

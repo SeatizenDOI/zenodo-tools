@@ -22,9 +22,11 @@ class ZenodoAPI:
         self.params = {'access_token': self.ACCESS_TOKEN}
         self.headers = {"Content-Type": "application/json"}
 
-        self.set_deposit_id() # Try to get current id of the session.
+        if session_name != "":
+            self.set_deposit_id() # Try to get current id of the session.
 
 
+    # -- Complexe operations on deposit
     def create_deposit_on_zenodo(self, session_tmp_folder, metadata):
         """
             session_tmp_folder: Upload all file in tmp folder
@@ -90,11 +92,27 @@ class ZenodoAPI:
         self.__zenodo_actions_publish()
 
 
+    def clean_draft_no_version(self):
+        """ Delete all draft version. """
+        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH})
+        for deposit in r.json():
+            try:
+                if deposit["state"] == "unsubmitted" and deposit["submitted"] == False and deposit["title"] == "":
+                    print("Delete draft version")
+                    r2 = requests.post(deposit["links"]["discard"], params=self.params, json={}, headers=self.headers)
+                    ZenodoErrorHandler.parse(r2, ParsingReturnType.ALL)
+
+            except:
+                continue
+
+
+    # Simple operation on deposit.
     def __get_single_deposit(self):
         """ Get data from a deposit (last version). """
         r = requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}?access_token={self.ACCESS_TOKEN}")
         self.deposit_id = r.json()["id"]
         return r.json()
+
 
     def list_files(self):
         """ List all files for a session. """
@@ -175,7 +193,7 @@ class ZenodoAPI:
         """ Publish current version. Warning cannot remove file after publish. """
         r = requests.post(f"{self.ZENODO_LINK}/{self.deposit_id}/actions/publish", params={'access_token': self.ACCESS_TOKEN})
         self.deposit_id = ZenodoErrorHandler.parse(r)
-        print("Version published.")
+        print("Version publish.")
 
 
     def __zenodo_send_metadata(self, metadata):
@@ -216,6 +234,13 @@ class ZenodoAPI:
                     time.sleep(0.5)
 
 
+    def get_conceptrecid_specific_deposit(self):
+        """ Extract conceptrecid from a deposit"""
+        r = requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}?access_token={self.ACCESS_TOKEN}")
+        return r.json()["conceptrecid"]
+
+
+    # -- Operation to associate deposit to a doi or a name
     def set_deposit_id(self):
         """ Find deposit id with identifiers equal to session_name. If more than one deposit have the same session_name return None """
         r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN})
@@ -239,13 +264,11 @@ class ZenodoAPI:
             self.deposit_id = ids[0]
 
 
-    def get_all_version_ids_for_deposit(self):
+    def get_all_version_ids_for_deposit(self, conceptrecid):
         """ Return a list of ids for raw data version and a list of id for processed data version for a specific session"""
-        conceptrecid = self.get_conceptrecid_specific_deposit()
         r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, "all_versions": True, 'q': f"conceptrecid:{conceptrecid}"})
-
         if len(r.json()) == 0:
-            raise NameError("No global id found")
+            raise NameError("No concept id found")
 
         raw_data_ids, processed_data_ids = [], []
         for deposit in r.json():
@@ -256,23 +279,17 @@ class ZenodoAPI:
             else:
                 print(f"No match for version {deposit['metadata']['version']}")
         return raw_data_ids, processed_data_ids
+
+
+    def get_conceptrecid_from_idOrConceptrecid(self, idOrConceptrecid):
+        """ Return conceptrecid from doi who can be an id or a conceptrecid """
+        # Try to check if it's an id
+        r = requests.get(f"{self.ZENODO_LINK}/{idOrConceptrecid}?access_token={self.ACCESS_TOKEN}")
+        if r.status_code == 200:
+            return r.json()["conceptrecid"]
         
-
-    def get_conceptrecid_specific_deposit(self):
-        """ Extract conceptrecid from a deposit"""
-        r = requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}?access_token={self.ACCESS_TOKEN}")
-        return r.json()["conceptrecid"]
-    
-    
-    def clean_draft_no_version(self):
-        """ Delete all draft version. """
-        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH})
-        for deposit in r.json():
-            try:
-                if deposit["state"] == "unsubmitted" and deposit["submitted"] == False and deposit["title"] == "":
-                    print("Delete draft version")
-                    r2 = requests.post(deposit["links"]["discard"], params=self.params, json={}, headers=self.headers)
-                    ZenodoErrorHandler.parse(r2, ParsingReturnType.ALL)
-
-            except:
-                continue
+        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, "all_versions": True, 'q': f"conceptrecid:{idOrConceptrecid}"})
+        if len(r.json()) > 0:
+            return idOrConceptrecid
+        
+        return None
