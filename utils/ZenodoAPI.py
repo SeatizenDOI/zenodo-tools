@@ -22,9 +22,11 @@ class ZenodoAPI:
         self.params = {'access_token': self.ACCESS_TOKEN}
         self.headers = {"Content-Type": "application/json"}
 
+        self.all_deposit_cache = [] # When fetching deposit, keep all data in cache except if we create deposit or add version.
+        
         if session_name != "":
             self.set_deposit_id() # Try to get current id of the session.
-
+        
 
     # -- Complexe operations on deposit
     def create_deposit_on_zenodo(self, session_tmp_folder, metadata):
@@ -44,6 +46,9 @@ class ZenodoAPI:
 
         # Publish version.
         self.__zenodo_actions_publish()
+
+        # Clear cache.
+        self.all_deposit_cache.clear()
 
 
     def add_new_version_to_deposit(self, temp_folder, metadata, restricted_files = []):
@@ -70,6 +75,9 @@ class ZenodoAPI:
         
         # Publish.
         self.__zenodo_actions_publish()
+
+        # Clear cache.
+        self.all_deposit_cache.clear()
 
 
     def edit_metadata(self, metadata):
@@ -105,7 +113,14 @@ class ZenodoAPI:
             except:
                 continue
 
-
+    # Update zenodoAPI
+    def update_current_session(self, session_name):
+        self.deposit_id = None
+        self.session_name = session_name
+        
+        if session_name != "":
+            self.set_deposit_id() # Try to get current id of the session.
+            
     # Simple operation on deposit.
     def __get_single_deposit(self):
         """ Get data from a deposit (last version). """
@@ -243,9 +258,13 @@ class ZenodoAPI:
     # -- Operation to associate deposit to a doi or a name
     def set_deposit_id(self):
         """ Find deposit id with identifiers equal to session_name. If more than one deposit have the same session_name return None """
-        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN})
+        # Add cache to avoid fetch n time every time
+        if len(self.all_deposit_cache) == 0:
+            r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH})
+            self.all_deposit_cache = r.json()
+        
         ids = []
-        for deposit in r.json():
+        for deposit in self.all_deposit_cache:
             try:
                 for identifiers in deposit["metadata"]["related_identifiers"]:
                     if identifiers["identifier"].replace("urn:", "") == self.session_name:

@@ -1,5 +1,11 @@
 # Zenodo-tools
 
+## Create env
+```
+    conda create env --file zenodo_env.yml
+    conda activate zenodo_env
+```
+
 ## Configuration
 
 Pour utiliser ce dépôt, il vous faut un fichier de config.json à la racine du projet contenant votre propre ACCESS_TOKEN :

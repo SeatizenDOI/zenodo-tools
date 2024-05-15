@@ -48,6 +48,9 @@ def main(opt):
     list_session = get_list_sessions(opt)
     index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_session) else 0
 
+    # Zenodo API
+    zenodoAPI = ZenodoAPI("", config_json)
+    
     for session_path in list_session[index_start:]:
         session_path = Path(session_path)
 
@@ -58,10 +61,10 @@ def main(opt):
             
             print(f"\n\nWorking with session {session_path.name}")
             plancha_session = PlanchaSession(session_path, TMP_PATH)
-            
+            zenodoAPI.update_current_session(plancha_session.session_name)
+
             # Update session_doi.csv
             print("-- Add doi in session_doi.csv.")
-            zenodoAPI = ZenodoAPI(plancha_session.session_name, config_json)
             if zenodoAPI.deposit_id:
                 seatizenManager.add_to_session_doi(plancha_session.session_name, zenodoAPI.get_conceptrecid_specific_deposit())
             else:

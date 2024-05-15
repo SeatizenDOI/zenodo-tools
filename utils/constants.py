@@ -1,5 +1,6 @@
 TMP_PATH = "/media/bioeos/F/tmp/"
 RESTRICTED_FILES = ["DCIM"]
+IMG_EXTENSION = ('.png', '.jpg', '.jpeg') # Image extension in lower case
 
 # Zenodo constants for seatizen manager
 TMP_PATH_MANAGER = "/tmp/SeatizenManager/"

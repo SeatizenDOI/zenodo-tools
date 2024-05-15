@@ -8,10 +8,9 @@ from enum import Enum
 from pathlib import Path
 from zipfile import ZipFile
 from datetime import datetime
-from exiftool import ExifToolHelper
 
 from .PlanchaZipper import PlanchaZipper
-from .constants import MAXIMAL_DEPOSIT_FILE_SIZE
+from .constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION
 
 class BaseType(Enum):
     RGP = "RGP Station from IGN"
@@ -63,7 +62,7 @@ class PlanchaSession:
             self.__zip_processed_frames()
 
         for file in self.session_path.iterdir():
-            if file.suffix == ".pdf": # !FIXME Allow all kind of file.
+            if file.is_file():
                 shutil.copy(file, Path(self.temp_folder, file.name))
 
 
@@ -106,31 +105,37 @@ class PlanchaSession:
 
     def __zip_processed_frames(self):
         """ Zip frames folder without useless frames """
-        frames_zip_path = Path(self.temp_folder, "PROCESSED_DATA_FRAMES.zip")
-        frames_folder = Path(self.session_path, "PROCESSED_DATA/FRAMES")
-        predictions_gps = Path(self.session_path, "METADATA/predictions_gps.csv")
 
-        if not Path.exists(predictions_gps):
+        # Retrieve relative path of frame.
+        frames_list = self.get_frames_list()
+        
+        # Get frame predictions.
+        predictions_gps_path = Path(self.session_path, "METADATA/predictions_gps.csv")
+        if not Path.exists(predictions_gps_path):
             print(f"No predictions_gps found for session {self.session_name}\n")
             return
-
-        df_predictions_gps = pd.read_csv(predictions_gps)
-
+        
+        df_predictions_gps = pd.read_csv(predictions_gps_path)
         if len(df_predictions_gps) == 0: 
             print(f"Predictions GPS empty for session {self.session_name}\n")
             return
+        filenames = df_predictions_gps["FileName"].to_list() # CSV without useless images
+
+        frame_parent_folder = self.get_frame_parent_folder(frames_list)
+        frames_zip_path = Path(self.temp_folder, f"{frame_parent_folder.replace('/', '_')}.zip")
+        frames_folder = Path(self.session_path, frame_parent_folder)
 
         if not Path.exists(frames_folder) or not frames_folder.is_dir() or len(list(frames_folder.iterdir())) == 0:
             print(f"[WARNING] Frames folder not found or empty for {self.session_name}\n")
             return 
         
         t_start = datetime.now()
-        filenames = df_predictions_gps["FileName"].to_list() # CSV without useless images
         print(f"Preparing FRAMES folder")
         with ZipFile(frames_zip_path, "w") as zip_object:
-            for file in tqdm(sorted(list(frames_folder.iterdir()))):
+            for file in tqdm(frames_list):
+                file = Path(file)
                 if file.name in filenames:
-                    zip_object.write(file, Path(file.parent.name, file.name))
+                    zip_object.write(file, file.relative_to(frames_folder))
         print(f"Successful zipped FRAMES folder in {datetime.now() - t_start}\n")
 
 
@@ -365,21 +370,23 @@ class PlanchaSession:
                 size += round(os.path.getsize(str(file)) / 1000000000, 1)
         return size
 
-    #! FIXME use relative path and predictions_gps
+
     def check_frames(self):
         """ Check if we have split some frames and if they are georefenreced. """
-        frames_path = Path(self.session_path, "PROCESSED_DATA", "FRAMES")
-        if not Path.exists(frames_path) or not frames_path.is_dir():
+        
+        # Get frame relative path.
+        metadata_path = Path(self.session_path, "METADATA/metadata.csv")
+        if not Path.exists(metadata_path):
+            print(f"No metadata_csv found for session {self.session_name}\n")
             return 0, False
+        metadata_df = pd.read_csv(metadata_path)
 
-        nb_frames = len(list(frames_path.iterdir()))
-        isGeoreferenced = False
-        if nb_frames > 0:
-            with ExifToolHelper() as et:
-                metadata = et.get_metadata(next(frames_path.iterdir()))[0]
-                if "Composite:GPSLongitude" in metadata and "Composite:GPSLatitude" in metadata:
-                    isGeoreferenced = True
-
+        nb_frames = len(metadata_df)
+        
+        # Drop NA columns, sometimes, GPSLatitute is filled with NA value
+        metadata_df.replace("", float("NaN"), inplace=True)
+        metadata_df.dropna(how='all', axis=1, inplace=True)
+        isGeoreferenced = "GPSLongitude" in metadata_df and "GPSLatitude" in metadata_df
         return nb_frames, isGeoreferenced
 
 
@@ -443,6 +450,46 @@ class PlanchaSession:
         predictions_gps = pd.read_csv(predictions_gps)
         if len(predictions_gps) == 0: return None # No predictions
         if "GPSLongitude" not in predictions_gps or "GPSLatitude" not in predictions_gps: return None # No GPS coordinate
-        if predictions_gps["GPSLatitude"].std() == 0.0 or predictions_gps["GPSLongitude"].std() == 0.0: return None # All frames have the same gps coordinate
+        if round(predictions_gps["GPSLatitude"].std(), 3) == 0.0 or round(predictions_gps["GPSLongitude"].std(), 3) == 0.0: return None # All frames have the same gps coordinate
 
         return predictions_gps
+
+
+    def get_frames_list(self):
+        """ Return list of frames from relative path in metadata csv. """
+        frames_path = []
+
+        # Get frame relative path.
+        metadata_path = Path(self.session_path, "METADATA/metadata.csv")
+        if not Path.exists(metadata_path):
+            print(f"No metadata_csv found for session {self.session_name}\n")
+            return frames_path
+        metadata_df = pd.read_csv(metadata_path)
+        if len(metadata_df) == 0: return frames_path
+    
+        try:
+            relative_path_key = [key for key in list(metadata_df) if "relative_file_path" in key][0]
+        except KeyError:
+            raise NameError(f"Cannot find relative path key for {self.session_path}")
+
+        # Iter on each file
+        for _, row in metadata_df.iterrows():
+            path_img = Path(Path(self.session_path).parent, *[x for x in row[relative_path_key].split("/") if x]) # Sometimes relative path start with /
+            # Check if it's a file and if ended with image extension
+            if path_img.is_file() and path_img.suffix.lower() in IMG_EXTENSION:
+                frames_path.append(path_img)
+
+        return frames_path
+
+    def get_frame_parent_folder(self, list_frames):
+        """ Extract common parent name from all relative path. """
+
+        # Remove image name and remove session name to get only intermediate folder.
+        list_parents = list(set([str(Path(frame).parent).split(self.session_path.name)[1] for frame in list_frames]))
+
+        # While we don't have a unique intermediate folder we keep reducing path
+        while len(list_parents) != 1:
+            list_parents = list(set([str(Path(p).parent) for p in list_parents]))
+
+        # Remove first underscore.
+        return list_parents[0][1:] if list_parents[0][0] == "/" else list_parents[0]
