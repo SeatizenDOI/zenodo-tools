@@ -80,7 +80,7 @@ def get_session_name_doi_from_opt(opt):
         # In case user take the whole url 
         if "zenodo." in doi:
             doi = doi.split("zenodo.")[1]
-        return doi
+        return int(doi)
     
     def clean_name(name):
         if name in ["", None, np.nan]: return None

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from utils.ZenodoAPI import ZenodoAPI
 from utils.lib_tools import get_session_name_doi_from_opt
-from utils.constants import TMP_PATH_DOWNLOADER
+# from utils.constants import TMP_PATH_DOWNLOADER
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-download", description="Workflow to download raw data and processed data with metadata")
@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/download_example.csv", help="Path to the csv file, header can be session_name or doi or both")
 
     # Path of output.
-    parser.add_argument("-pout", "--path_folder_out", default="/tmp", help="Output folder to rebuild sessions")
+    parser.add_argument("-pout", "--path_folder_out", default="/tmp/test_download", help="Output folder to rebuild sessions")
 
     # Data type to download.
     parser.add_argument("-dr", "--download_rawdata", action="store_true", help="Download raw data from a session")
@@ -52,18 +52,8 @@ def main(opt):
     index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_name_doi) else 0
 
     for i, (session_name, doi) in enumerate(list_name_doi[index_start:]):
-        """
-            On cherche à reconstruire une session brute ou non.
-
-            Si on passe juste un name ou un conceptrecid
-                => Dernière session processed_data si elle existe
-            Si on passe un id en particulier
-                => Processed data renseigner et si c'est un id de raw data, dernier processed data s'il existe
-            
-            Si on a juste un nom, on a juste à récupérer son id 
-        """
         try:
-            print(f"\n\nWorking with {session_name} and {doi}")
+            print(f"\n\nWorking with input: session name {session_name} and doi {doi}")
             zenodoAPI, conceptrecid = None, None
             if doi:
                 zenodoAPI = ZenodoAPI("", config_json)
@@ -84,11 +74,17 @@ def main(opt):
             raw_data_ids, processed_data_ids = zenodoAPI.get_all_version_ids_for_deposit(conceptrecid)
             
             for id in raw_data_ids if opt.download_rawdata else []:
-                print(f"Raw data id {id}")
-                
+                print(f"Working for RAW DATA Version {id}")
+                zenodoAPI.deposit_id = id
+                zenodoAPI.zenodo_download_files(path_output)
 
-            for id in processed_data_ids if opt.download_processed_data else []:
-                print(f"Processed data id {id}")
+            # For processed data we don't need to download all version but only the last or the specified one.
+            if opt.download_processed_data:
+                id_processed_data = doi if doi and doi in processed_data_ids else max(processed_data_ids)
+                
+                print(f"Working for PROCESSED DATA Version {id_processed_data}")
+                zenodoAPI.deposit_id = id_processed_data
+                zenodoAPI.zenodo_download_files(path_output)
 
         except Exception:
             print(traceback.format_exc(), end="\n\n")

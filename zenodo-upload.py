@@ -21,7 +21,7 @@ def parse_args():
 
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Path to folder of session")
-    parser.add_argument("-pses", "--path_session", default="/home/bioeos/Documents/Bioeos/plancha-session/20240314_REU-SAINTLEU_ASV-1_02", help="Path to the session")
+    parser.add_argument("-pses", "--path_session", default="/home/bioeos/Documents/Bioeos/plancha-session/20140404_REU-LEPORT_ASV-1_01/", help="Path to the session")
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/test.csv", help="Path to the csv file")
 
     # Data type to upload.
@@ -74,7 +74,7 @@ def main(opt):
             if opt.upload_rawdata:
                 if zenodoAPI.deposit_id != None:
                     print(f"We already have a deposit with the same urn: https://zenodo.org/records/{zenodoAPI.deposit_id}")
-                    continue
+                    
                 # Prepape raw data
                 folders_to_upload = plancha_session.prepare_raw_data()
                 raw_metadata = plancha_metadata.build_for_raw()

@@ -120,7 +120,7 @@ class PlanchaSession:
             print(f"Predictions GPS empty for session {self.session_name}\n")
             return
         filenames = df_predictions_gps["FileName"].to_list() # CSV without useless images
-
+        
         frame_parent_folder = self.get_frame_parent_folder(frames_list)
         frames_zip_path = Path(self.temp_folder, f"{frame_parent_folder.replace('/', '_')}.zip")
         frames_folder = Path(self.session_path, frame_parent_folder)
@@ -243,6 +243,7 @@ class PlanchaSession:
                 cum_size += size
             shutil.move(filename, Path(f_to_move, Path(filename).name))
         
+        print(f"We will have {nb_ses} versions for RAW DATA")
         return folders_to_upload
 
 

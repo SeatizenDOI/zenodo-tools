@@ -1,6 +1,8 @@
 import os
 import json
 import time
+import shutil
+import zipfile
 import requests
 import traceback
 from pathlib import Path
@@ -8,6 +10,7 @@ from pathlib import Path
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 
+from .lib_tools import md5
 from .ZenodoErrorHandler import ZenodoErrorHandler, ParsingReturnType
 from .constants import MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE, NB_VERSION_TO_FETCH
 
@@ -113,17 +116,19 @@ class ZenodoAPI:
             except:
                 continue
 
-    # Update zenodoAPI
+
+    # Update current session without deleting object
     def update_current_session(self, session_name):
         self.deposit_id = None
         self.session_name = session_name
         
         if session_name != "":
             self.set_deposit_id() # Try to get current id of the session.
-            
+
+
     # Simple operation on deposit.
     def __get_single_deposit(self):
-        """ Get data from a deposit (last version). """
+        """ Get data from a deposit. """
         r = requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}?access_token={self.ACCESS_TOKEN}")
         self.deposit_id = r.json()["id"]
         return r.json()
@@ -158,6 +163,62 @@ class ZenodoAPI:
                 time.sleep(0.5)
 
 
+    def zenodo_download_files(self, output_folder):
+        """ Download all file """
+        self.__set_session_name()
+
+        path_zip_session = Path(output_folder, self.session_name, "ZIP")
+        path_zip_session.mkdir(exist_ok=True, parents=True)
+
+        for file in self.list_files():
+
+            path_tmp_file = Path(path_zip_session, file["filename"])
+            print(f"\nWorking with: {path_tmp_file}")
+            self.zenodo_download_file(file["links"]["download"], path_tmp_file)
+
+            # Retry while checksum is different.
+            while md5(path_tmp_file) != file["checksum"]:
+                print(f"[WARNING] Checksum error when downloading {path_tmp_file}. We retry.")
+                path_tmp_file.unlink()
+                self.zenodo_download_file(file["links"]["download"], path_tmp_file)
+
+            # Extract file in directory.
+            path_to_unzip_or_move = Path(output_folder, self.session_name)
+            if ".zip" not in file["filename"]:
+                print(f"Move {path_tmp_file} to {path_to_unzip_or_move}.")
+                shutil.move(path_tmp_file, Path(path_to_unzip_or_move, file["filename"]))
+            else:
+                if "DCIM" in file["filename"]:
+                    path_to_unzip_or_move = Path(output_folder, self.session_name, "DCIM")
+                elif "PROCESSED_DATA" in file["filename"]:
+                    folder_name = file["filename"].replace(".zip", "").replace("PROCESSED_DATA_", "")
+                    path_to_unzip_or_move = Path(output_folder, self.session_name, "PROCESSED_DATA", folder_name)
+                else:
+                    path_to_unzip_or_move = Path(output_folder, self.session_name, file["filename"].replace(".zip", ""))
+                
+                print(f"Unzip {path_tmp_file} to {path_to_unzip_or_move}.")
+                with zipfile.ZipFile(path_tmp_file, 'r') as zip_ref:
+                    zip_ref.extractall(path_to_unzip_or_move)
+            
+
+        # Delete zip file and folder
+        print(f"\nRemove {path_zip_session} folder.")
+        for file in path_zip_session.iterdir():
+            file.unlink()
+        path_zip_session.rmdir()
+
+    def __set_session_name(self):
+        """ Set session name from deposit_id """
+
+        deposit = self.__get_single_deposit()
+        try:
+            for identifier in deposit["metadata"]["related_identifiers"]:
+                if identifier["relation"] == "isAlternateIdentifier" and identifier["scheme"] == "urn":
+                    self.session_name = identifier["identifier"].replace("urn:", "")
+                    break
+        except KeyError:
+            raise NameError("Session name not find")
+
     def __remove_restricted_files(self, restricted_files):
         """ Remove restricted file before publish new version. """
         
@@ -187,6 +248,7 @@ class ZenodoAPI:
         print("Discard change of current version")
         r = requests.post(f"{self.ZENODO_LINK}/{self.deposit_id}/actions/discard", params=self.params, json={}, headers=self.headers)
         ZenodoErrorHandler.parse(r, ParsingReturnType.NONE)
+        self.all_deposit_cache.clear() # Discard version so id change
 
 
     def __zenodo_actions_newversion(self):
@@ -234,6 +296,7 @@ class ZenodoAPI:
             isSend, max_try = False, 0
             while not isSend:
                 try:
+                    print(f"Try number {max_try} on {MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE}")
                     file_size = os.stat(file).st_size
                     with open(file, "rb") as f:
                         with tqdm(total=file_size, unit="B", unit_scale=True) as t:
