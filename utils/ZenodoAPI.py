@@ -54,7 +54,7 @@ class ZenodoAPI:
         self.all_deposit_cache.clear()
 
 
-    def add_new_version_to_deposit(self, temp_folder, metadata, restricted_files = []):
+    def add_new_version_to_deposit(self, temp_folder, metadata, restricted_files = [], dontUploadWhenLastVersionIsProcessedData=False):
         print("-- Upload new data for existing version... ")
         # Get actual state of the deposit.
         deposit = self.__get_single_deposit()
@@ -63,6 +63,11 @@ class ZenodoAPI:
         if deposit["state"] == "unsubmitted" and deposit["submitted"] == False or deposit["state"] == "inprogress" and deposit["submitted"] == True:
             self.__zenodo_actions_discard()
             self.set_deposit_id()
+        
+        if dontUploadWhenLastVersionIsProcessedData: #!FIXME To delete when finishing to upload all data
+            deposit = self.__get_single_deposit()
+            if "PROCESSED_DATA" in deposit["metadata"]["version"]:
+                raise NameError(f"We already have a processed data version: https://zenodo.org/records/{self.deposit_id}")
         
         # Create a new version.
         bucket_url = self.__zenodo_actions_newversion()

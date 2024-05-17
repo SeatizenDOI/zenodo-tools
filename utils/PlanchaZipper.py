@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from zipfile import ZipFile
 
-from .constants import MAXIMAL_ZIP_SIZE
+from .constants import MAXIMAL_ZIP_SIZE, BYTE_TO_GIGA_BYTE
 
 class PlanchaZipper:
     """ Create zip file and scale with max size """
@@ -15,7 +15,7 @@ class PlanchaZipper:
 
 
     def add_file(self, file, output_struc_file):
-        file_size = round(os.path.getsize(str(file)) / 1000000000, 6)
+        file_size = round(os.path.getsize(str(file)) / BYTE_TO_GIGA_BYTE, 6)
         if file_size + self.tot_zip_size > MAXIMAL_ZIP_SIZE:
             self.nb_zip_file += 1
             self.zip.close()

@@ -10,7 +10,7 @@ from zipfile import ZipFile
 from datetime import datetime
 
 from .PlanchaZipper import PlanchaZipper
-from .constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION
+from .constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE
 
 class BaseType(Enum):
     RGP = "RGP Station from IGN"
@@ -64,6 +64,11 @@ class PlanchaSession:
         for file in self.session_path.iterdir():
             if file.is_file():
                 shutil.copy(file, Path(self.temp_folder, file.name))
+        
+        # Check if tmp folder is > MAX_SIZE_FILE_DEPOSIT to avoid error
+        size_gb = round(sum([os.stat(file).st_size for file in self.temp_folder.iterdir()]) / BYTE_TO_GIGA_BYTE, 6)
+        if size_gb > MAXIMAL_DEPOSIT_FILE_SIZE:
+            raise NameError("The sum total of processed data file sizes is greater than the Zenodo limit.")
 
 
     def __zip_raw(self, folder):
@@ -219,7 +224,7 @@ class PlanchaSession:
     def move_into_subfolder_if_needed(self):
         zip_file_with_size = {}
         for file in self.temp_folder.iterdir():
-            file_size = round(os.path.getsize(str(file)) / 1000000000, 3)
+            file_size = round(os.path.getsize(str(file)) / BYTE_TO_GIGA_BYTE, 3)
             zip_file_with_size[str(file)] = file_size
 
         # Total size of zip file can fit into one zenodo version
@@ -368,7 +373,7 @@ class PlanchaSession:
         size = 0
         for file in dcim_path.iterdir():
             if file.suffix.lower() in extension:
-                size += round(os.path.getsize(str(file)) / 1000000000, 1)
+                size += round(os.path.getsize(str(file)) / BYTE_TO_GIGA_BYTE, 1)
         return size
 
 
@@ -451,7 +456,7 @@ class PlanchaSession:
         predictions_gps = pd.read_csv(predictions_gps)
         if len(predictions_gps) == 0: return None # No predictions
         if "GPSLongitude" not in predictions_gps or "GPSLatitude" not in predictions_gps: return None # No GPS coordinate
-        if round(predictions_gps["GPSLatitude"].std(), 3) == 0.0 or round(predictions_gps["GPSLongitude"].std(), 3) == 0.0: return None # All frames have the same gps coordinate
+        if round(predictions_gps["GPSLatitude"].std(), 10) == 0.0 or round(predictions_gps["GPSLongitude"].std(), 10) == 0.0: return None # All frames have the same gps coordinate
 
         return predictions_gps
 

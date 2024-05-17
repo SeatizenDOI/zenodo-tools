@@ -21,8 +21,8 @@ def parse_args():
 
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Path to folder of session")
-    parser.add_argument("-pses", "--path_session", default="/home/bioeos/Documents/Bioeos/plancha-session/20140404_REU-LEPORT_ASV-1_01/", help="Path to the session")
-    parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/test.csv", help="Path to the csv file")
+    parser.add_argument("-pses", "--path_session", default="/media/bioeos/E/202309_plancha_session/20230926_REU-HERMITAGE_ASV-2_01/", help="Path to the session")
+    parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/retry.csv", help="Path to the csv file")
 
     # Data type to upload.
     parser.add_argument("-ur", "--upload-rawdata", action="store_true", help="Upload raw data from a session")
@@ -74,8 +74,8 @@ def main(opt):
             if opt.upload_rawdata:
                 if zenodoAPI.deposit_id != None:
                     print(f"We already have a deposit with the same urn: https://zenodo.org/records/{zenodoAPI.deposit_id}")
+                    continue
                     
-                # Prepape raw data
                 folders_to_upload = plancha_session.prepare_raw_data()
                 raw_metadata = plancha_metadata.build_for_raw()
 
@@ -88,11 +88,10 @@ def main(opt):
                 plancha_session.cleanup()
             
             if opt.upload_processeddata:
-                # Processed data
                 folders, needFrames = get_processed_folders_to_upload(opt)
                 plancha_session.prepare_processed_data(folders, needFrames)
                 processed_metadata = plancha_metadata.build_for_processed_data()
-                zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, RESTRICTED_FILES)
+                zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, RESTRICTED_FILES, dontUploadWhenLastVersionIsProcessedData=True)
                 plancha_session.cleanup()
             
             if opt.update_metadata:
