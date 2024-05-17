@@ -5,7 +5,6 @@ from pathlib import Path
 
 from utils.ZenodoAPI import ZenodoAPI
 from utils.lib_tools import get_session_name_doi_from_opt
-# from utils.constants import TMP_PATH_DOWNLOADER
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-download", description="Workflow to download raw data and processed data with metadata")

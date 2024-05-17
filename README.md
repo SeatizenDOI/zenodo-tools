@@ -1,68 +1,144 @@
-# Zenodo-tools
+<p align="center">
+  <a href="https://github.com/SeatizenDOI/zenodo-tools/graphs/contributors"><img src="https://img.shields.io/github/contributors/SeatizenDOI/zenodo-tools" alt="GitHub contributors"></a>
+  <a href="https://github.com/SeatizenDOI/zenodo-tools/network/members"><img src="https://img.shields.io/github/forks/SeatizenDOI/zenodo-tools" alt="GitHub forks"></a>
+  <a href="https://github.com/SeatizenDOI/zenodo-tools/issues"><img src="https://img.shields.io/github/issues/SeatizenDOI/zenodo-tools" alt="GitHub issues"></a>
+  <a href="https://github.com/SeatizenDOI/zenodo-tools/blob/main/LICENSE"><img src="https://img.shields.io/github/license/SeatizenDOI/zenodo-tools" alt="License"></a>
+  <a href="https://github.com/SeatizenDOI/zenodo-tools/pulls"><img src="https://img.shields.io/github/issues-pr/SeatizenDOI/zenodo-tools" alt="GitHub pull requests"></a>
+  <a href="https://github.com/SeatizenDOI/zenodo-tools/stargazers"><img src="https://img.shields.io/github/stars/SeatizenDOI/zenodo-tools" alt="GitHub stars"></a>
+  <a href="https://github.com/SeatizenDOI/zenodo-tools/watchers"><img src="https://img.shields.io/github/watchers/SeatizenDOI/zenodo-tools" alt="GitHub watchers"></a>
+</p>
 
-## Create env
+
+<div align="center">
+
+# Zenodo tools
+
+</div>
+
+This repository provides tools for uploading, downloading and manipulating seatizen sessions on the zenodo platform
+
+
+## Summary
+
+* [Installation](#installation)
+* [Usage upload](#usage-of-zenodo-upload-script-parameters)
+* [Usage download](#usage-of-zenodo-download-script-parameters)
+* [Contributing](#contributing)
+* [License](#license)
+
+
+## Installation
+
+To ensure a consistent environment for all users, this project uses a Conda environment defined in a `zenodo_env.yml` file. Follow these steps to set up your environment:
+
+1. **Install Conda:** If you do not have Conda installed, download and install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/products/distribution).
+
+2. **Create the Conda Environment:** Navigate to the root of the project directory and run the following command to create a new environment from the `zenodo_env.yml` file:
+   ```bash
+   conda env create -f zenodo_env.yml
+   ```
+
+3. **Activate the Environment:** Once the environment is created, activate it using:
+   ```bash
+   conda activate zenodo_env
+   ```
+4. **Create config.json:** To use this repository, you need a config.json file at the root of the project containing your own ACCESS_TOKEN:
+    ```json
+    {
+        "ACCESS_TOKEN": "ACCESS_TOKEN",
+        "ZENODO_LINK": "https://sandbox.zenodo.org/api/deposit/depositions"
+    }
+    ```
+
+## Usage of zenodo-upload Script Parameters
+
+The zenodo-upload script is designed to facilitate the workflow of uploading raw and processed data with metadata. You can use various options to specify inputs and the types of data to upload. Here is a description of the main parameters:
+
+To run the zenodo-upload.py, navigate to the project root and execute:
+
+```bash
+python zenodo-upload.py [OPTIONS]
 ```
-    conda create env --file zenodo_env.yml
-    conda activate zenodo_env
-```
 
-## Configuration
+Where `[OPTIONS]` can include:
 
-Pour utiliser ce dépôt, il vous faut un fichier de config.json à la racine du projet contenant votre propre ACCESS_TOKEN :
+### Input Parameters
 
-```json
-{
-    "ACCESS_TOKEN": "ACCESS_TOKEN",
-    "ZENODO_LINK": "https://sandbox.zenodo.org/api/deposit/depositions"
-}
-```
+The script allows you to select an input method from several mutually exclusive options:
 
-# Choix réaliser pour la compression des fichiers
+* `-efol`, `--enable_folder`: Use data from a session folder.
+* `-eses`, `--enable_session`: Use data from a single session.
+* `-ecsv`, `--enable_csv`: Use data from a CSV file.
+* `-eno`, `--enable_nothing`: Do not use a session; use with the clean parameter.
 
-Il est possible de publier deux types de données.
+### Input Paths
 
-- les données brutes (RAW_DATA)
+You can specify the paths to the files or folders to be used as input:
 
-Les données brutes ne sont pas accessibles au public. Certaines sessions comporte plus de 50Go de données brutes or zenodo limite un dépot de fichier à 50Go par version.
-Pour éviter ce problème, les dossiers sont découpés en sous archive et auront vocation à être uploadé dans différentes versions.
+* `-pfol`, `--path_folder`: Path to the session folder. Default: /home/bioeos/Documents/Bioeos/plancha-session.
+* `-pses`, `--path_session`: Path to a specific session. Default: /media/bioeos/E/202309_plancha_session/20230926_REU-HERMITAGE_ASV-2_01/.
+* `-pcsv`, `--path_csv_file`: Path to the CSV file containing the inputs. Default: ./csv_inputs/retry.csv.
 
-Actuellement, il n'y a que le dossier DCIM qui dépasse les 50 Go. Donc ce traitement ne s'applique à ce dossier.
+### Data Types to Upload
 
-Exemple :
+The script allows you to choose the type of data to upload:
 
-Si nous avons ces fichiers à envoyer
-```txt
-DCIM.zip # 50 Go
-DCIM_2.zip # 19 Go
-GPS.zip # 170 Mo
-SENSORS.zip # 2 Go
-```
+* `-ur`, `--upload-rawdata`: Upload raw data from a session.
+* `-up`, `--upload-processeddata`: Specify the folder to upload. Use f for FRAMES, m for METADATA, b for BATHY, g for GPS, i for IA. For example, -up fi to upload frames and IA.
+* `-um`, `--update-metadata`: Update metadata from a session.
 
-Sur zenodo cela correspondra à :
-version RAW_DATA 
+### Optional Arguments
 
-```txt
-DCIM.zip
-```
-version RAW_DATA_2
+The script also includes optional arguments to fine-tune its behavior:
 
-```txt
-DCIM_2.zip
-GPS.zip
-SENSORS.zip
-```
+* `-is`, `--index_start`: Choose the index from which to start. Default: 0.
+* `-cd`, `--clean_draft`: Clean all drafts with no published version.
 
-- les données calculées (PROCESSED_DATA)
+## Usage of zenodo-download Script Parameters
 
 
-## TODO
+### Input Parameters
 
-- Faire la correspondance gbif du fichier d'annotation.
-- Ajouter un script qui permet de mettre à jour le zenodo metadata global ( définir ce qu'il faut mettre dedans )
-- Trier les créateurs / collaborateurs
+The script allows you to select an input method from several mutually exclusive options:
 
+* `-edoi`, `--enable_doi`: Use a DOI (Digital Object Identifier).
+* `-ename`, `--enable_name`: Use a session name.
+* `-ecsv`, `--enable_csv`: Use data from a CSV file.
 
-## Deposit général
+### Input Path
 
-- session_doi.csv
-Contient deux colonnes : nom de la session, doi pointant vers la dernière version du deposit associé à la session
+You can specify the path to the CSV file to be used as input:
+
+* `-pcsv`, `--path_csv_file`: Path to the CSV file containing the inputs. The header can be session_name or doi or both. Default: ./csv_inputs/download_example.csv.
+
+### Output Path
+
+You can specify the path to the folder where the downloaded sessions will be saved:
+
+* `-pout`, `--path_folder_out`: Output folder to rebuild sessions. Default: /tmp/test_download.
+
+### Data Types to Download
+
+The script allows you to choose the type of data to download:
+
+* `-dr`, `--download_rawdata`: Download raw data from a session.
+* `-dp`, `--download_processed_data`: Download processed data from a session.
+
+### Optional Arguments
+
+The script also includes optional arguments to fine-tune its behavior:
+
+* `-is`, `--index_start`: Choose the index from which to start. Default: 0.
+
+## Contributing
+
+Contributions are welcome! To contribute, please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or fix.
+3. Commit your changes with clear, descriptive messages.
+4. Push your branch and submit a pull request.
+
+## License
+
+This framework is distributed under the wtfpl license. See `LICENSE` for more information.
