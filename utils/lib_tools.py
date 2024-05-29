@@ -75,7 +75,7 @@ def get_session_name_doi_from_opt(opt):
     """ Return a list who contains tuple (name, doi)"""
 
     def clean_doi(doi):
-        if doi in ["", None, np.nan]: return None
+        if doi != doi or doi in ["", None, np.nan]: return None
 
         # In case user take the whole url 
         if "zenodo." in doi:

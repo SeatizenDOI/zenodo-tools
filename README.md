@@ -46,7 +46,7 @@ To ensure a consistent environment for all users, this project uses a Conda envi
     ```json
     {
         "ACCESS_TOKEN": "ACCESS_TOKEN",
-        "ZENODO_LINK": "https://sandbox.zenodo.org/api/deposit/depositions"
+        "ZENODO_LINK": "https://zenodo.org/api/deposit/depositions"
     }
     ```
 

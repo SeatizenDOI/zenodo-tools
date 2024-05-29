@@ -19,8 +19,8 @@ class ZenodoAPI:
     def __init__(self, session_name, config_json):
         self.session_name = session_name
         self.deposit_id = None
-        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_DEV_SEATIZEN"]
-        self.ZENODO_LINK = config_json["ZENODO_DEV_LINK"]
+        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN"]
+        self.ZENODO_LINK = config_json["ZENODO_LINK"]
         
         self.params = {'access_token': self.ACCESS_TOKEN}
         self.headers = {"Content-Type": "application/json"}
