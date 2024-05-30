@@ -2,7 +2,7 @@
   <a href="https://github.com/SeatizenDOI/zenodo-tools/graphs/contributors"><img src="https://img.shields.io/github/contributors/SeatizenDOI/zenodo-tools" alt="GitHub contributors"></a>
   <a href="https://github.com/SeatizenDOI/zenodo-tools/network/members"><img src="https://img.shields.io/github/forks/SeatizenDOI/zenodo-tools" alt="GitHub forks"></a>
   <a href="https://github.com/SeatizenDOI/zenodo-tools/issues"><img src="https://img.shields.io/github/issues/SeatizenDOI/zenodo-tools" alt="GitHub issues"></a>
-  <a href="https://github.com/SeatizenDOI/zenodo-tools/blob/main/LICENSE"><img src="https://img.shields.io/github/license/SeatizenDOI/zenodo-tools" alt="License"></a>
+  <a href="https://github.com/SeatizenDOI/zenodo-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/SeatizenDOI/zenodo-tools" alt="License"></a>
   <a href="https://github.com/SeatizenDOI/zenodo-tools/pulls"><img src="https://img.shields.io/github/issues-pr/SeatizenDOI/zenodo-tools" alt="GitHub pull requests"></a>
   <a href="https://github.com/SeatizenDOI/zenodo-tools/stargazers"><img src="https://img.shields.io/github/stars/SeatizenDOI/zenodo-tools" alt="GitHub stars"></a>
   <a href="https://github.com/SeatizenDOI/zenodo-tools/watchers"><img src="https://img.shields.io/github/watchers/SeatizenDOI/zenodo-tools" alt="GitHub watchers"></a>
@@ -46,7 +46,7 @@ To ensure a consistent environment for all users, this project uses a Conda envi
     ```json
     {
         "ACCESS_TOKEN": "ACCESS_TOKEN",
-        "ZENODO_LINK": "https://sandbox.zenodo.org/api/deposit/depositions"
+        "ZENODO_LINK": "https://zenodo.org/api/deposit/depositions"
     }
     ```
 

@@ -8,6 +8,7 @@ from enum import Enum
 from pathlib import Path
 from zipfile import ZipFile
 from datetime import datetime
+from natsort import natsorted
 
 from .PlanchaZipper import PlanchaZipper
 from .constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE
@@ -80,6 +81,11 @@ class PlanchaSession:
             print(f"[WARNING] {folder} folder not found or empty for {self.session_name}\n")
             return
         
+        # Before zip, remove all file with extension
+        for file in raw_folder.iterdir():
+            if file.is_file() and ".tif.aux.xml" in file.name:
+                file.unlink()
+        
         t_start = datetime.now()
         print(f"Preparing {folder} folder")
         shutil.make_archive(zip_folder, "zip", raw_folder)
@@ -89,7 +95,7 @@ class PlanchaSession:
     def __zip_dcim(self):
         """ Zip all file in dcim folder. """
         dcim_folder = Path(self.session_path, "DCIM")
-        dcim_files = sorted(list(dcim_folder.iterdir()))
+        dcim_files = natsorted(list(dcim_folder.iterdir()))
         
         if not Path.exists(dcim_folder) or not dcim_folder.is_dir() or not len(dcim_files) > 0:
             print(f"[WARNING] DCIM folder not found or empty for {self.session_name}\n")
@@ -100,7 +106,7 @@ class PlanchaSession:
         zipper = PlanchaZipper(Path(self.temp_folder, "DCIM.zip"))
         for file in dcim_files:
             if file.is_dir() and "GOPRO" in file.name:
-                for gopro_file in sorted(list(file.iterdir())):
+                for gopro_file in natsorted(list(file.iterdir())):
                     zipper.add_file(gopro_file, Path(gopro_file.parent.name, gopro_file.name))
             else:
                 zipper.add_file(file, file.name)
@@ -149,14 +155,10 @@ class PlanchaSession:
         gps_zip_path = Path(self.temp_folder, "GPS.zip")
         gps_base_folder = Path(self.session_path, "GPS/BASE")
         gps_device_folder = Path(self.session_path, "GPS/DEVICE")
-
-        if not Path.exists(gps_base_folder) or not gps_base_folder.is_dir() or not Path.exists(gps_device_folder) or not gps_device_folder.is_dir():
-            print(f"[WARNING] GPS folder not found for {self.session_name}\n")
-            return 
         
         print("Preparing GPS folder")
-        devices_file = sorted(list(gps_device_folder.iterdir()))
-        base_files = sorted(list(gps_base_folder.iterdir()))
+        devices_file = natsorted(list(gps_device_folder.iterdir())) if Path.exists(gps_device_folder) and gps_device_folder.is_dir() else []
+        base_files = natsorted(list(gps_base_folder.iterdir())) if Path.exists(gps_base_folder) and gps_base_folder.is_dir() else []
 
         if len(devices_file) == 0 and len(base_files) == 0:
             print(f"[WARNING] GPS folder empty\n")
@@ -237,7 +239,7 @@ class PlanchaSession:
         f_to_move.mkdir(exist_ok=True)
         folders_to_upload = [f_to_move]
 
-        for filename, size in sorted(zip_file_with_size.items()):
+        for filename, size in natsorted(zip_file_with_size.items()):
             if size + cum_size >= MAXIMAL_DEPOSIT_FILE_SIZE:
                 nb_ses += 1
                 f_to_move = Path(self.temp_folder, f"RAW_DATA_{nb_ses}")

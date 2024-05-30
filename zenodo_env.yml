@@ -1,9 +1,12 @@
 name: zenodo_env
+channels:
+  - defaults
 dependencies:
   - python=3.11
   - pip=24
   - pip:
-    - pandas=2.2
-    - pycountry=23.12
-    - requests=2.31
-    - tqdm=4.66
+    - natsort==8.4.0
+    - pandas==2.2.2
+    - pycountry==23.12.11
+    - requests==2.31.0
+    - tqdm==4.66.4
