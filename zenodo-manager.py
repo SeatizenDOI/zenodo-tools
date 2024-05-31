@@ -8,7 +8,7 @@ from utils.ZenodoAPI import ZenodoAPI
 from utils.lib_tools import get_list_sessions
 from utils.PlanchaSession import PlanchaSession
 from utils.SeatizenManager import SeatizenManager
-
+from utils.SQLiteConnector import SQLiteConnector
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-manager", description="Workflow to manage global deposit")
@@ -40,8 +40,15 @@ def main(opt):
     with open('./config.json') as json_file:
         config_json = json.load(json_file)
 
+    # Geopackage name
+    geopackage_name = Path("./sqllite/global_seatizen.gpkg")
+    source_sql_name = Path("sqllite/bdd.sql")
+
+    sqlConnector = SQLiteConnector(geopackage_name)
+    sqlConnector.generate(source_sql_name)
+
     # Load metadata manager
-    seatizenManager = SeatizenManager(config_json, metadata_json)
+    # seatizenManager = SeatizenManager(config_json, metadata_json)
 
     # Stat
     sessions_fail = []
@@ -63,18 +70,29 @@ def main(opt):
             plancha_session = PlanchaSession(session_path, TMP_PATH)
             zenodoAPI.update_current_session(plancha_session.session_name)
 
+            """
+                On a une session
+                On cherche à savoir si elle a son deposit en ligne sinon on renvoie une erreur
+                On récupère la dernière version et on regarde si c'est un processed_data sinon on renvoie une erreur
+
+                Comment trouver les fichiers qui sont en ligne et leur doi associé ? Pour les frames il faut zipper le dossier metadata et voir si con checksum md5 à changer
+                Pour voir si les prédictions ont c
+            """
+
             # Update session_doi.csv
             print("-- Add doi in session_doi.csv.")
             if zenodoAPI.deposit_id:
-                seatizenManager.add_to_session_doi(plancha_session.session_name, zenodoAPI.get_conceptrecid_specific_deposit())
+                print(plancha_session.session_name, zenodoAPI.get_conceptrecid_specific_deposit())
+                # seatizenManager.add_to_session_doi(plancha_session.session_name, zenodoAPI.get_conceptrecid_specific_deposit())
             else:
                 print("[WARNING] Session without conceptid, may be in draft or not on zenodo.")
 
             # Get all frames metadata for the session (read predictions_gps.csv)
             print("-- Grab frame metadata.")
             predictions_gps = plancha_session.get_predictions_gps()
-            if predictions_gps:
-                seatizenManager.add_to_metadata_image(predictions_gps)
+            if len(predictions_gps):
+                print("predictions gps ok")
+                # seatizenManager.add_to_metadata_image(predictions_gps)
             else:
                 print("[WARNING] No decent image metadata to upload.")
 
@@ -89,7 +107,7 @@ def main(opt):
         [print("\t* " + session_name) for session_name in sessions_fail]
     
     # Save and publish change.
-    seatizenManager.save_and_publish()
+    # seatizenManager.save_and_publish()
 
 if __name__ == "__main__":
     opt = parse_args()

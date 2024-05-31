@@ -451,14 +451,14 @@ class PlanchaSession:
 
 
     def get_predictions_gps(self):
-        """ Return predictions_gps content else None if empty or not exist or all point are in the same place. """
+        """ Return predictions_gps content else {} if empty or not exist or all point are in the same place. """
         predictions_gps_path = Path(self.session_path, "METADATA", "predictions_gps.csv")
-        if not Path.exists(predictions_gps_path): return None
+        if not Path.exists(predictions_gps_path): return {}
 
-        predictions_gps = pd.read_csv(predictions_gps)
-        if len(predictions_gps) == 0: return None # No predictions
-        if "GPSLongitude" not in predictions_gps or "GPSLatitude" not in predictions_gps: return None # No GPS coordinate
-        if round(predictions_gps["GPSLatitude"].std(), 10) == 0.0 or round(predictions_gps["GPSLongitude"].std(), 10) == 0.0: return None # All frames have the same gps coordinate
+        predictions_gps = pd.read_csv(predictions_gps_path)
+        if len(predictions_gps) == 0: return {} # No predictions
+        if "GPSLongitude" not in predictions_gps or "GPSLatitude" not in predictions_gps: return {} # No GPS coordinate
+        if round(predictions_gps["GPSLatitude"].std(), 10) == 0.0 or round(predictions_gps["GPSLongitude"].std(), 10) == 0.0: return {} # All frames have the same gps coordinate
 
         return predictions_gps
 
