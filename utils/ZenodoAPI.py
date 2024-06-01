@@ -212,6 +212,7 @@ class ZenodoAPI:
             file.unlink()
         path_zip_session.rmdir()
 
+
     def __set_session_name(self):
         """ Set session name from deposit_id """
 
@@ -223,6 +224,7 @@ class ZenodoAPI:
                     break
         except KeyError:
             raise NameError("Session name not find")
+
 
     def __remove_restricted_files(self, restricted_files):
         """ Remove restricted file before publish new version. """
@@ -380,3 +382,6 @@ class ZenodoAPI:
             return idOrConceptrecid
         
         return None
+    
+    def get_all_zenodo_deposit(self):
+        return requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH}).json()

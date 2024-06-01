@@ -1,0 +1,62 @@
+{
+    "_NB": "Underwater / Aerial",
+    "image_type": "Underwater",
+    "_NB": "Platform and human readable platform compute from the session name. Add your options, key always in capital",
+    "platform": {
+        "ASV": "Autonomous Surface Vehicle",
+        "UAV": "Unmanned Aerial Vehicle",
+        "SCUBA": "Scuba diving",
+        "MASK": "Mask",
+        "KITE": "Kite surf",
+        "PADDLE": "Paddle"
+    },
+    "project_name": "Hyscores",
+    "creators": [
+        {
+            "name": "Pascal Mouquet",
+            "affiliation": "Ifremer DOI, La Réunion, France",
+            "orcid": "0000-0003-0361-4131"
+        },
+        {
+            "name": "Touria Bajjouk",
+            "affiliation": "Ifremer, Brest, France",
+            "orcid": "0000-0001-9039-0660"
+        },
+        {
+            "name": "Michel Ropert",
+            "affiliation": "Ifremer DOI, La Réunion, France",
+            "orcid": "0000-0002-5837-6268"
+        }
+    ],
+    "contributors": [
+        {
+            "name": "Laurence Morel",
+            "type": "DataCurator",
+            "affiliation": "Kart'eau, La Réunion, France"
+        }
+    ],
+    "related_identifiers": [
+        {
+            "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",
+            "relation": "isMetadataFor",
+            "resource_type": "dataset"
+        }
+    ],
+    "_NB": "open, restricted",
+    "access_right": "open",
+    "_NB": "Work with open, ",
+    "license": "cc-by-4.0",
+    "_NB": "Add place, human_readable_platform, platform ",
+    "keywords": [
+        "Coral Reef",
+        "Coral Reef Habitat",
+        "Citizen Sciences",
+        "Ecology",
+        "Mapping",
+        "Indian Ocean",
+        "Global Coral Reef Monitoring Network",
+        "Artificial Intelligence",
+        "Reef Ecosystem"
+    ],
+    "description": ""
+}

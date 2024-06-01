@@ -28,17 +28,25 @@ def parse_args():
     parser.add_argument("-ur", "--upload-rawdata", action="store_true", help="Upload raw data from a session")
     parser.add_argument("-up", "--upload-processeddata", default="", help="Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA | Ex: '-up fi' for upload frames and ia ")
     parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session")
+    parser.add_argument("-uc", "--upload-custom", action="store_true", help="Upload a custom version from a session")
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
     parser.add_argument("-cd", "--clean_draft", action="store_true", help="Clean all draft with no version published")
+    parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata.json", help="Json Metadata file path")
+    
 
     return parser.parse_args()
 
 def main(opt):
 
     # Open json file with metadata of the session.
-    with open('./metadata.json') as json_file:
+    metadata_json_path = Path(opt.path_metadata_json)
+    if not Path.exists(metadata_json_path) or not metadata_json_path.is_file():
+        print("Cannot find metadata file.")
+        return
+
+    with open(metadata_json_path) as json_file:
         metadata_json = json.load(json_file)
     
     # Open json file with zenodo token.
@@ -52,6 +60,9 @@ def main(opt):
             zenodoAPI.clean_draft_no_version()
         return 
     
+    # Zenodo API
+    zenodoAPI = ZenodoAPI("", config_json)
+
     # Stat
     sessions_fail = []
     list_session = get_list_sessions(opt)
@@ -69,7 +80,7 @@ def main(opt):
             
             plancha_session = PlanchaSession(session_path, TMP_PATH)
             plancha_metadata = PlanchaMetadata(plancha_session, metadata_json)
-            zenodoAPI = ZenodoAPI(plancha_session.session_name, config_json)
+            zenodoAPI.update_current_session(plancha_session.session_name)
 
             if opt.upload_rawdata:
                 if zenodoAPI.deposit_id != None:
@@ -98,7 +109,7 @@ def main(opt):
                 if zenodoAPI.deposit_id == None:
                     print("With no id, we cannot update our data, continue")
                     continue
-                
+
                 raw_data_ids, processed_data_ids = zenodoAPI.get_all_version_ids_for_deposit(zenodoAPI.get_conceptrecid_specific_deposit())
 
                 # Update metadata for raw data
@@ -117,6 +128,19 @@ def main(opt):
                     zenodoAPI.deposit_id = id
                     zenodoAPI.edit_metadata(processed_metadata)
         
+            if opt.upload_custom:
+                plancha_session.prepare_raw_data() # TODO Actually i just need to upload dcim folder. Later, let user choose
+                custom_metadata = plancha_metadata.build_for_custom() 
+
+                if zenodoAPI.deposit_id == None:
+                    # No deposit found, create a new one
+                    zenodoAPI.create_deposit_on_zenodo(plancha_session.temp_folder, custom_metadata)
+                else:
+                    # Session have already a deposit, so we add a new version.
+                    zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, custom_metadata)
+                
+                plancha_session.cleanup()
+
         except Exception:
             print(traceback.format_exc(), end="\n\n")
 

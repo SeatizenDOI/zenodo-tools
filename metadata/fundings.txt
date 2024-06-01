@@ -1,0 +1,10 @@
+
+Pour le projet Plancha: "Le projet Plancha est co-financé par la Préfecture de La Réunion dans le cadre d'un contrat de convergence et de transformation 2019-2022, mesure 3.3.1.1.
+Pour la mission Monaco: "Le projet 4Sea co-financé par les Explorations de Monaco (n°2022/11) dans le cadre de la Mission océan Indien."
+Pour BioEOS: "Le projet BioEOS est co-financé par le CNES."
+Pour IOT: "Le projet IOT est co-financé par le FEDER INTERREG V et la Préfecture de La Réunion (20181306-0018039) et le Contrat de Convergence et de Transformation de La Réunion.
+
+PLANCHA: The Plancha project is co-financed by the Prefecture of Reunion as part of a 2019-2022 convergence and transformation contract, measure 3.3.1.1
+Monaco: The 4Sea project co-financed by Monaco Explorations (n°2022/11) as part of the Indian Ocean Mission.
+Bioeos: The BioEOS project is co-financed by CNES.
+IOT: The IOT project is co-financed by the FEDER INTERREG V and the Prefecture of La Réunion (20181306-0018039) and the Convergence and Transformation Contract of La Réunion

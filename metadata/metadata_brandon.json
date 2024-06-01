@@ -1,0 +1,169 @@
+{
+    "_NB": "Underwater / Aerial",
+    "image_type": "Underwater",
+    "_NB": "Platform and human readable platform compute from the session name. Add your options, key always in capital",
+    "platform": {
+        "ASV": "Autonomous Surface Vehicle",
+        "UAV": "Unmanned Aerial Vehicle",
+        "SCUBA": "Scuba diving",
+        "MASK": "Mask",
+        "KITE": "Kite surf",
+        "PADDLE": "Paddle"
+    },
+    "project_name": "Plancha",
+    "creators": [
+        {
+            "name": "Julien Barde",
+            "affiliation": "IRD",
+            "orcid": "0000-0002-3519-6141"
+        },
+        {
+            "name": "Sylvain Bonhommeau",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0000-0002-0882-5918"
+        },
+        {
+            "name": "Matteo Contini",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0007-8665-6201"
+        }
+    ],
+    "contributors": [
+        {
+            "name": "Victor Illien",
+            "type": "DataCurator",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0007-2143-8027"
+        },
+        {
+            "name": "Serge Bernard",
+            "type": "Other",
+            "affiliation": "CNRS",
+            "orcid": "0000-0003-1772-0592"
+        },
+        {
+            "name": "Alexandre Boyer",
+            "type": "Other",
+            "affiliation": "IRD",
+            "orcid": "0009-0002-2787-1044"
+        },
+        {
+            "name": "Leanne Carpentier",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": " 0009-0004-1796-3855"
+        },
+        {
+            "name": "Thomas Chevrier",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0006-4108-5698"
+        },
+        {
+            "name": "Justine Talpaert Daudon",
+            "type": "Other",
+            "affiliation": "IRD",
+            "orcid": "0000-0001-9582-451X"
+        },
+        {
+            "name": "Belen De Ana",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France"
+        },
+        {
+            "name": "Denis De Oliveira",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France"
+        },
+        {
+            "name": "Magali Duval",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0000-0002-6425-7724"
+        },
+        {
+            "name": "Pierre Gogendeau",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0000-0003-2440-431X"
+        },
+        {
+            "name": "Alexis Joly",
+            "type": "Other",
+            "affiliation": "INRIA",
+            "orcid": "0000-0002-2161-9940"
+        },
+        {
+            "name": "Mohan Julien",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0000-0003-2808-1095"
+        },
+        {
+            "name": "Arthur Lazennec",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0007-9522-8049"
+        },
+        {
+            "name": "Sylvain Poulain",
+            "type": "Other",
+            "affiliation": "GISCAN",
+            "orcid": "0009-0005-9789-9095"
+        },
+        {
+            "name": "Mervyn Ravitchandirane",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0007-6170-0157"
+        },
+        {
+            "name": "Cam Ly Rintz",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0005-0541-2332"
+        },
+        {
+            "name": "Victor Russias",
+            "type": "Other",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0004-6895-6751"
+        }
+    ],
+    "related_identifiers": [
+        {
+            "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",
+            "relation": "isMetadataFor",
+            "resource_type": "dataset"
+        }
+    ],
+    "_NB": "open, restricted",
+    "access_right": "open",
+    "_NB": "Work with open, ",
+    "license": "cc-by-4.0",
+    "_NB": "Add place, human_readable_platform, platform ",
+    "keywords": [
+        "Coral Reef",
+        "Coral Reef Habitat",
+        "Citizen Sciences",
+        "Deep Learning",
+        "Machine Learning",
+        "Computer Vision",
+        "Ecology",
+        "Mapping",
+        "Remote Sensing",
+        "GeoAI",
+        "Indian Ocean",
+        "Bathymetry",
+        "Global Coral Reef Monitoring Network",
+        "Artificial Intelligence",
+        "Reef Ecosystem"
+    ],
+    "workflow-link": "https://github.com/SeatizenDOI/plancha-workflow/releases/tag/v1.0.3",
+    "inference-link": "https://github.com/SeatizenDOI/plancha-inference/releases/tag/v1.0.0",
+    "zenodo-link": "https://github.com/SeatizenDOI/zenodo-tools",
+    "software-link": "https://github.com/SeatizenDOI",
+    "fundings": [
+        "The 4Sea project co-financed by Monaco Explorations (n°2022/11) as part of the Indian Ocean Mission."
+    ]
+}
