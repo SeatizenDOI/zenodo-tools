@@ -8,7 +8,7 @@ Un utilisateur expérimenté pourra par exemple utilisé le .gpkg qui contient t
 
 ## Gestion du dépot global
 
-/!\ Pour mettre à jour la base de données, il faut que les sessions soit en ligne sur zenodo /!\
+/!\ Pour mettre à jour la base de données, il faut que les sessions soit en ligne sur zenodo et il faut aussi avoir la session en local /!\
 
 Soit on télécharge ce qu'il y a en ligne
 
