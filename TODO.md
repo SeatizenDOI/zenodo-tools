@@ -6,7 +6,31 @@ Il permet de gérer le dépôt zenodo associé. Celui contient un geopackage qui
 
 Un utilisateur expérimenté pourra par exemple utilisé le .gpkg qui contient toutes les données du projet et l'utilisé pour réaliser ses propres requêtes.
 
+## Gestion du dépot global
 
+/!\ Pour mettre à jour la base de données, il faut que les sessions soit en ligne sur zenodo /!\
+
+Soit on télécharge ce qu'il y a en ligne
+
+1.1.1 On télécharge la base de données. S'il elle n'est pas présente => 1.2 sinon 2.1
+
+1.2 On génère la base de données
+
+2.1.1 Pour chaque session, on récupère le conceptrecid et le doi de version des frames et des predictions (Comparaison des sums md5 frames.zip et predictions.zip).
+
+2.1.2 On regarde s'il existe un deposit avec ce conceptrecid. Si oui on le récupère, sinon on le crée
+
+2.1.3 On regarde s'il existe une version avec les frames. Si non, on crée la version et on ajoute les frames.
+
+2.1.4 On regqrde s'il existe une version avec les prédictions. Si non on crée la version.
+
+2.1.5 On regarde s'il existe le modèle associé aux prédictions. Si non, on l'ajoute ainsi que ses classes.
+
+2.1.6 On ajoute les prédictions liés au frames.
+
+2.1.7 
+
+Comment gérer deux models de multilabel différent
 
 ## Import
 

@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/download_example.csv", help="Path to the csv file, header can be session_name or doi or both")
 
     # Path of output.
-    parser.add_argument("-pout", "--path_folder_out", default="/tmp/test_download", help="Output folder to rebuild sessions")
+    parser.add_argument("-pout", "--path_folder_out", default="/tmp/00_test_download", help="Output folder to rebuild sessions")
 
     # Data type to download.
     parser.add_argument("-dr", "--download_rawdata", action="store_true", help="Download raw data from a session")
@@ -30,20 +30,13 @@ def parse_args():
 
     return parser.parse_args()
 
-def main(opt):
-    
-    # Return if no choice
-    if not opt.download_rawdata and not opt.download_processed_data:
-        print("[WARNING] Please choose if you want to reconstruct raw data or processed data or both.")
-        return
+
+def download_with_token(opt, config_json, path_output):
+    print("Using downloader with token")
 
     # Create output_folder
     path_output = Path(opt.path_folder_out)
     path_output.mkdir(exist_ok=True, parents=True)
-
-    # Open json file with zenodo token.
-    with open('./config.json') as json_file:
-        config_json = json.load(json_file)
     
     # Stat.
     sessions_fail = []
@@ -88,12 +81,92 @@ def main(opt):
         except Exception:
             print(traceback.format_exc(), end="\n\n")
 
-            sessions_fail.append(i)
+            sessions_fail.append((i, session_name, doi))
 
     # Stat
     print("\nEnd of process. On {} sessions, {} fails. ".format(len(list_name_doi), len(sessions_fail)))
     if (len(sessions_fail)):
-        [print(f"\t* Line {index+2} failed") for index in sessions_fail]
+        [print(f"\t* {i}, {session_name}, {doi} failed") for i, session_name, doi in sessions_fail]
+
+
+
+def download_without_token(opt):
+    """
+        Depuis un conceptrecid, on peut récupérer la liste des files.   
+
+        Donc en gros depuis n'importe qu'elle type de doi, on peut récupèrer la liste des fichiers. Si c'est en restricted, c'est vide.
+
+        Depuis un session name ? c'est cho
+    """
+    print("Using downloader without token")
+    
+    # Create output_folder
+    path_output = Path(opt.path_folder_out)
+    path_output.mkdir(exist_ok=True, parents=True)
+
+    # Stat.
+    sessions_fail = []
+    list_name_doi = get_session_name_doi_from_opt(opt)
+    index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_name_doi) else 0
+
+    for i, (session_name, doi) in enumerate(list_name_doi[index_start:]):
+        try:
+            if doi == None:
+                print("Cannot find session without doi when you don't provide token.")
+                continue
+            
+            version_json = ZenodoAPI.get_version_from_doi(doi)
+            list_files = version_json["files"]
+
+            # Continue if no files to download due to access_right not open.
+            if len(list_files) == 0 and version_json["metadata"]["access_right"] != "open":
+                print("[WARNING] No files to download, version is not open.")
+                continue
+            
+            
+            # Get session_name.
+            session_name = ""
+            try:
+                for identifier_obj in version_json["metadata"]["alternate_identifiers"]:
+                    if "urn:" in identifier_obj["identifier"]:
+                        session_name = identifier_obj["identifier"].replace("urn:", "")
+                        break
+            except Exception:
+                pass
+
+            if session_name == "":
+                print("[WARNING] Cannot find session_name.")
+
+            ZenodoAPI.download_manager_without_token(list_files, path_output, session_name, doi)
+
+        except Exception:
+            print(traceback.format_exc(), end="\n\n")
+
+            sessions_fail.append((i, session_name, doi))
+
+    # Stat
+    print("\nEnd of process. On {} sessions, {} fails. ".format(len(list_name_doi), len(sessions_fail)))
+    if (len(sessions_fail)):
+        [print(f"\t* {i}, {session_name}, {doi} failed") for i, session_name, doi in sessions_fail]
+
+
+def main(opt):
+    
+    # Return if no choice
+    if not opt.download_rawdata and not opt.download_processed_data:
+        print("[WARNING] Please choose if you want to reconstruct raw data or processed data or both.")
+        return
+
+    config_path = Path('./config.json')
+    if not Path.exists(config_path) or not config_path.is_file():
+        download_without_token(opt)
+
+    else:
+        # Open json file with zenodo token.
+        with open(config_path) as json_file:
+            config_json = json.load(json_file)
+        
+        download_with_token(opt, config_json)
 
 if __name__ == "__main__":
     opt = parse_args()

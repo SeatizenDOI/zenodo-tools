@@ -100,6 +100,19 @@ The script also includes optional arguments to fine-tune its behavior:
 
 ## Usage of zenodo-download Script Parameters
 
+The zenodo-download script is designed to facilitate the workflow of downloading raw and processed data with metadata. 
+Every user can download an open session with this script without token. 
+But if you want to download restricted data or use session name to select session, you will need a token.
+
+You can use various options to specify inputs and the types of data to upload. Here is a description of the main parameters:
+
+To run the zenodo-download.py, navigate to the project root and execute:
+
+```bash
+python zenodo-download.py [OPTIONS]
+```
+
+Where `[OPTIONS]` can include:
 ### Input Parameters
 
 The script allows you to select an input method from several mutually exclusive options:
