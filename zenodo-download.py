@@ -123,7 +123,9 @@ def download_without_token(opt):
                 print("[WARNING] No files to download, version is not open.")
                 continue
             
-            
+            # In case we get a conceptrecid from the user, get doi
+            doi = version_json["id"]
+
             # Get session_name.
             session_name = ""
             try:
