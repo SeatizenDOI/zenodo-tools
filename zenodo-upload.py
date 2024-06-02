@@ -28,12 +28,12 @@ def parse_args():
     parser.add_argument("-ur", "--upload-rawdata", action="store_true", help="Upload raw data from a session")
     parser.add_argument("-up", "--upload-processeddata", default="", help="Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA | Ex: '-up fi' for upload frames and ia ")
     parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session")
-    parser.add_argument("-uc", "--upload-custom", action="store_true", help="Upload a custom version from a session")
+    parser.add_argument("-uc", "--upload-custom", action="store_true", help="Upload a custom data from a session") # TODO Explain
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
     parser.add_argument("-cd", "--clean_draft", action="store_true", help="Clean all draft with no version published")
-    parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata.json", help="Json Metadata file path")
+    parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata.json", help="Path to metadata json file")
     
 
     return parser.parse_args()

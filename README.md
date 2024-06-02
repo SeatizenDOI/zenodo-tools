@@ -86,6 +86,8 @@ The script allows you to choose the type of data to upload:
 * `-ur`, `--upload-rawdata`: Upload raw data from a session.
 * `-up`, `--upload-processeddata`: Specify the folder to upload. Use f for FRAMES, m for METADATA, b for BATHY, g for GPS, i for IA. For example, -up fi to upload frames and IA.
 * `-um`, `--update-metadata`: Update metadata from a session.
+* `-uc`, `--upload-custom`: Upload a custom data from a session.
+
 
 ### Optional Arguments
 
@@ -93,9 +95,10 @@ The script also includes optional arguments to fine-tune its behavior:
 
 * `-is`, `--index_start`: Choose the index from which to start. Default: 0.
 * `-cd`, `--clean_draft`: Clean all drafts with no published version.
+* `-pmj`, `--path_metadata_json`: Path to metadata json file.
+
 
 ## Usage of zenodo-download Script Parameters
-
 
 ### Input Parameters
 
