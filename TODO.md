@@ -64,3 +64,5 @@ On peut faire des exports csv basiques :
 - fichier qui montre l'emprise de chaque session pour toutes les sessions.
 
 On peut aussi faire des exports de fichiers gpkg exploitable (centralisé tous les sessions de saint leu pour avoir l'emprise par exemple)
+
+Faire olutot un session_doi.csv en pdf

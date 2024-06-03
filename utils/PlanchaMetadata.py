@@ -204,7 +204,7 @@ class PlanchaMetadata:
 
         fundings = ""
         for f in self.metadata_json["fundings"]:
-            fundings += f"<bold><i>{f}</i></bold><br>"
+            fundings += f"<strong><i>{f}</i></strong><br>"
         
         return fundings
     

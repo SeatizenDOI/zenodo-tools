@@ -26,9 +26,12 @@ def parse_args():
 
     # Mode.
     parser.add_argument("-ulo", "--use_from_local", action="store_true", help="Work from a local folder. Update if exists else Create. Default behaviour is to download data from zenodo.")
+    parser.add_argument("-um", "--update_metadata", action="store_true", help="Update last version metadata")
     
     # Seatizen Atlas path.
     parser.add_argument("-psa", "--path_seatizen_atlas_folder", default="./seatizen_atlas", help="Folder to store data")
+    parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata_seatizen_atlas.json", help="Path to metadata gile")
+
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start.")
@@ -40,15 +43,6 @@ def parse_args():
 
 def main(opt):
 
-    """
-        Dans un premier temps, on crée le dossier de seatizen_atlas.
-
-        Si on choisit  de le télécharger, on supprime son contenu.  et on le télécharge seulement si on a pas demandé de forcer le regenerate.
-
-        Si on choisit de travailler en local, on supprime seulement si on a mis force regenerete sinon on garde.
-    
-    """
-
     config_path, config_json = Path('./config.json'), {}
     if not Path.exists(config_path) or not config_path.is_file():
         print("No config file found, you cannot upload the result on zenodo.")
@@ -56,6 +50,13 @@ def main(opt):
         # Open json file with zenodo token.
         with open(config_path) as json_file:
             config_json = json.load(json_file)
+
+    if opt.update_metadata:
+        if config_json == {}:
+            print("Cannot update metadata without zenodo token")
+        else:
+            SeatizenManager.update_metadata(config_json, opt.path_metadata_json)
+        return
 
     seatizenManager = SeatizenManager(config_json, opt.path_seatizen_atlas_folder, opt.use_from_local, opt.force_regenerate)
 

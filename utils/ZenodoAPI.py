@@ -130,7 +130,6 @@ class ZenodoAPI:
         if session_name != "":
             self.set_deposit_id() # Try to get current id of the session.
 
-
     # Simple operation on deposit.
     def __get_single_deposit(self):
         """ Get data from a deposit. """

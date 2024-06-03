@@ -22,7 +22,7 @@ def get_mode_from_opt(opt) -> Sources:
 
     return mode
 
-def get_src_from_mode(mode, opt) -> str:
+def get_src_from_mode(mode: Sources, opt) -> str:
     """ Retrieve src path from mode """
     src = ""
 

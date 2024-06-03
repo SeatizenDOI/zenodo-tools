@@ -1,0 +1,58 @@
+{
+    "creators": [
+        {
+            "name": "Julien Barde",
+            "affiliation": "IRD",
+            "orcid": "0000-0002-3519-6141"
+        },
+        {
+            "name": "Sylvain Bonhommeau",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0000-0002-0882-5918"
+        },
+        {
+            "name": "Matteo Contini",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0007-8665-6201"
+        },
+        {
+            "name": "Victor Illien",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0007-2143-8027"
+        },
+        {
+            "name": "Alexis Joly",
+            "affiliation": "INRIA",
+            "orcid": "0000-0002-2161-9940"
+        }
+    ],
+    "related_identifiers": [
+        {
+            "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",
+            "relation": "isMetadataFor",
+            "resource_type": "dataset"
+        }
+    ],
+    "_NB": "open, restricted",
+    "access_right": "open",
+    "_NB": "Work with open, ",
+    "license": "cc-by-4.0",
+    "keywords": [
+        "Coral Reef",
+        "Coral Reef Habitat",
+        "Citizen Sciences",
+        "Deep Learning",
+        "Machine Learning",
+        "Computer Vision",
+        "Ecology",
+        "Mapping",
+        "Remote Sensing",
+        "GeoAI",
+        "Indian Ocean",
+        "Bathymetry",
+        "Global Coral Reef Monitoring Network",
+        "Artificial Intelligence",
+        "Reef Ecosystem"
+    ],
+    "version": "v0.0.1"
+}

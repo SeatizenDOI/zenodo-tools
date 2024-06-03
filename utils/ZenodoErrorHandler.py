@@ -9,21 +9,21 @@ class ParsingReturnType(enum.Enum):
 
 class ZenodoErrorHandler:
 
-    def parse_errors(response):
+    def parse_errors(response) -> None:
         print(response.json(), response)
         raise NameError("Something Failed with Zenodo")
     
-    def parse_links(response):
+    def parse_links(response) -> None:
         [print(key, response["metadata"]["links"][key]) for key in response["metadata"]["links"]]
 
-    def parse_files(response):
+    def parse_files(response) -> None:
         [print(f) for f in response["files"]]
 
-    def parse_metadata(response):
+    def parse_metadata(response) -> None:
         [print(key, response["metadata"][key]) for key in response["metadata"]]
 
     @staticmethod
-    def parse(r, parsing_type=ParsingReturnType.NONE):
+    def parse(r, parsing_type=ParsingReturnType.NONE) -> int | None:
 
         if r.status_code >= 400:
             ZenodoErrorHandler.parse_errors(r)
