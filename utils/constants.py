@@ -4,12 +4,9 @@ IMG_EXTENSION = ('.png', '.jpg', '.jpeg') # Image extension in lower case
 BYTE_TO_GIGA_BYTE = 1000000000
 
 # Zenodo constants for seatizen manager
-TMP_PATH_MANAGER = "/tmp/SeatizenManager/"
 SEATIZEN_ATLAS_DOI = "11125848"
-
-SESSION_DOI_CSV = "session_doi.csv"
-METADATA_IMAGE_CSV = "metadata_image.csv"
-SEATIZEN_MANAGER_FILES = [SESSION_DOI_CSV, METADATA_IMAGE_CSV]
+SEATIZEN_ATLAS_GPKG = "seatizen_atlas_db.gpkg"
+SQL_FILE = "./sqllite/bdd.sql"
 
 # Zenodo constant for upload
 MAXIMAL_DEPOSIT_FILE_SIZE = 50 # GB

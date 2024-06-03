@@ -26,13 +26,18 @@
             "name": "Michel Ropert",
             "affiliation": "Ifremer DOI, La Réunion, France",
             "orcid": "0000-0002-5837-6268"
+        },
+        {
+            "name": "Laurence Morel",
+            "affiliation": "Kart'eau, La Réunion, France"
         }
     ],
     "contributors": [
         {
-            "name": "Laurence Morel",
+            "name": "Victor Illien",
             "type": "DataCurator",
-            "affiliation": "Kart'eau, La Réunion, France"
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0007-2143-8027"
         }
     ],
     "related_identifiers": [
@@ -58,5 +63,9 @@
         "Artificial Intelligence",
         "Reef Ecosystem"
     ],
-    "description": ""
+    "description": 2015,
+    "workflow-link": "https://github.com/SeatizenDOI/plancha-workflow/releases/tag/v1.0.3",
+    "inference-link": "https://github.com/SeatizenDOI/plancha-inference/releases/tag/v1.0.0",
+    "zenodo-link": "https://github.com/SeatizenDOI/zenodo-tools",
+    "software-link": "https://github.com/SeatizenDOI"
 }

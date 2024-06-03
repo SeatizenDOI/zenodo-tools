@@ -1,6 +1,7 @@
 import sqlite3
 import traceback
 from pathlib import Path
+from .constants import SQL_FILE
 
 class SQLiteConnector:
 
@@ -43,18 +44,16 @@ class SQLiteConnector:
         self.cur.executemany("INSERT INTO deposit VALUES(?, ?)", data)
         self.con.commit()  # Remember to commit the transaction after executing INSERT.
     
-    def generate(self, sql_path):
+    def generate(self):
         """ Regenerate gpkg file. """
 
-        if Path.exists(self.sqlite_filepath) and self.sqlite_filepath.is_file():
-            self.sqlite_filepath.unlink()
-            self.setup()
+        self.setup()
         
-        if not Path.exists(sql_path):
-            raise NameError(f"File {sql_path} not found")
+        if not Path.exists(Path(SQL_FILE)):
+            raise NameError(f"File {SQL_FILE} not found")
 
         # Lire le contenu du fichier SQL
-        with open(sql_path, 'r') as file:
+        with open(SQL_FILE, 'r') as file:
             sql_script = file.read()
 
         # Exécuter le script SQL
@@ -62,17 +61,3 @@ class SQLiteConnector:
     
     def close(self):
         self.con.close()
-
-def main():
-    
-    sql_path = Path("sqllite/test.gpkg")
-
-    sqlconnector = SQLiteConnector(sql_path)
-
-    try:
-        sqlconnector.generate()
-        sqlconnector.get_all_deposit()
-    except :
-        print(traceback.format_exc(), end="\n\n")
-    finally:
-        sqlconnector.close() # Always close

@@ -44,6 +44,7 @@ class PlanchaMetadata:
         return data
 
     def build_for_custom(self):
+        """ Build for custom deposit. self.metadata_json["description"] value refer to the enum. """
         data = {
             'metadata': {
                 'title': self.__build_title(),
@@ -52,7 +53,7 @@ class PlanchaMetadata:
                 'creators': self.metadata_json["creators"],
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
                 'language': "eng",
-                'description': self.metadata_json["description"],
+                'description': self.__get_description_custom(self.metadata_json["description"]),
                 'access_right': 'open',
                 'version': "RAW_DATA",
                 'license': self.metadata_json["license"],
@@ -100,11 +101,6 @@ class PlanchaMetadata:
         # Check for bathy
         haveSensorFile = self.plancha_session.check_sensor_file()
         isBathyGenerated = self.plancha_session.get_bathy_stat()
-
-        hp = self.metadata_json["platform"][self.plancha_session.platform] if self.plancha_session.platform in self.metadata_json["platform"] else "No key for platform"
-        place = self.plancha_session.place
-        country = self.plancha_session.country if self.plancha_session.country else "Somewhere"
-        date = self.plancha_session.date
 
         return f"""
 
@@ -219,3 +215,30 @@ class PlanchaMetadata:
             You can find all the necessary scripts to download this data in this <a href="{self.metadata_json["zenodo-link"]}" target="_blank">repository</a>. <br>
             Enjoy your data with <a href="{self.metadata_json["software-link"]}" target="_blank">SeatizenDOI</a>! <br>
         """
+
+    def __get_description_2015(self):
+        return f"""
+            <i>This dataset was collected {self.__sub_title()}.</i> <br>
+
+            <br><br>Underwater or aerial images collected by scientists or citizens can have a wide variety of use for science, management, or conservation.
+            These images can be annotated and shared to train IA models which can in turn predict the objects on the images.
+            We provide a set of tools (hardware and software) to collect marine data, predict species or habitat, and provide maps.<br>
+
+
+            Underwater Images Collected by Scuba Diving in Réunion Island during the Hyscores Project. <br>
+            For more details, visit the <a href="https://archimer.ifremer.fr/doc/00350/46122/" target="_blank">Hyscores Project</a>.<br><br>
+
+
+            <h2> Generic folder structure </h2>
+            {self.__get_tree()}
+
+            <h2> Software </h2>
+            <br> {self.__get_software()}
+        """
+    
+    def __get_description_custom(self, description_value):
+        
+        if description_value == 2015:
+            return self.__get_description_2015()
+        
+        return ""

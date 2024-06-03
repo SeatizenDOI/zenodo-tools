@@ -24,11 +24,12 @@ def parse_args():
     parser.add_argument("-pses", "--path_session", default="/media/bioeos/E/202309_plancha_session/20230926_REU-HERMITAGE_ASV-2_01/", help="Path to the session")
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/retry.csv", help="Path to the csv file")
 
-    # Data type to upload.
+    # Data type to upload or update.
     parser.add_argument("-ur", "--upload-rawdata", action="store_true", help="Upload raw data from a session")
     parser.add_argument("-up", "--upload-processeddata", default="", help="Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA | Ex: '-up fi' for upload frames and ia ")
-    parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session")
     parser.add_argument("-uc", "--upload-custom", action="store_true", help="Upload a custom data from a session") # TODO Explain
+    parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session")
+    parser.add_argument("-umc", "--update-metadata-custom", action="store_true", help="Update custom metadata from a session")
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
@@ -69,8 +70,7 @@ def main(opt):
     index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_session) else 0
 
     for session_path in list_session[index_start:]:
-        session_path = Path(session_path)
-
+  
         try:
             if not Path.exists(session_path):
                 print(f"Session not found for {session_path.name}")
@@ -138,8 +138,20 @@ def main(opt):
                 else:
                     # Session have already a deposit, so we add a new version.
                     zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, custom_metadata)
+            
+            if opt.update_metadata_custom:
+                if zenodoAPI.deposit_id == None:
+                    print("With no id, we cannot update our data, continue")
+                    continue
                 
-                plancha_session.cleanup()
+                custom_metadata = plancha_metadata.build_for_custom() 
+                raw_data_ids, processed_data_ids = zenodoAPI.get_all_version_ids_for_deposit(zenodoAPI.get_conceptrecid_specific_deposit())
+                for id in raw_data_ids + processed_data_ids:
+                    print(f"Working with id {id}")
+                    zenodoAPI.deposit_id = id
+                    zenodoAPI.edit_metadata(custom_metadata)
+
+            plancha_session.cleanup()
 
         except Exception:
             print(traceback.format_exc(), end="\n\n")

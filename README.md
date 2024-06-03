@@ -101,8 +101,13 @@ The script also includes optional arguments to fine-tune its behavior:
 ## Usage of zenodo-download Script Parameters
 
 The zenodo-download script is designed to facilitate the workflow of downloading raw and processed data with metadata. 
-Every user can download an open session with this script without token. 
-But if you want to download restricted data or use session name to select session, you will need a token.
+
+This script is intended for two types of users.
+
+The first type of user is the one who has a Zenodo token for their account. This will allow them to download restricted data. They just need to provide a DOI that belongs to the deposit and choose what they want to download (raw data and/or processed data). All versions named as RAW_DATA are complete, so they will all be downloaded. However, for PROCESSED_DATA, the script will either download the latest version or the version that the DOI points to.
+
+The second type of user is the one who does not have a token. They cannot download restricted data. For the script to work, they must provide the DOI they want. This does not work with a session_name.
+
 
 You can use various options to specify inputs and the types of data to upload. Here is a description of the main parameters:
 

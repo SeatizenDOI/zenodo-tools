@@ -35,7 +35,7 @@ def get_src_from_mode(mode, opt) -> str:
 
     return src
 
-def get_list_sessions(opt) -> list:
+def get_list_sessions(opt) -> list[Path]:
     """ Retrieve list of sessions from input """
 
     list_sessions = []
@@ -44,7 +44,7 @@ def get_list_sessions(opt) -> list:
     src = get_src_from_mode(mode, opt)
 
     if mode == Sources.SESSION:
-        list_sessions = [src]
+        list_sessions = [Path(src)]
 
     elif mode == Sources.FOLDER:
         list_sessions = sorted(list(Path(src).iterdir()))
