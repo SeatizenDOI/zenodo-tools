@@ -1,7 +1,7 @@
 import sqlite3
 import traceback
 from pathlib import Path
-from .constants import SQL_FILE
+from ..utils.constants import SQL_FILE
 
 class SQLiteConnector:
 

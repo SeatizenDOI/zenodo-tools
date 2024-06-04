@@ -6,7 +6,7 @@ BYTE_TO_GIGA_BYTE = 1000000000
 # Zenodo constants for seatizen manager
 SEATIZEN_ATLAS_DOI = "11125848"
 SEATIZEN_ATLAS_GPKG = "seatizen_atlas_db.gpkg"
-SQL_FILE = "./sqllite/bdd.sql"
+SQL_FILE = "./src/sql_connector/base_database.sql"
 
 # Zenodo constant for upload
 MAXIMAL_DEPOSIT_FILE_SIZE = 50 # GB

@@ -10,8 +10,8 @@ from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
 
-from .PlanchaZipper import PlanchaZipper
-from .constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE
+from .zipper import PlanchaZipper
+from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE
 
 class BaseType(Enum):
     RGP = "RGP Station from IGN"

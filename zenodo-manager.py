@@ -3,12 +3,10 @@ import argparse
 import traceback
 from pathlib import Path
 
-from utils.constants import TMP_PATH
-from utils.ZenodoAPI import ZenodoAPI
-from utils.lib_tools import get_list_sessions
-from utils.PlanchaSession import PlanchaSession
-from utils.SeatizenManager import SeatizenManager
-from utils.SQLiteConnector import SQLiteConnector
+from src.utils.lib_tools import get_list_sessions
+
+from src.zenodo_api.token import ZenodoAPI
+from src.seatizen_atlas.manager import SeatizenManager
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-manager", description="Workflow to manage global deposit")
@@ -29,7 +27,7 @@ def parse_args():
     parser.add_argument("-um", "--update_metadata", action="store_true", help="Update last version metadata")
     
     # Seatizen Atlas path.
-    parser.add_argument("-psa", "--path_seatizen_atlas_folder", default="./seatizen_atlas", help="Folder to store data")
+    parser.add_argument("-psa", "--path_seatizen_atlas_folder", default="./seatizen_atlas_folder", help="Folder to store data")
     parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata_seatizen_atlas.json", help="Path to metadata gile")
 
 
@@ -65,9 +63,6 @@ def main(opt):
     sessions_fail = []
     list_session = get_list_sessions(opt)
     index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_session) else 0
-
-    # Zenodo API
-    zenodoAPI = ZenodoAPI("", config_json)
     
     for session_path in list_session[index_start:]:
 
@@ -90,8 +85,6 @@ def main(opt):
     if (len(sessions_fail)):
         [print("\t* " + session_name) for session_name in sessions_fail]
     
-    # Save and publish change.
-    # seatizenManager.publish()
 
 if __name__ == "__main__":
     opt = parse_args()

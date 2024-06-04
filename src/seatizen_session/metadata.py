@@ -1,4 +1,4 @@
-from .PlanchaSession import PlanchaSession, BaseType, DCIMType
+from .manager import PlanchaSession, BaseType, DCIMType
 
 class PlanchaMetadata:
 

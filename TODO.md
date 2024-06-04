@@ -66,3 +66,21 @@ On peut faire des exports csv basiques :
 On peut aussi faire des exports de fichiers gpkg exploitable (centralisé tous les sessions de saint leu pour avoir l'emprise par exemple)
 
 Faire olutot un session_doi.csv en pdf
+
+
+
+
+## Comment découper mon code
+
+j'ai trois cripts principaux qui partage des codes 
+
+
+comment se découpe zenodo ou plutot l'architecture en général ?
+
+J'envoie des sessions plancha sur zenodo, une session plancha fai trop référence à quelque chose comment le qualifier ?
+
+une Plancha session comprends un zipper et un metadata et un manager 
+
+Ensuite nous avons 
+
+

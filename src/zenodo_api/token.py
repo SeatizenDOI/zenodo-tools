@@ -1,18 +1,13 @@
-import os
 import json
-import time
 import shutil
 import zipfile
 import requests
-import traceback
 from pathlib import Path
 
-from tqdm import tqdm
-from tqdm.utils import CallbackIOWrapper
-
-from .lib_tools import md5
-from .ZenodoErrorHandler import ZenodoErrorHandler, ParsingReturnType
-from .constants import MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE, NB_VERSION_TO_FETCH
+from .error import ZenodoErrorHandler, ParsingReturnType
+from .base_function import file_downloader, file_uploader
+from ..utils.lib_tools import md5
+from ..utils.constants import NB_VERSION_TO_FETCH
 
 class ZenodoAPI:
     
@@ -55,6 +50,7 @@ class ZenodoAPI:
 
 
     def add_new_version_to_deposit(self, temp_folder, metadata, restricted_files = [], dontUploadWhenLastVersionIsProcessedData=False):
+        """ Create a new version of a deposit"""
         print("-- Upload new data for existing version... ")
         # Get actual state of the deposit.
         deposit = self.__get_single_deposit()
@@ -141,30 +137,6 @@ class ZenodoAPI:
     def list_files(self):
         """ List all files for a session. """
         return requests.get(f"{self.ZENODO_LINK}/{self.deposit_id}/files?access_token={self.ACCESS_TOKEN}").json()
-    
-    
-    def zenodo_download_file(self, link, output_file):
-        """ Download file at output_file path. """
-
-        isDownload, max_try = False, 0
-        while not isDownload:
-            try:
-                r = requests.get(f"{link}", params={'access_token': self.ACCESS_TOKEN}, stream=True)
-                total = int(r.headers.get('content-length', 0))
-
-                with open(output_file, 'wb') as file, tqdm(total=total, unit='B', unit_scale=True) as bar:
-                    for data in r.iter_content(chunk_size=1000):
-                        size = file.write(data)
-                        bar.update(size)
-                
-                isDownload = True
-            except KeyboardInterrupt:
-                raise NameError("Stop iteration")
-            except:
-                print(traceback.format_exc(), end="\n\n")
-                max_try += 1
-                if max_try >= MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE: raise NameError("Abort due to max try")
-                time.sleep(0.5)
 
 
     def zenodo_download_files(self, output_folder):
@@ -178,13 +150,13 @@ class ZenodoAPI:
 
             path_tmp_file = Path(path_zip_session, file["filename"])
             print(f"\nWorking with: {path_tmp_file}")
-            self.zenodo_download_file(file["links"]["download"], path_tmp_file)
+            file_downloader(file["links"]["download"], path_tmp_file, self.params)
 
             # Retry while checksum is different.
             while md5(path_tmp_file) != file["checksum"]:
                 print(f"[WARNING] Checksum error when downloading {path_tmp_file}. We retry.")
                 path_tmp_file.unlink()
-                self.zenodo_download_file(file["links"]["download"], path_tmp_file)
+                file_downloader(file["links"]["download"], path_tmp_file, self.params)
 
             # Extract file in directory.
             path_to_unzip_or_move = Path(output_folder, self.session_name)
@@ -284,7 +256,7 @@ class ZenodoAPI:
         r = requests.put(f'{self.ZENODO_LINK}/{self.deposit_id}',
                         params=self.params,
                         data=json.dumps(metadata),
-                        headers=self.params
+                        headers=self.headers
                     )
         ZenodoErrorHandler.parse(r, ParsingReturnType.NONE)
 
@@ -292,6 +264,7 @@ class ZenodoAPI:
     def __zenodo_upload_files(self, tmp_folder, bucket_url):
         """ Upload a folder of file to specific version. Warning, don't check if the total size is < 50 Go (Zenodo limit)"""
         print("Uploading new file")
+       
         path_tmp = Path(tmp_folder)
         if not Path.exists(path_tmp) or not path_tmp.is_dir():
             print("\t[WARNING] TMP folder not found")
@@ -299,23 +272,7 @@ class ZenodoAPI:
         
         for file in path_tmp.iterdir():
             print(f"Send file {file.name}")
-            isSend, max_try = False, 0
-            while not isSend:
-                try:
-                    print(f"Try number {max_try} on {MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE}")
-                    file_size = os.stat(file).st_size
-                    with open(file, "rb") as f:
-                        with tqdm(total=file_size, unit="B", unit_scale=True) as t:
-                            wrapped_file = CallbackIOWrapper(t.update, f, "read")
-                            requests.put(f"{bucket_url}/{file.name}", data=wrapped_file, params=self.params)
-                    isSend = True
-                except KeyboardInterrupt:
-                    raise NameError("Stop upload")
-                except:
-                    print(traceback.format_exc(), end="\n\n")
-                    max_try += 1
-                    if max_try >= MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE: raise NameError("Abort due to max try")
-                    time.sleep(0.5)
+            file_uploader(bucket_url, file, self.params)
 
 
     def get_conceptrecid_specific_deposit(self):
@@ -384,84 +341,3 @@ class ZenodoAPI:
     
     def get_all_zenodo_deposit(self):
         return requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH}).json()
-
-    # -- Zenodo without token.
-    @staticmethod
-    def get_version_from_doi(doi):
-        """ Retrieve all information about a session with a doi. """
-        r = requests.get(f"https://zenodo.org/api/records/{doi}")
-
-        version_json = {}
-        if r.status_code == 404:
-            print(f"Cannot access to {doi}. Error 404")
-        else:
-            version_json = r.json()
-        
-        return version_json
-
-    @staticmethod
-    def download_manager_without_token(files, output_folder, session_name, doi):
-        """ Manage to download files without token. """
-        path_zip_session = Path(output_folder, session_name, "ZIP")
-        path_zip_session.mkdir(exist_ok=True, parents=True)
-
-        for file in files:
-
-            path_tmp_file = Path(path_zip_session, file["key"])
-            url = f"https://zenodo.org/api/records/{doi}/files/{file['key']}/content"
-            print(f"\nWorking with: {path_tmp_file}")
-            ZenodoAPI.download_file_without_token(url, path_tmp_file)
-
-            # Retry while checksum is different.
-            while md5(path_tmp_file) != file["checksum"].replace("md5:", ""):
-                print(f"[WARNING] Checksum error when downloading {path_tmp_file}. We retry.")
-                path_tmp_file.unlink()
-                ZenodoAPI.download_file_without_token(url, path_tmp_file)
-
-            # Extract file in directory.
-            path_to_unzip_or_move = Path(output_folder, session_name)
-            if ".zip" not in file["key"]:
-                print(f"Move {path_tmp_file} to {path_to_unzip_or_move}.")
-                shutil.move(path_tmp_file, Path(path_to_unzip_or_move, file["key"]))
-            else:
-                if "DCIM" in file["key"]:
-                    path_to_unzip_or_move = Path(output_folder, session_name, "DCIM")
-                elif "PROCESSED_DATA" in file["key"]:
-                    folder_name = file["key"].replace(".zip", "").replace("PROCESSED_DATA_", "")
-                    path_to_unzip_or_move = Path(output_folder, session_name, "PROCESSED_DATA", folder_name)
-                else:
-                    path_to_unzip_or_move = Path(output_folder, session_name, file["key"].replace(".zip", ""))
-                
-                print(f"Unzip {path_tmp_file} to {path_to_unzip_or_move}.")
-                with zipfile.ZipFile(path_tmp_file, 'r') as zip_ref:
-                    zip_ref.extractall(path_to_unzip_or_move)
-            
-
-        # Delete zip file and folder
-        print(f"\nRemove {path_zip_session} folder.")
-        for file in path_zip_session.iterdir():
-            file.unlink()
-        path_zip_session.rmdir()
-    
-    @staticmethod
-    def download_file_without_token(url, output_file):
-        """ Download file at output_file path. """
-        isDownload, max_try = False, 0
-        while not isDownload:
-            try:
-                r = requests.get(f"{url}", stream=True)
-                total = int(r.headers.get('content-length', 0))
-
-                with open(output_file, 'wb') as file, tqdm(total=total, unit='B', unit_scale=True) as bar:
-                    for data in r.iter_content(chunk_size=1000):
-                        size = file.write(data)
-                        bar.update(size)
-                
-                isDownload = True
-            except KeyboardInterrupt:
-                raise NameError("Stop iteration")
-            except:
-                print(traceback.format_exc(), end="\n\n")
-                max_try += 1
-                if max_try >= MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE: raise NameError("Abort due to max try")
-                time.sleep(0.5)

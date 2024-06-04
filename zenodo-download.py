@@ -3,8 +3,8 @@ import argparse
 import traceback
 from pathlib import Path
 
-from utils.ZenodoAPI import ZenodoAPI
-from utils.lib_tools import get_session_name_doi_from_opt
+from src.zenodo_api.token import ZenodoAPI
+from src.utils.lib_tools import get_session_name_doi_from_opt
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-download", description="Workflow to download raw data and processed data with metadata")

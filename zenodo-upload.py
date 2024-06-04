@@ -3,11 +3,11 @@ import argparse
 import traceback
 from pathlib import Path
 
-from utils.ZenodoAPI import ZenodoAPI
-from utils.PlanchaSession import PlanchaSession
-from utils.PlanchaMetadata import PlanchaMetadata
-from utils.constants import TMP_PATH, RESTRICTED_FILES
-from utils.lib_tools import get_list_sessions, get_processed_folders_to_upload
+from src.zenodo_api.token import ZenodoAPI
+from src.seatizen_session.manager import PlanchaSession
+from src.seatizen_session.metadata import PlanchaMetadata
+from src.utils.constants import TMP_PATH, RESTRICTED_FILES
+from src.utils.lib_tools import get_list_sessions, get_processed_folders_to_upload
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-upload", description="Workflow to upload raw data and processed data with metadata")
@@ -27,8 +27,9 @@ def parse_args():
     # Data type to upload or update.
     parser.add_argument("-ur", "--upload-rawdata", action="store_true", help="Upload raw data from a session")
     parser.add_argument("-up", "--upload-processeddata", default="", help="Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA | Ex: '-up fi' for upload frames and ia ")
-    parser.add_argument("-uc", "--upload-custom", action="store_true", help="Upload a custom data from a session") # TODO Explain
     parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session") # ! Caution could be dangerous when we get multiple processed version
+    
+    parser.add_argument("-uc", "--upload-custom", action="store_true", help="Upload a custom data from a session") # TODO Explain
     parser.add_argument("-umc", "--update-metadata-custom", action="store_true", help="Update custom metadata from a session")
 
     # Optional arguments.
