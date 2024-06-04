@@ -4,6 +4,8 @@ import traceback
 from pathlib import Path
 
 from src.zenodo_api.token import ZenodoAPI
+from src.zenodo_api.tokenless import get_version_from_doi, download_manager_without_token
+
 from src.utils.lib_tools import get_session_name_doi_from_opt
 
 def parse_args():
@@ -91,13 +93,6 @@ def download_with_token(opt, config_json, path_output):
 
 
 def download_without_token(opt):
-    """
-        Depuis un conceptrecid, on peut récupérer la liste des files.   
-
-        Donc en gros depuis n'importe qu'elle type de doi, on peut récupèrer la liste des fichiers. Si c'est en restricted, c'est vide.
-
-        Depuis un session name ? c'est cho
-    """
     print("Using downloader without token")
     
     # Create output_folder
@@ -115,7 +110,7 @@ def download_without_token(opt):
                 print("Cannot find session without doi when you don't provide token.")
                 continue
             
-            version_json = ZenodoAPI.get_version_from_doi(doi)
+            version_json = get_version_from_doi(doi)
             list_files = version_json["files"]
 
             # Continue if no files to download due to access_right not open.
@@ -139,7 +134,7 @@ def download_without_token(opt):
             if session_name == "":
                 print("[WARNING] Cannot find session_name.")
 
-            ZenodoAPI.download_manager_without_token(list_files, path_output, session_name, doi)
+            download_manager_without_token(list_files, path_output, session_name, doi)
 
         except Exception:
             print(traceback.format_exc(), end="\n\n")
