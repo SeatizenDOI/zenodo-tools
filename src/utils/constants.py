@@ -13,3 +13,6 @@ MAXIMAL_DEPOSIT_FILE_SIZE = 50 # GB
 MAXIMAL_ZIP_SIZE = 15 # GB
 MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE = 50
 NB_VERSION_TO_FETCH = 500
+
+# Zenodo for download without token
+ZENODO_LINK_WITHOUT_TOKEN = "https://zenodo.org/api/records"

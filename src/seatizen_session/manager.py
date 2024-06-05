@@ -10,7 +10,7 @@ from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
 
-from .zipper import PlanchaZipper
+from .zipper import SessionZipper
 from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE
 
 class BaseType(Enum):
@@ -23,7 +23,7 @@ class DCIMType(Enum):
     VIDEO = "MP4 files"
     IMAGE = "JPG files"
 
-class PlanchaSession:
+class SessionManager:
 
     def __init__(self, session_path, temp_folder):
         # Basics path.
@@ -103,7 +103,7 @@ class PlanchaSession:
         
         t_start = datetime.now()
         print(f"Preparing DCIM folder")
-        zipper = PlanchaZipper(Path(self.temp_folder, "DCIM.zip"))
+        zipper = SessionZipper(Path(self.temp_folder, "DCIM.zip"))
         for file in dcim_files:
             if file.is_dir() and "GOPRO" in file.name:
                 for gopro_file in natsorted(list(file.iterdir())):

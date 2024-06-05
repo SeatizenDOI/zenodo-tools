@@ -1,8 +1,8 @@
-from .manager import PlanchaSession, BaseType, DCIMType
+from .manager import SessionManager, BaseType, DCIMType
 
-class PlanchaMetadata:
+class SessionMetadata:
 
-    def __init__(self, plancha_session: PlanchaSession, metadata_json: dict):
+    def __init__(self, plancha_session: SessionManager, metadata_json: dict):
         self.plancha_session = plancha_session
         self.metadata_json = metadata_json
 

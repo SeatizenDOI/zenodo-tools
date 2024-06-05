@@ -6,7 +6,9 @@ from pathlib import Path
 from src.utils.lib_tools import get_list_sessions
 
 from src.zenodo_api.token import ZenodoAPI
-from src.seatizen_atlas.manager import SeatizenManager
+from src.seatizen_atlas.manager import AtlasManager
+from src.seatizen_atlas.metadata import seatizen_atlas_metadata
+
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-manager", description="Workflow to manage global deposit")
@@ -28,7 +30,7 @@ def parse_args():
     
     # Seatizen Atlas path.
     parser.add_argument("-psa", "--path_seatizen_atlas_folder", default="./seatizen_atlas_folder", help="Folder to store data")
-    parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata_seatizen_atlas.json", help="Path to metadata gile")
+    parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata_seatizen_atlas.json", help="Path to metadata file")
 
 
     # Optional arguments.
@@ -53,10 +55,10 @@ def main(opt):
         if config_json == {}:
             print("Cannot update metadata without zenodo token")
         else:
-            SeatizenManager.update_metadata(config_json, opt.path_metadata_json)
+            seatizen_atlas_metadata(config_json, opt.path_metadata_json)
         return
 
-    seatizenManager = SeatizenManager(config_json, opt.path_seatizen_atlas_folder, opt.use_from_local, opt.force_regenerate)
+    seatizenManager = AtlasManager(config_json, opt.path_seatizen_atlas_folder, opt.use_from_local, opt.force_regenerate)
 
 
     # Stat

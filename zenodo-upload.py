@@ -4,8 +4,8 @@ import traceback
 from pathlib import Path
 
 from src.zenodo_api.token import ZenodoAPI
-from src.seatizen_session.manager import PlanchaSession
-from src.seatizen_session.metadata import PlanchaMetadata
+from src.seatizen_session.manager import SessionManager
+from src.seatizen_session.metadata import SessionMetadata
 from src.utils.constants import TMP_PATH, RESTRICTED_FILES
 from src.utils.lib_tools import get_list_sessions, get_processed_folders_to_upload
 
@@ -21,7 +21,7 @@ def parse_args():
 
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Path to folder of session")
-    parser.add_argument("-pses", "--path_session", default="/media/bioeos/E/202309_plancha_session/20230926_REU-HERMITAGE_ASV-2_01/", help="Path to the session")
+    parser.add_argument("-pses", "--path_session", default="/home/bioeos/Documents/Bioeos/plancha-session/20221119_MUS-ST-BRANDON_ASV-01_01/", help="Path to the session")
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/retry.csv", help="Path to the csv file")
 
     # Data type to upload or update.
@@ -79,8 +79,8 @@ def main(opt):
             
             print(f"\n\nWorking with session {session_path.name}")
             
-            plancha_session = PlanchaSession(session_path, TMP_PATH)
-            plancha_metadata = PlanchaMetadata(plancha_session, metadata_json)
+            plancha_session = SessionManager(session_path, TMP_PATH)
+            plancha_metadata = SessionMetadata(plancha_session, metadata_json)
             zenodoAPI.update_current_session(plancha_session.session_name)
 
             if opt.upload_rawdata:
@@ -95,7 +95,6 @@ def main(opt):
                     if i == 0:
                         zenodoAPI.create_deposit_on_zenodo(folder_to_upload, raw_metadata) # RAW_DATA
                     else:
-                        raw_metadata["metadata"]["version"] = f"RAW_DATA_{i+1}"
                         zenodoAPI.add_new_version_to_deposit(folder_to_upload, raw_metadata, RESTRICTED_FILES) # RAW_DATA_2, RAW_DATA_3, ...
                 plancha_session.cleanup()
             

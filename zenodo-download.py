@@ -33,7 +33,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def download_with_token(opt, config_json, path_output):
+def download_with_token(opt, config_json):
     print("Using downloader with token")
 
     # Create output_folder
@@ -111,6 +111,8 @@ def download_without_token(opt):
                 continue
             
             version_json = get_version_from_doi(doi)
+            if version_json == {} or "files" not in version_json:
+                continue
             list_files = version_json["files"]
 
             # Continue if no files to download due to access_right not open.
@@ -153,7 +155,9 @@ def main(opt):
     if not opt.download_rawdata and not opt.download_processed_data:
         print("[WARNING] Please choose if you want to reconstruct raw data or processed data or both.")
         return
+    download_without_token(opt)
 
+    return
     config_path = Path('./config.json')
     if not Path.exists(config_path) or not config_path.is_file():
         download_without_token(opt)

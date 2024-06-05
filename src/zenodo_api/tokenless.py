@@ -4,7 +4,10 @@ import requests
 from pathlib import Path
 
 from ..utils.lib_tools import md5
+from ..utils.constants import ZENODO_LINK_WITHOUT_TOKEN
+
 from .base_function import file_downloader
+
 
 
 def download_manager_without_token(files, output_folder, session_name, doi):
@@ -15,7 +18,7 @@ def download_manager_without_token(files, output_folder, session_name, doi):
     for file in files:
 
         path_tmp_file = Path(path_zip_session, file["key"])
-        url = f"https://zenodo.org/api/records/{doi}/files/{file['key']}/content"
+        url = f"{ZENODO_LINK_WITHOUT_TOKEN}/{doi}/files/{file['key']}/content"
         print(f"\nWorking with: {path_tmp_file}")
         file_downloader(url, path_tmp_file)
 
@@ -53,7 +56,7 @@ def download_manager_without_token(files, output_folder, session_name, doi):
 
 def get_version_from_doi(doi):
     """ Retrieve all information about a session with a doi. """
-    r = requests.get(f"https://zenodo.org/api/records/{doi}")
+    r = requests.get(f"{ZENODO_LINK_WITHOUT_TOKEN}/{doi}")
 
     version_json = {}
     if r.status_code == 404:

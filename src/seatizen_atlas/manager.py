@@ -2,10 +2,10 @@ from pathlib import Path
 
 from ..utils.constants import SEATIZEN_ATLAS_DOI, SEATIZEN_ATLAS_GPKG
 
-from ..zenodo_api.token import ZenodoAPI
+from ..zenodo_api.tokenless import download_manager_without_token, get_version_from_doi
 from ..sql_connector.connector import SQLiteConnector
 
-class SeatizenManager:
+class AtlasManager:
     def __init__(self, config, seatizen_folder_path, from_local, force_regenerate):
         
         # Config
@@ -40,10 +40,10 @@ class SeatizenManager:
         if not self.force_regenerate and not self.from_local:
             
             # Get last version information.
-            version_json = ZenodoAPI.get_version_from_doi(SEATIZEN_ATLAS_DOI)
+            version_json = get_version_from_doi(SEATIZEN_ATLAS_DOI)
 
             # Download data.
-            ZenodoAPI.download_manager_without_token(version_json["files"], self.seatizen_folder_path, ".", SEATIZEN_ATLAS_DOI)
+            download_manager_without_token(version_json["files"], self.seatizen_folder_path, ".", SEATIZEN_ATLAS_DOI)
         
         # Try to figure out if we have a gpkg file.
         if not Path.exists(self.seatizen_atlas_gpkg) or not self.seatizen_atlas_gpkg.is_file():

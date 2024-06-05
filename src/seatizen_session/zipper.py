@@ -4,7 +4,7 @@ from zipfile import ZipFile
 
 from ..utils.constants import MAXIMAL_ZIP_SIZE, BYTE_TO_GIGA_BYTE
 
-class PlanchaZipper:
+class SessionZipper:
     """ Create zip file and scale with max size """
     def __init__(self, base_zip_path) -> None:
         self.zip_path = base_zip_path
