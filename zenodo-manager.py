@@ -37,8 +37,6 @@ def parse_args():
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start.")
     parser.add_argument("-fr", "--force_regenerate", action="store_true", help="Regenerate gpkg file from scracth even if exist.")
 
-
-
     return parser.parse_args()
 
 def main(opt):
@@ -59,7 +57,6 @@ def main(opt):
         return
 
     seatizenManager = AtlasManager(config_json, opt.path_seatizen_atlas_folder, opt.use_from_local, opt.force_regenerate)
-
 
     # Stat
     sessions_fail = []
@@ -87,6 +84,12 @@ def main(opt):
     if (len(sessions_fail)):
         [print("\t* " + session_name) for session_name in sessions_fail]
     
+
+    # Export all value we wants.
+    seatizenManager.export_csv()
+    
+    # Upload all data.
+    seatizenManager.publish(opt.path_metadata_json)
 
 if __name__ == "__main__":
     opt = parse_args()

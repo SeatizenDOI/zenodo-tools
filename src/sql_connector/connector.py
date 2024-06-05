@@ -5,49 +5,89 @@ from ..utils.constants import SQL_FILE
 
 class SQLiteConnector:
 
-    def __init__(self, sqlite_filepath):
+    _instance = None
 
-        self.sqlite_filepath = sqlite_filepath
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls, *args, **kwargs)
+            cls._instance._connection = None
+        return cls._instance
+
+
+    def connect(self, sqlite_filepath):
+        """ Establishes connection with database """
+        try:
+            self._connection = sqlite3.connect(sqlite_filepath)
+            self._connection.enable_load_extension(True)
+            self._connection.execute('SELECT load_extension("mod_spatialite")')
+        except sqlite3.Error:
+            print(f"Cannot connect to {sqlite_filepath}")
+
+
+    def create(self, query, params=None):
+        """ Add data in database """
+        if params is None:
+            params = []
+        self._execute(query, params)
+
+
+    def read(self, query, params=None):
+        if params is None:
+            params = []
+        return self._query(query, params)
+
+
+    def update(self, query, params=None):
+        if params is None:
+            params = []
+        self._execute(query, params)
+
+
+    def delete(self, query, params=None):
+        if params is None:
+            params = []
+        self._execute(query, params)
+
+
+    def _query(self, query, params):
+        if self._connection is None:
+            print("Error: database connection not established")
+            return None
         
-        self.con, self.cur = None, None
+        cursor = self._connection.cursor()
+        cursor.execute(query, params)
+        results = cursor.fetchall()
+        cursor.close()
+        
+        return results
 
-        self.setup()
+
+    def _execute(self, query, params):
+        if self._connection is None:
+            print("Error: database connection not established")
+            return None
+        
+        cursor = self._connection.cursor()
+        cursor.execute(query, params)
+        self._connection.commit()
+        cursor.close()
     
-    def setup(self):
-        try:
-            self.con = sqlite3.connect(self.sqlite_filepath)
-            self.con.enable_load_extension(True)
-            self.con.execute('SELECT load_extension("mod_spatialite")')
-            self.cur = self.con.cursor()
-        except sqlite3.Error:
-            print(f"Cannot connect to {self.sqlite_filepath}")
 
-
-    def get_all_deposit(self):
-        deposit = []
-        try:
-            res = self.cur.execute("SELECT * FROM deposit")
-            deposit = res.fetchall()
-            print(deposit)
-
-        except sqlite3.Error:
-            print(traceback.format_exc(), end="\n\n")
-
-        return deposit
+    def execute_query(self, query, params=None):
+        """ Perform custom query. """
+        
+        if params is None:
+            params = []
+        if query.strip().lower().startswith('select'):
+            return self._query(query, params)
+        else:
+            self._execute(query, params)
+            return None
     
-    def insert_deposit(self):
-        data = [
-            (1, "test"),
-            (2, "test"),
-            (3, "test"),
-        ]
-        self.cur.executemany("INSERT INTO deposit VALUES(?, ?)", data)
-        self.con.commit()  # Remember to commit the transaction after executing INSERT.
-    
-    def generate(self):
+    def generate(self, sqlite_filepath):
         """ Regenerate gpkg file. """
 
-        self.setup()
+        self.connect(sqlite_filepath)
         
         if not Path.exists(Path(SQL_FILE)):
             raise NameError(f"File {SQL_FILE} not found")
@@ -57,7 +97,9 @@ class SQLiteConnector:
             sql_script = file.read()
 
         # Exécuter le script SQL
-        self.con.executescript(sql_script)
+        self._connection.executescript(sql_script)
     
     def close(self):
-        self.con.close()
+        if self._connection is not None:
+            self._connection.close()
+            SQLiteConnector._instance = None

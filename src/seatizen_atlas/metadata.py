@@ -6,17 +6,26 @@ from ..zenodo_api.token import ZenodoAPI
 
 def seatizen_atlas_metadata(config_json, metadata_json_path):
     """ Seatizen Atlas metadata """
-    metadata_json_path = Path(metadata_json_path)
-    if not Path.exists(metadata_json_path) or not metadata_json_path.is_file():
-        print("Metadata file not found.")
-        return
     print("Updating metadata last version of seatizen atlas.")
-    with open(metadata_json_path) as json_file:
-        metadata_json = json.load(json_file)
+    
+    metadata = build_metadata(metadata_json_path)
 
     zenodoAPI = ZenodoAPI("", config_json)
     zenodoAPI.deposit_id = SEATIZEN_ATLAS_DOI
+
+    zenodoAPI.edit_metadata(metadata)
     
+
+def build_metadata(metadata_json_path):
+
+    metadata_json_path = Path(metadata_json_path)
+    if not Path.exists(metadata_json_path) or not metadata_json_path.is_file():
+        print("Metadata file not found.")
+        return {}
+    
+    with open(metadata_json_path) as json_file:
+        metadata_json = json.load(json_file)
+
     data = {
         'metadata': {
             'title': "Seatizen Atlas",
@@ -31,7 +40,8 @@ def seatizen_atlas_metadata(config_json, metadata_json_path):
             'license': metadata_json["license"]
         }
     }
-    zenodoAPI.edit_metadata(data)
+    return data
+
 
 def get_description():
     return f"""
