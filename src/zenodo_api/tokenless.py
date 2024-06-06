@@ -65,3 +65,7 @@ def get_version_from_doi(doi):
         version_json = r.json()
     
     return version_json
+
+# TODO Add get_version_from_session_name => last version.
+
+# TODO Add get all version from session_name => all version

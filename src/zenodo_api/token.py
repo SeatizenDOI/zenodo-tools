@@ -106,6 +106,7 @@ class ZenodoAPI:
 
     def clean_draft_no_version(self):
         """ Delete all draft version. """
+        # TODO try to find draft with query or implement page by page
         r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH})
         for deposit in r.json():
             try:
@@ -284,6 +285,8 @@ class ZenodoAPI:
     # -- Operation to associate deposit to a doi or a name
     def set_deposit_id(self):
         """ Find deposit id with identifiers equal to session_name. If more than one deposit have the same session_name return None """
+        
+        # TODO Change by fetching by session name
         # Add cache to avoid fetch n time every time
         if len(self.all_deposit_cache) == 0:
             r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH})
@@ -340,4 +343,5 @@ class ZenodoAPI:
         return None
     
     def get_all_zenodo_deposit(self):
+        # TODO Faire le truc de par page
         return requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH}).json()
