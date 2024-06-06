@@ -155,9 +155,7 @@ def main(opt):
     if not opt.download_rawdata and not opt.download_processed_data:
         print("[WARNING] Please choose if you want to reconstruct raw data or processed data or both.")
         return
-    download_without_token(opt)
 
-    return
     config_path = Path('./config.json')
     if not Path.exists(config_path) or not config_path.is_file():
         download_without_token(opt)
