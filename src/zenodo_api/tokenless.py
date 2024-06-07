@@ -65,3 +65,59 @@ def get_version_from_doi(doi):
         version_json = r.json()
     
     return version_json
+
+
+def get_version_from_session_name(session_name):
+    """ Retrieve last version about a session with a session_name. """
+
+    query = f'q=metadata.identifiers.identifier:"urn:{session_name}"'
+    r = requests.get(f"{ZENODO_LINK_WITHOUT_TOKEN}?{query}")
+
+    version_json = {}
+    if r.status_code == 404:
+        print(f"Cannot access to {session_name}. Error 404")
+        return version_json
+    
+    # Try to acces version. If all is good we have just one version, but if we have more or less than one version, we have an error.
+    try:
+        list_version = r.json()["hits"]["hits"]
+        if len(list_version) > 1:
+            print("Retrieve more than one version, abort.")
+        elif len(list_version) == 0:
+            print(f"No version found for {session_name}.")
+        else:
+            version_json = list_version[0]
+    except:
+        print(f"Cannot get version for {session_name}.")
+    
+    return version_json
+
+def get_all_version_from_session_name(session_name):
+    """ Retrieve all versions about a session with a session_name. """
+
+    query = f'q=metadata.identifiers.identifier:"urn:{session_name}"&allversions=true'
+    r = requests.get(f"{ZENODO_LINK_WITHOUT_TOKEN}?{query}")
+
+    version_json = []
+    if r.status_code == 404:
+        print(f"Cannot access to {session_name}. Error 404")
+        return version_json
+    
+    # Try to acces version. If all is good we have just one conceptrecid, else we have a problem.
+    try:
+        list_version = r.json()["hits"]["hits"]
+
+        if len(list_version) == 0:
+            print(f"No version found for {session_name}.")
+            return version_json
+
+        conceptrecids = set(map(lambda version: version['conceptrecid'], list_version))
+        if len(conceptrecids) > 1:
+            print("Retrieve more than one deposit, abort.")
+        else:
+            version_json = list_version
+
+    except:
+        print(f"Cannot get version for {session_name}.")
+    
+    return version_json

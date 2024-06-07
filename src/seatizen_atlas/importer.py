@@ -18,3 +18,7 @@ class AtlasImport:
         if not Path.exists(session_path) or not session_path.is_dir():
             print("[ERROR] Session not found in importer. ")
         
+        
+        # Zip actual frames folder without useless file to get md5 sum.
+
+        # Zip metadata

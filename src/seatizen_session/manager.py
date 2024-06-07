@@ -120,17 +120,8 @@ class SessionManager:
         # Retrieve relative path of frame.
         frames_list = self.get_frames_list()
         
-        # Get frame predictions.
-        predictions_gps_path = Path(self.session_path, "METADATA/predictions_gps.csv")
-        if not Path.exists(predictions_gps_path):
-            print(f"No predictions_gps found for session {self.session_name}\n")
-            return
-        
-        df_predictions_gps = pd.read_csv(predictions_gps_path)
-        if len(df_predictions_gps) == 0: 
-            print(f"Predictions GPS empty for session {self.session_name}\n")
-            return
-        filenames = df_predictions_gps["FileName"].to_list() # CSV without useless images
+        # Get all useful images.
+        useful_frames = self.get_useful_frames_path()        
         
         frame_parent_folder = self.get_frame_parent_folder(frames_list)
         frames_zip_path = Path(self.temp_folder, f"{frame_parent_folder.replace('/', '_')}.zip")
@@ -145,7 +136,7 @@ class SessionManager:
         with ZipFile(frames_zip_path, "w") as zip_object:
             for file in tqdm(frames_list):
                 file = Path(file)
-                if file.name in filenames:
+                if file.name in useful_frames:
                     zip_object.write(file, file.relative_to(frames_folder))
         print(f"Successful zipped FRAMES folder in {datetime.now() - t_start}\n")
 
@@ -397,7 +388,7 @@ class SessionManager:
         isGeoreferenced = "GPSLongitude" in metadata_df and "GPSLatitude" in metadata_df
         return nb_frames, isGeoreferenced
 
-
+    # !FIXME This method take last model name found 
     def get_jacques_stat(self):
         """ Get jacques model name and return proportion of useful/useless. """
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
@@ -415,7 +406,7 @@ class SessionManager:
         
         return jacques_name, useful, useless
 
-
+    # !FIXME This method assume model come from lombardata
     def get_hugging_face(self):
         """ Return hugging face model name"""
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
@@ -501,3 +492,35 @@ class SessionManager:
 
         # Remove first underscore.
         return list_parents[0][1:] if list_parents[0][0] == "/" else list_parents[0]
+    
+    def get_useful_frames_path(self):
+        
+        useful_frames = []
+        try_ia = False
+        # Get frame predictions.
+        predictions_gps_path = Path(self.session_path, "METADATA/predictions_gps.csv")
+        if not Path.exists(predictions_gps_path):
+            try_ia = True
+        else:
+            df_predictions_gps = pd.read_csv(predictions_gps_path)
+            if len(df_predictions_gps) == 0: 
+                print(f"Predictions GPS empty for session {self.session_name}\n")
+                try_ia = True
+            else:
+                useful_frames = df_predictions_gps["FileName"].to_list() # CSV without useless images
+        
+        if not try_ia: return useful_frames
+
+        print("We didn't find predictions gps, so we try with jacques csv anotations to select useful frames.")
+        # Cannot find predictions_gps, try with jacques annotation_files
+        IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
+        if not Path.exists(IA_path) or not IA_path.is_dir():
+            return useful_frames
+
+        for file in IA_path.iterdir():
+            if "jacques" not in file.name: continue
+            df_jacques = pd.read_csv(file)
+
+            useful_frames = df_jacques[df_jacques["Useless"] == 0]["FileName"].to_list()
+
+        return useful_frames        

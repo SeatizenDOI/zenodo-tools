@@ -21,7 +21,7 @@ def parse_args():
 
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Path to folder of session")
-    parser.add_argument("-pses", "--path_session", default="/home/bioeos/Documents/Bioeos/plancha-session/20221119_MUS-ST-BRANDON_ASV-01_01/", help="Path to the session")
+    parser.add_argument("-pses", "--path_session", default="/media/bioeos/E/2021_plancha_session/20210317_REU-HERMITAGE_SCUBA-2_00", help="Path to the session")
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/retry.csv", help="Path to the csv file")
 
     # Data type to upload or update.
@@ -138,6 +138,7 @@ def main(opt):
                 else:
                     # Session have already a deposit, so we add a new version.
                     zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, custom_metadata)
+                plancha_session.cleanup()
             
             if opt.update_metadata_custom:
                 if zenodoAPI.deposit_id == None:
@@ -149,9 +150,7 @@ def main(opt):
                 for id in raw_data_ids + processed_data_ids:
                     print(f"Working with id {id}")
                     zenodoAPI.deposit_id = id
-                    zenodoAPI.edit_metadata(custom_metadata)
-
-            plancha_session.cleanup()
+                    zenodoAPI.edit_metadata(custom_metadata)            
 
         except Exception:
             print(traceback.format_exc(), end="\n\n")

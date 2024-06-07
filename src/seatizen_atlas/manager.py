@@ -62,12 +62,17 @@ class AtlasManager:
             self.sql_connector.connect(self.seatizen_atlas_gpkg)
 
     def import_session(self, session: Path):
+        self.importer.import_seatizen_session(session)
 
-
-        pass
     
     def export_csv(self):
-        pass
+        print("\t\t")
+        self.exporter.session_doi_csv()
+        self.exporter.metadata_images_csv()
+        self.exporter.metadata_annotation_csv()
+        self.exporter.darwincore_annotation_csv()
+        self.exporter.global_map_shp()
+
 
     def clean_seatizen_folder(self):
         for file in self.seatizen_folder_path.iterdir():
@@ -89,6 +94,5 @@ class AtlasManager:
 
         # Previous files to not propagate.
         previous_files = zenodoAPI.list_files()
-        print(metadata)
-        print(previous_files)
-        # zenodoAPI.add_new_version_to_deposit(self.seatizen_folder_path, metadata, restricted_files=previous_files)
+
+        zenodoAPI.add_new_version_to_deposit(self.seatizen_folder_path, metadata, restricted_files=previous_files)

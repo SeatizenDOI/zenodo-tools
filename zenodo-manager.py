@@ -5,7 +5,9 @@ from pathlib import Path
 
 from src.utils.lib_tools import get_list_sessions
 
+from src.zenodo_api.tokenless import get_version_from_session_name, get_all_version_from_session_name
 from src.zenodo_api.token import ZenodoAPI
+
 from src.seatizen_atlas.manager import AtlasManager
 from src.seatizen_atlas.metadata import seatizen_atlas_metadata
 
@@ -31,7 +33,6 @@ def parse_args():
     # Seatizen Atlas path.
     parser.add_argument("-psa", "--path_seatizen_atlas_folder", default="./seatizen_atlas_folder", help="Folder to store data")
     parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata_seatizen_atlas.json", help="Path to metadata file")
-
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start.")
@@ -89,7 +90,10 @@ def main(opt):
     seatizenManager.export_csv()
     
     # Upload all data.
-    seatizenManager.publish(opt.path_metadata_json)
+    # seatizenManager.publish(opt.path_metadata_json)
+
+    # Close database connection.
+    seatizenManager.sql_connector.close()
 
 if __name__ == "__main__":
     opt = parse_args()

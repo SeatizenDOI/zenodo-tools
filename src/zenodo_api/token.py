@@ -3,6 +3,7 @@ import shutil
 import zipfile
 import requests
 from pathlib import Path
+from datetime import datetime
 
 from .error import ZenodoErrorHandler, ParsingReturnType
 from .base_function import file_downloader, file_uploader
@@ -20,8 +21,6 @@ class ZenodoAPI:
         self.params = {'access_token': self.ACCESS_TOKEN}
         self.headers = {"Content-Type": "application/json"}
 
-        self.all_deposit_cache = [] # When fetching deposit, keep all data in cache except if we create deposit or add version.
-        
         if session_name != "":
             self.set_deposit_id() # Try to get current id of the session.
         
@@ -44,9 +43,6 @@ class ZenodoAPI:
 
         # Publish version.
         self.__zenodo_actions_publish()
-
-        # Clear cache.
-        self.all_deposit_cache.clear()
 
 
     def add_new_version_to_deposit(self, temp_folder, metadata, restricted_files = [], dontUploadWhenLastVersionIsProcessedData=False):
@@ -80,9 +76,6 @@ class ZenodoAPI:
         # Publish.
         self.__zenodo_actions_publish()
 
-        # Clear cache.
-        self.all_deposit_cache.clear()
-
 
     def edit_metadata(self, metadata):
         """ Update metadata of deposit_id """
@@ -106,17 +99,17 @@ class ZenodoAPI:
 
     def clean_draft_no_version(self):
         """ Delete all draft version. """
-        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH})
-        for deposit in r.json():
+        
+        deposits = self.get_all_zenodo_deposit() # !FIXME Cannot get only draft version.
+        for deposit in deposits:
             try:
                 if deposit["state"] == "unsubmitted" and deposit["submitted"] == False and deposit["title"] == "":
-                    print("Delete draft version")
+                    print(f"\nDelete draft version {deposit['id']}")
                     r2 = requests.post(deposit["links"]["discard"], params=self.params, json={}, headers=self.headers)
                     ZenodoErrorHandler.parse(r2, ParsingReturnType.ALL)
 
             except:
                 continue
-
 
     # Update current session without deleting object
     def update_current_session(self, session_name):
@@ -226,7 +219,6 @@ class ZenodoAPI:
         print("Discard change of current version")
         r = requests.post(f"{self.ZENODO_LINK}/{self.deposit_id}/actions/discard", params=self.params, json={}, headers=self.headers)
         ZenodoErrorHandler.parse(r, ParsingReturnType.NONE)
-        self.all_deposit_cache.clear() # Discard version so id change
 
 
     def __zenodo_actions_newversion(self):
@@ -284,29 +276,21 @@ class ZenodoAPI:
     # -- Operation to associate deposit to a doi or a name
     def set_deposit_id(self):
         """ Find deposit id with identifiers equal to session_name. If more than one deposit have the same session_name return None """
-        # Add cache to avoid fetch n time every time
-        if len(self.all_deposit_cache) == 0:
-            r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH})
-            self.all_deposit_cache = r.json()
+
+        query = 'metadata.identifiers.identifier:"urn:{self.session_name}"'
+        r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, 'q': query})
         
-        ids = []
-        for deposit in self.all_deposit_cache:
-            try:
-                for identifiers in deposit["metadata"]["related_identifiers"]:
-                    if identifiers["identifier"].replace("urn:", "") == self.session_name:
-                        ids.append(deposit["id"])
-                        break
-            except:
-                continue
+        if r.status_code == 404:
+            raise NameError(f"Cannot access to {self.session_name}.")
         
-        # Handle multiple case
-        if len(ids) == 0:
+        deposits = r.json()
+        if len(deposits) > 1:
+            raise NameError("Retrieve more than one version, abort.")
+        elif len(deposits) == 0:
             print(f"[WARNING] No id found for session {self.session_name}") # Only warning print
             return None
-        elif len(ids) > 1:
-            raise NameError(f"[WARNING] Multiple ids found for session {self.session_name}")
         else:
-            self.deposit_id = ids[0]
+            self.deposit_id = deposits[0]["id"]
 
 
     def get_all_version_ids_for_deposit(self, conceptrecid):
@@ -340,4 +324,24 @@ class ZenodoAPI:
         return None
     
     def get_all_zenodo_deposit(self):
-        return requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH}).json()
+        """ Grab all versions in user zenodo account. """
+        print(f"Retrieve all versions in user zenodo account in packs of {NB_VERSION_TO_FETCH}.")
+        
+        need_to_fetch_more, page = True, 1
+        versions = []
+        while need_to_fetch_more:
+
+            start_t = datetime.now()
+            request = requests.get(self.ZENODO_LINK, params={"access_token": self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, "all_versions": True, "page": page})
+            
+            print(f"Query time for page {page}: {datetime.now() - start_t} sec")
+            if request.status_code == 200:
+                versions = versions + request.json()
+                if len(versions) % NB_VERSION_TO_FETCH == 0:
+                    page += 1
+                else:
+                    need_to_fetch_more = False
+            else:
+                print(f"[WARNING] Request failed, try again for page {page}")
+
+        return versions

@@ -204,7 +204,7 @@ class SessionMetadata:
 
         fundings = ""
         for f in self.metadata_json["fundings"]:
-            fundings += f"<strong><i>{f}</i></strong><br>"
+            fundings += f"<notes><strong><i>{f}</i></strong></notes><br>"
         
         return fundings
     
