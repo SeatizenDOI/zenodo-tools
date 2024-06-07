@@ -5,9 +5,6 @@ from pathlib import Path
 
 from src.utils.lib_tools import get_list_sessions
 
-from src.zenodo_api.tokenless import get_version_from_session_name, get_all_version_from_session_name
-from src.zenodo_api.token import ZenodoAPI
-
 from src.seatizen_atlas.manager import AtlasManager
 from src.seatizen_atlas.metadata import seatizen_atlas_metadata
 
@@ -23,7 +20,7 @@ def parse_args():
 
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Path to folder of session")
-    parser.add_argument("-pses", "--path_session", default="/home/bioeos/Documents/Bioeos/plancha-session/20240314_REU-SAINTLEU_ASV-1_02", help="Path to the session")
+    parser.add_argument("-pses", "--path_session", default="/media/bioeos/D/20240517_REU-TROU-DEAU_ASV-1_01/", help="Path to the session")
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/test.csv", help="Path to the csv file")
 
     # Mode.

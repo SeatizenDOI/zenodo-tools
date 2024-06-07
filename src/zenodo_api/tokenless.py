@@ -92,7 +92,7 @@ def get_version_from_session_name(session_name):
     
     return version_json
 
-def get_all_version_from_session_name(session_name):
+def get_all_versions_from_session_name(session_name):
     """ Retrieve all versions about a session with a session_name. """
 
     query = f'q=metadata.identifiers.identifier:"urn:{session_name}"&allversions=true'

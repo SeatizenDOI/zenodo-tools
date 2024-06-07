@@ -12,6 +12,8 @@ from natsort import natsorted
 
 from .zipper import SessionZipper
 from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE
+from ..utils.lib_tools import md5
+
 
 class BaseType(Enum):
     RGP = "RGP Station from IGN"
@@ -524,3 +526,14 @@ class SessionManager:
             useful_frames = df_jacques[df_jacques["Useless"] == 0]["FileName"].to_list()
 
         return useful_frames        
+    
+    
+    def get_md5_checksum_zip_folder(self):
+        """ Return a dict of filename: md5 checksum in TMP Folder. """
+        print("Get checksum of zip file in temp_folder")
+        filename_with_md5 = {}
+        for file in self.temp_folder.iterdir():
+            if file.suffix.lower() != ".zip": continue
+
+            filename_with_md5[file.name] = md5(file)
+        return filename_with_md5
