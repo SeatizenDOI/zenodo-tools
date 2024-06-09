@@ -277,7 +277,7 @@ class ZenodoAPI:
     def set_deposit_id(self):
         """ Find deposit id with identifiers equal to session_name. If more than one deposit have the same session_name return None """
 
-        query = 'metadata.identifiers.identifier:"urn:{self.session_name}"'
+        query = f'metadata.identifiers.identifier:"urn:{self.session_name}"'
         r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, 'q': query})
         
         if r.status_code == 404:
@@ -323,8 +323,8 @@ class ZenodoAPI:
         
         return None
     
-    def get_all_zenodo_deposit(self):
-        """ Grab all versions in user zenodo account. """
+    def get_all_zenodo_deposit(self, all_versions: bool = True):
+        """ Grab all deposit in user zenodo account. Can also get all versions."""
         print(f"Retrieve all versions in user zenodo account in packs of {NB_VERSION_TO_FETCH}.")
         
         need_to_fetch_more, page = True, 1
@@ -332,7 +332,7 @@ class ZenodoAPI:
         while need_to_fetch_more:
 
             start_t = datetime.now()
-            request = requests.get(self.ZENODO_LINK, params={"access_token": self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, "all_versions": True, "page": page})
+            request = requests.get(self.ZENODO_LINK, params={"access_token": self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, "all_versions": all_versions, "page": page})
             
             print(f"Query time for page {page}: {datetime.now() - start_t} sec")
             if request.status_code == 200:
