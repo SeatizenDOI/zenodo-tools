@@ -45,7 +45,7 @@ CREATE TABLE gpkg_geometry_columns (
 );
 
 INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) VALUES
-('deposit', 'footprint', 'GEOMETRY', 4326, 0, 0),
+('deposit', 'footprint', 'MULTIPOINT', 4326, 0, 0),
 ('frame', 'location', 'POINT', 4326, 1, 0);
 
 ----------------------------------------
@@ -56,7 +56,7 @@ INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, 
 CREATE TABLE IF NOT EXISTS deposit (
     doi TEXT PRIMARY KEY,
     session_name TEXT NOT NULL,
-    footprint GEOMETRY,
+    footprint BLOB,
     session_date DATE GENERATED ALWAYS AS (SUBSTR(session_name, 0, 9)) VIRTUAL,
     alpha3_country_code TEXT GENERATED ALWAYS AS (SUBSTR(session_name, 10, 3)) VIRTUAL,
     location TEXT GENERATED ALWAYS AS (

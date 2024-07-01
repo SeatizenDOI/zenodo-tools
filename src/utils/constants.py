@@ -1,4 +1,4 @@
-TMP_PATH = "/media/bioeos/F/tmp/"
+TMP_PATH = "/tmp/00_plancha"
 RESTRICTED_FILES = ["DCIM"]
 IMG_EXTENSION = ('.png', '.jpg', '.jpeg') # Image extension in lower case
 BYTE_TO_GIGA_BYTE = 1000000000

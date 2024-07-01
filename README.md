@@ -49,6 +49,11 @@ To ensure a consistent environment for all users, this project uses a Conda envi
         "ZENODO_LINK": "https://zenodo.org/api/deposit/depositions"
     }
     ```
+5. **Other lib:** Install mod-spatialite. Here for ubuntu 22.04
+```bash
+sudo apt-get install libsqlite3-mod-spatialite
+```
+
 
 ## Usage of zenodo-upload Script Parameters
 

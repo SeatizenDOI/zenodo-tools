@@ -3,16 +3,21 @@ import json
 import shutil
 import pycountry
 import pandas as pd
+pd.set_option("display.precision", 32)
 from tqdm import tqdm
 from enum import Enum
 from pathlib import Path
 from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
+import geopandas as gpd
+import alphashape
+import pandas as pd
+from shapely.geometry import Point
+from scipy.spatial import ConvexHull
 
 from .zipper import SessionZipper
 from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE
-from ..utils.lib_tools import md5
 
 
 class BaseType(Enum):
@@ -376,11 +381,8 @@ class SessionManager:
         """ Check if we have split some frames and if they are georefenreced. """
         
         # Get frame relative path.
-        metadata_path = Path(self.session_path, "METADATA/metadata.csv")
-        if not Path.exists(metadata_path):
-            print(f"No metadata_csv found for session {self.session_name}\n")
-            return 0, False
-        metadata_df = pd.read_csv(metadata_path)
+        metadata_df = self.get_metadata_csv()
+        if len(metadata_df) == 0: return 0, False
 
         nb_frames = len(metadata_df)
         
@@ -461,11 +463,7 @@ class SessionManager:
         frames_path = []
 
         # Get frame relative path.
-        metadata_path = Path(self.session_path, "METADATA/metadata.csv")
-        if not Path.exists(metadata_path):
-            print(f"No metadata_csv found for session {self.session_name}\n")
-            return frames_path
-        metadata_df = pd.read_csv(metadata_path)
+        metadata_df = self.get_metadata_csv()
         if len(metadata_df) == 0: return frames_path
     
         try:
@@ -528,12 +526,64 @@ class SessionManager:
         return useful_frames        
     
     
-    def get_md5_checksum_zip_folder(self):
-        """ Return a dict of filename: md5 checksum in TMP Folder. """
-        print("Get checksum of zip file in temp_folder")
-        filename_with_md5 = {}
+    def get_metadata_csv(self) -> pd.DataFrame:
+        """ Getter to access metadata csv file. """
+        metadata_path = Path(self.session_path, "METADATA/metadata.csv")
+        if not Path.exists(metadata_path):
+            print(f"No metadata_csv found for session {self.session_name}\n")
+            return {}
+        return pd.read_csv(metadata_path)
+    
+    
+    def get_waypoints_file(self) -> pd.DataFrame:
+        """ Getter to acces waypoints file. """
+        sensors_path = Path(self.session_path, "SENSORS")
+        if not Path.exists(sensors_path) or not sensors_path.is_dir():
+            print(f"No SENSORS folder for session {self.session_name}")
+            return {}
+        
+        
+        for file in sensors_path.iterdir():
+            if file.suffix != ".waypoints": continue
+
+            waypoints = []
+            with open(file, "r") as f:
+                for row in f:
+                    row = row.replace("\n", "").split("\t")
+                    if len(row) < 12 or row[2] != '3': continue # 3 is the line for gps coordinate
+                    waypoints.append((float(row[8]), float(row[9])))
+            return pd.DataFrame(waypoints, columns=["GPSLatitude", "GPSLongitude"])
+
+        print(f"No waypoints file found for session {self.session_name}")
+        return {}
+
+
+    def get_bit_size_zip_folder(self):
+        """ Return a dict of filename: size in TMP Folder. """
+        print("func: Get size of zip file in temp_folder")
+        filename_with_size = {}
         for file in self.temp_folder.iterdir():
             if file.suffix.lower() != ".zip": continue
 
-            filename_with_md5[file.name] = md5(file)
-        return filename_with_md5
+            filename_with_size[file.name] = os.path.getsize(str(file))
+            print(f"{file.name} : {filename_with_size[file.name]}")
+
+        return filename_with_size
+
+    def get_footprint(self):
+        "Return the footprint of the session"
+
+        coordinates = self.get_waypoints_file()
+        if len(coordinates) == 0:
+            coordinates = self.get_metadata_csv()
+            if len(coordinates) == 0 or "GPSLatitude" not in coordinates or "GPSLongitude" not in coordinates: return 
+
+        points = coordinates[['GPSLongitude', 'GPSLatitude']].values
+
+        # Compute the convex hull for the original points
+        hull = ConvexHull(points)
+        polylist = []
+        for idx in hull.vertices: # Indices of points forming the vertices of the convex hull.
+            polylist.append(points[idx])
+
+        return polylist

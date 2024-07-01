@@ -20,7 +20,7 @@ def parse_args():
 
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Path to folder of session")
-    parser.add_argument("-pses", "--path_session", default="/media/bioeos/D/20240517_REU-TROU-DEAU_ASV-1_01/", help="Path to the session")
+    parser.add_argument("-pses", "--path_session", default="/home/groderg/Documents/Ifremer/plancha/20231127_REU-HERMITAGE_ASV-2_02", help="Path to the session")
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/test.csv", help="Path to the csv file")
 
     # Mode.
