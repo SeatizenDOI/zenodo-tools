@@ -6,7 +6,7 @@ from ..utils.constants import MAXIMAL_ZIP_SIZE, BYTE_TO_GIGA_BYTE
 
 class SessionZipper:
     """ Create zip file and scale with max size """
-    def __init__(self, base_zip_path) -> None:
+    def __init__(self, base_zip_path: Path) -> None:
         self.zip_path = base_zip_path
         self.zip_name = Path(base_zip_path).stem
         self.zip = ZipFile(self.zip_path, "w")
@@ -14,7 +14,7 @@ class SessionZipper:
         self.tot_zip_size, self.nb_zip_file = 0, 1
 
 
-    def add_file(self, file, output_struc_file) -> None:
+    def add_file(self, file: Path, output_struc_file: str | Path) -> None:
         file_size = round(os.path.getsize(str(file)) / BYTE_TO_GIGA_BYTE, 6)
         if file_size + self.tot_zip_size > MAXIMAL_ZIP_SIZE:
             self.nb_zip_file += 1
