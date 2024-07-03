@@ -3,20 +3,16 @@ import json
 import shutil
 import pycountry
 import pandas as pd
-pd.set_option("display.precision", 32)
+pd.set_option("display.precision", 12)
 from tqdm import tqdm
 from enum import Enum
 from pathlib import Path
 from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
-import geopandas as gpd
-import alphashape
-import pandas as pd
-from shapely.geometry import Point
 from scipy.spatial import ConvexHull
 
-from .zipper import SessionZipper
+from .ss_zipper import SessionZipper
 from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE
 
 
@@ -32,7 +28,7 @@ class DCIMType(Enum):
 
 class SessionManager:
 
-    def __init__(self, session_path, temp_folder):
+    def __init__(self, session_path: str, temp_folder: str) -> None:
         # Basics path.
         self.session_path = Path(session_path)
         self.session_name = self.session_path.name
@@ -46,7 +42,7 @@ class SessionManager:
         self.compute_basics_info()
 
 
-    def prepare_raw_data(self):
+    def prepare_raw_data(self) -> list[Path]:
         """ Zip all file in a tmp folder. """
         self.cleanup()
         print("-- Prepare raw data... ")
@@ -58,7 +54,7 @@ class SessionManager:
         return self.move_into_subfolder_if_needed()
         
     
-    def prepare_processed_data(self, processed_folder, needFrames=False):
+    def prepare_processed_data(self, processed_folder: list, needFrames=False) -> None:
         """ Zip all processed data in tmp folder. """
         self.cleanup()
         print("-- Prepare processed data... ")
@@ -79,13 +75,13 @@ class SessionManager:
             raise NameError("The sum total of processed data file sizes is greater than the Zenodo limit.")
 
 
-    def __zip_raw(self, folder):
+    def __zip_raw(self, folder_to_zip: str)-> None:
         """ Zip all file in folder. """
-        zip_folder = Path(self.temp_folder, folder.replace("/", "_"))
-        raw_folder = Path(self.session_path, folder)
+        zip_folder = Path(self.temp_folder, folder_to_zip.replace("/", "_"))
+        raw_folder = Path(self.session_path, folder_to_zip)
         
         if not Path.exists(raw_folder) or not raw_folder.is_dir() or not len(list(raw_folder.iterdir())) > 0:
-            print(f"[WARNING] {folder} folder not found or empty for {self.session_name}\n")
+            print(f"[WARNING] {folder_to_zip} folder not found or empty for {self.session_name}\n")
             return
         
         # Before zip, remove all file with extension
@@ -94,12 +90,12 @@ class SessionManager:
                 file.unlink()
         
         t_start = datetime.now()
-        print(f"Preparing {folder} folder")
+        print(f"Preparing {folder_to_zip} folder")
         shutil.make_archive(zip_folder, "zip", raw_folder)
-        print(f"Successful zipped {folder} folder in {datetime.now() - t_start} sec\n")
+        print(f"Successful zipped {folder_to_zip} folder in {datetime.now() - t_start} sec\n")
 
 
-    def __zip_dcim(self):
+    def __zip_dcim(self) -> None:
         """ Zip all file in dcim folder. """
         dcim_folder = Path(self.session_path, "DCIM")
         dcim_files = natsorted(list(dcim_folder.iterdir()))
@@ -121,7 +117,7 @@ class SessionManager:
         print(f"Successful zipped DCIM folder in {datetime.now() - t_start} split in {zipper.nb_zip_file} archive\n")
 
 
-    def __zip_processed_frames(self):
+    def __zip_processed_frames(self) -> None:
         """ Zip frames folder without useless frames """
 
         # Retrieve relative path of frame.
@@ -148,7 +144,7 @@ class SessionManager:
         print(f"Successful zipped FRAMES folder in {datetime.now() - t_start}\n")
 
 
-    def __zip_gps_raw(self):
+    def __zip_gps_raw(self) -> None:
         """ Zip all file in gps folder. """
         gps_zip_path = Path(self.temp_folder, "GPS.zip")
         gps_base_folder = Path(self.session_path, "GPS/BASE")
@@ -176,8 +172,8 @@ class SessionManager:
         print(f"Successful zipped GPS folder in {datetime.now() - t_start}\n")
         
     
-    def __set_place(self):
-        """ Set country and place as variable. """
+    def __set_place(self) -> None:
+        """ Set country and place as variable from session_name. """
         place = self.session_name.split("_")[1].split("-")
         self.country = pycountry.countries.get(alpha_3=place[0])
         if self.country != None:
@@ -187,26 +183,26 @@ class SessionManager:
         self.place = "-".join([a.lower().title() for a in place[1:]])
 
 
-    def __set_date(self):
-        """ Set data as variable. """
+    def __set_date(self) -> None:
+        """ Set date as variable from session_name. """
         date = self.session_name.split("_")[0]
         if not date.isnumeric() or len(date) != 8: print("[WARNING] Error in session name")
         self.date = f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
     
 
-    def __set_platform(self):
-        """ Set platform as variable. """
+    def __set_platform(self) -> None:
+        """ Set platform as variable from session_name. """
         self.platform = self.session_name.split("_")[2].split("-")[0].upper()
 
 
-    def compute_basics_info(self):
+    def compute_basics_info(self) -> None:
         """ Compute basics information to avoid complication. """
         self.__set_place()
         self.__set_date()
         self.__set_platform()
 
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """ Remove all generated zipped file. """
         if not Path.exists(self.temp_folder) or not self.temp_folder.is_dir(): return
 
@@ -221,7 +217,7 @@ class SessionManager:
                 file.unlink()
     
     
-    def move_into_subfolder_if_needed(self):
+    def move_into_subfolder_if_needed(self) -> list[Path]:
         zip_file_with_size = {}
         for file in self.temp_folder.iterdir():
             file_size = round(os.path.getsize(str(file)) / BYTE_TO_GIGA_BYTE, 3)
@@ -252,7 +248,7 @@ class SessionManager:
         return folders_to_upload
 
 
-    def check_ppk(self):
+    def check_ppk(self) -> bool:
         """ True or false if session is processed with ppk """
         gps_device_path = Path(self.session_path, "GPS", "DEVICE")
         if not Path.exists(gps_device_path) or not gps_device_path.is_dir():
@@ -265,7 +261,7 @@ class SessionManager:
         return False
 
 
-    def read_and_extract_percentage(self, file):
+    def read_and_extract_percentage(self, file: Path) -> tuple[float, float, float]:
         """ Extract and return Q1, Q2, Q5 %"""
         df = pd.read_csv(file, sep=",")
         if "fix" not in df or len(df) == 0: return 0, 0, 0
@@ -278,7 +274,7 @@ class SessionManager:
 
 
     # Return percentage for Q1, Q2, Q5
-    def get_percentage(self, isPPK):
+    def get_percentage(self, isPPK: bool) -> tuple[float, float, float]:
         """ Choose the right file to extract Q1, Q2, Q5"""
         gps_device_path = Path(self.session_path, "GPS", "DEVICE")
         if not Path.exists(gps_device_path) or not gps_device_path.is_dir():
@@ -297,7 +293,7 @@ class SessionManager:
         return 0, 0, 0
 
 
-    def get_base_type(self):
+    def get_base_type(self) -> BaseType:
         """ Return the base used """
         gps_base_path = Path(self.session_path, "GPS", "BASE")
         if not Path.exists(gps_base_path) or not gps_base_path.is_dir():
@@ -316,7 +312,7 @@ class SessionManager:
         return BaseType.NONE
 
 
-    def check_gpx(self):
+    def check_gpx(self) -> bool:
         """ Return true is gpx file"""
         gps_device_path = Path(self.session_path, "GPS", "DEVICE")
         if not Path.exists(gps_device_path) or not gps_device_path.is_dir():
@@ -328,7 +324,7 @@ class SessionManager:
         return False
 
 
-    def check_sensor_file(self):
+    def check_sensor_file(self) -> bool:
         """ Return true or false if sensor file exist. """
         sensor_path = Path(self.session_path, "SENSORS")
         if not Path.exists(sensor_path) or not sensor_path.is_dir():
@@ -340,7 +336,7 @@ class SessionManager:
         return False
 
 
-    def get_bathy_stat(self):
+    def get_bathy_stat(self) -> bool:
         """ Return true or false if bathy workflow succeed. """
         bathy_path = Path(self.session_path, "PROCESSED_DATA", "BATHY")
         if not Path.exists(bathy_path) or not bathy_path.is_dir():
@@ -349,7 +345,7 @@ class SessionManager:
         return len(list(bathy_path.iterdir())) > 20 # Assumed if we have less than 20 files, we don't have processed bathy
 
 
-    def is_video_or_images(self):
+    def is_video_or_images(self) -> tuple[DCIMType, float]:
         """ Return media type of raw data. """
         dcim_path = Path(self.session_path, "DCIM")
         if not Path.exists(dcim_path) or not dcim_path.is_dir():
@@ -365,7 +361,7 @@ class SessionManager:
         return isVideoOrImagesOrNothing, 0 if isVideoOrImagesOrNothing == DCIMType.NONE else self.get_file_dcim_size([".mp4"] if isVideoOrImagesOrNothing == DCIMType.VIDEO else [".jpg", ".jpeg"])
 
 
-    def get_file_dcim_size(self, extension):
+    def get_file_dcim_size(self, extension: str) -> float:
         """ Return Sum of filesize """
         dcim_path = Path(self.session_path, "DCIM")
         if not Path.exists(dcim_path) or not dcim_path.is_dir(): return 0
@@ -377,7 +373,7 @@ class SessionManager:
         return size
 
 
-    def check_frames(self):
+    def check_frames(self) -> tuple[int, bool]:
         """ Check if we have split some frames and if they are georefenreced. """
         
         # Get frame relative path.
@@ -386,14 +382,14 @@ class SessionManager:
 
         nb_frames = len(metadata_df)
         
-        # Drop NA columns, sometimes, GPSLatitute is filled with NA value
+        # Drop NA columns, sometimes, GPSLatitude is filled with NA value
         metadata_df.replace("", float("NaN"), inplace=True)
         metadata_df.dropna(how='all', axis=1, inplace=True)
         isGeoreferenced = "GPSLongitude" in metadata_df and "GPSLatitude" in metadata_df
         return nb_frames, isGeoreferenced
 
     # !FIXME This method take last model name found 
-    def get_jacques_stat(self):
+    def get_jacques_stat(self) -> tuple[str, float, float]:
         """ Get jacques model name and return proportion of useful/useless. """
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
         if not Path.exists(IA_path) or not IA_path.is_dir():
@@ -411,7 +407,7 @@ class SessionManager:
         return jacques_name, useful, useless
 
     # !FIXME This method assume model come from lombardata
-    def get_hugging_face(self):
+    def get_hugging_face(self) -> str:
         """ Return hugging face model name"""
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
         if not Path.exists(IA_path) or not IA_path.is_dir():
@@ -424,7 +420,7 @@ class SessionManager:
         return ""
 
 
-    def get_echo_sounder_name(self):
+    def get_echo_sounder_name(self) -> str:
         """ Return echo sounder name based on ASV number. """
         asv_number = int(self.session_name.split("_")[2].replace("ASV-", ""))
         if asv_number == 1:
@@ -435,30 +431,37 @@ class SessionManager:
             return ""
 
 
-    def get_prog_json(self):
+    def get_prog_json(self) -> dict:
         """ Return plancha config of the session. """
         prog_path = Path(self.session_path, "METADATA", "prog_config.json")
-        if not Path.exists(prog_path): return None
+        if not Path.exists(prog_path): return {}
 
         with open(prog_path, "r") as f:
             prog_config = json.load(f)
         return prog_config
 
 
-    def get_predictions_gps(self):
-        """ Return predictions_gps content else {} if empty or not exist or all point are in the same place. """
+    def get_predictions_gps(self) -> pd.DataFrame:
+        """ Return predictions_gps content else {} if not found. """
         predictions_gps_path = Path(self.session_path, "METADATA", "predictions_gps.csv")
         if not Path.exists(predictions_gps_path): return {}
-
         predictions_gps = pd.read_csv(predictions_gps_path)
-        if len(predictions_gps) == 0: return {} # No predictions
+
+        return predictions_gps if len(predictions_gps) != 0 else {} # Avoid dataframe with just header and no data.
+    
+
+    def get_predictions_gps_with_filtering(self) -> pd.DataFrame:
+        """ Return predictions_gps content else {} if empty or not exist or all point are in the same place. """
+
+        predictions_gps = self.get_predictions_gps()
+        
         if "GPSLongitude" not in predictions_gps or "GPSLatitude" not in predictions_gps: return {} # No GPS coordinate
         if round(predictions_gps["GPSLatitude"].std(), 10) == 0.0 or round(predictions_gps["GPSLongitude"].std(), 10) == 0.0: return {} # All frames have the same gps coordinate
 
         return predictions_gps
 
 
-    def get_frames_list(self):
+    def get_frames_list(self) -> list:
         """ Return list of frames from relative path in metadata csv. """
         frames_path = []
 
@@ -480,7 +483,7 @@ class SessionManager:
 
         return frames_path
 
-    def get_frame_parent_folder(self, list_frames):
+    def get_frame_parent_folder(self, list_frames: str) -> str:
         """ Extract common parent name from all relative path. """
 
         # Remove image name and remove session name to get only intermediate folder.
@@ -493,21 +496,19 @@ class SessionManager:
         # Remove first underscore.
         return list_parents[0][1:] if list_parents[0][0] == "/" else list_parents[0]
     
-    def get_useful_frames_path(self):
-        
+
+    # !FIXME get last jacques file  
+    def get_useful_frames_path(self) -> list:
+        """ Return a list of frames path predicted useful by jacques. """
         useful_frames = []
         try_ia = False
         # Get frame predictions.
-        predictions_gps_path = Path(self.session_path, "METADATA/predictions_gps.csv")
-        if not Path.exists(predictions_gps_path):
+        df_predictions_gps = self.get_predictions_gps()
+        if len(df_predictions_gps) == 0: 
+            print(f"Predictions GPS empty for session {self.session_name}\n")
             try_ia = True
         else:
-            df_predictions_gps = pd.read_csv(predictions_gps_path)
-            if len(df_predictions_gps) == 0: 
-                print(f"Predictions GPS empty for session {self.session_name}\n")
-                try_ia = True
-            else:
-                useful_frames = df_predictions_gps["FileName"].to_list() # CSV without useless images
+            useful_frames = df_predictions_gps["FileName"].to_list() # CSV without useless images
         
         if not try_ia: return useful_frames
 
@@ -558,7 +559,7 @@ class SessionManager:
         return {}
 
 
-    def get_bit_size_zip_folder(self):
+    def get_bit_size_zip_folder(self) -> dict:
         """ Return a dict of filename: size in TMP Folder. """
         print("func: Get size of zip file in temp_folder")
         filename_with_size = {}
@@ -566,11 +567,12 @@ class SessionManager:
             if file.suffix.lower() != ".zip": continue
 
             filename_with_size[file.name] = os.path.getsize(str(file))
-            print(f"{file.name} : {filename_with_size[file.name]}")
+            print(f"{file.name} : {filename_with_size[file.name]} bits")
 
         return filename_with_size
 
-    def get_footprint(self):
+
+    def get_footprint(self) -> list:
         "Return the footprint of the session"
 
         coordinates = self.get_waypoints_file()
@@ -584,6 +586,6 @@ class SessionManager:
         hull = ConvexHull(points)
         polylist = []
         for idx in hull.vertices: # Indices of points forming the vertices of the convex hull.
-            polylist.append(points[idx])
+            polylist.append(list(points[idx]))
 
         return polylist

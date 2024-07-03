@@ -53,11 +53,11 @@ def get_list_sessions(opt) -> list[Path]:
         src = Path(src)
         if Path.exists(src):
             df_ses = pd.read_csv(src)
-            list_sessions = [str(Path(row.root_folder, row.session_name)) for row in df_ses.itertuples(index=False)]
+            list_sessions = [Path(row.root_folder, row.session_name) for row in df_ses.itertuples(index=False)]
 
     return list_sessions
 
-def get_processed_folders_to_upload(opt):
+def get_processed_folders_to_upload(opt) -> tuple[list, bool]:
     """ Parse input for processed folder """
     if opt.upload_processeddata == "": return [], False
 
@@ -71,10 +71,10 @@ def get_processed_folders_to_upload(opt):
     
     return folder_to_upload, needFrames
 
-def get_session_name_doi_from_opt(opt):
+def get_session_name_doi_from_opt(opt) -> list[tuple[str | None, int | None]]:
     """ Return a list who contains tuple (name, doi)"""
 
-    def clean_doi(doi):
+    def clean_doi(doi) -> int | None:
         # check for doi is not float nan
         if doi != doi or doi in ["", None, np.nan]: return None
 
@@ -107,7 +107,7 @@ def get_session_name_doi_from_opt(opt):
 
     return list_name_doi
 
-def md5(fname):
+def md5(fname: Path) -> str:
     """ Return md5 checksum of a file. """
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:

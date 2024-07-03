@@ -3,8 +3,8 @@ import argparse
 import traceback
 from pathlib import Path
 
-from src.zenodo_api.token import ZenodoAPI
-from src.zenodo_api.tokenless import get_version_from_doi, download_manager_without_token
+from zenodo_api.za_token import ZenodoAPI
+from zenodo_api.za_tokenless import get_version_from_doi, download_manager_without_token
 
 from src.utils.lib_tools import get_session_name_doi_from_opt
 
@@ -33,7 +33,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def download_with_token(opt, config_json):
+def download_with_token(opt, config_json: dict) -> None:
     print("Using downloader with token")
 
     # Create output_folder
@@ -92,7 +92,7 @@ def download_with_token(opt, config_json):
 
 
 
-def download_without_token(opt):
+def download_without_token(opt) -> None:
     print("Using downloader without token")
     
     # Create output_folder

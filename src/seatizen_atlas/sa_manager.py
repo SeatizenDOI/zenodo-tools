@@ -1,19 +1,18 @@
 from pathlib import Path
 
-from .metadata import build_metadata
-from .importer import AtlasImport
-from .exporter import AtlasExport
-
+from .sa_importer import AtlasImport
+from .sa_exporter import AtlasExport
+from .sa_metadata import build_metadata
 
 from ..utils.constants import SEATIZEN_ATLAS_DOI, SEATIZEN_ATLAS_GPKG
 
-from ..zenodo_api.token import ZenodoAPI
-from ..zenodo_api.tokenless import download_manager_without_token, get_version_from_doi
+from ..zenodo_api.za_token import ZenodoAPI
+from ..zenodo_api.za_tokenless import download_manager_without_token, get_version_from_doi
 
 from ..sql_connector.connector import SQLiteConnector
 
 class AtlasManager:
-    def __init__(self, config: dict, seatizen_folder_path: str, from_local: bool, force_regenerate: bool):
+    def __init__(self, config: dict, seatizen_folder_path: str, from_local: bool, force_regenerate: bool) -> None:
         
         # Config
         self.config = config
@@ -33,7 +32,7 @@ class AtlasManager:
         
         self.setup()
 
-    def setup(self):
+    def setup(self) -> None:
         
         # Create folder if not exists.
         self.seatizen_folder_path.mkdir(exist_ok=True, parents=True)
@@ -61,11 +60,11 @@ class AtlasManager:
             # If we have a file, connect with it
             self.sql_connector.connect(self.seatizen_atlas_gpkg)
 
-    def import_session(self, session: Path):
+    def import_session(self, session: Path) -> None:
         self.importer.import_seatizen_session(session)
 
     
-    def export_csv(self):
+    def export_csv(self) -> None:
         print("\t\t")
         self.exporter.session_doi_csv()
         self.exporter.metadata_images_csv()
@@ -74,12 +73,12 @@ class AtlasManager:
         self.exporter.global_map_shp()
 
 
-    def clean_seatizen_folder(self):
+    def clean_seatizen_folder(self) -> None:
         for file in self.seatizen_folder_path.iterdir():
             file.unlink()
 
 
-    def publish(self, metadata_json_path):
+    def publish(self, metadata_json_path) -> None:
         if self.from_local: 
             print("Work from local, don't publish data on zenodo.")
             return

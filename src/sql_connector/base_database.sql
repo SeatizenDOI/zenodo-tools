@@ -54,9 +54,11 @@ INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, 
 
 -- Deposit table
 CREATE TABLE IF NOT EXISTS deposit (
-    doi TEXT PRIMARY KEY,
+    doi TEXT NOT NULL PRIMARY KEY,
     session_name TEXT NOT NULL,
     footprint BLOB,
+    have_processed_data INTEGER NOT NULL,
+    have_raw_data INTEGER NOT NULL,
     session_date DATE GENERATED ALWAYS AS (SUBSTR(session_name, 0, 9)) VIRTUAL,
     alpha3_country_code TEXT GENERATED ALWAYS AS (SUBSTR(session_name, 10, 3)) VIRTUAL,
     location TEXT GENERATED ALWAYS AS (
@@ -86,14 +88,14 @@ INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, descript
 
 -- Version table
 CREATE TABLE IF NOT EXISTS version (
-    doi TEXT PRIMARY KEY,
+    doi TEXT NOT NULL PRIMARY KEY,
     deposit_doi TEXT NOT NULL,
     CONSTRAINT fk_deposit_version FOREIGN KEY (deposit_doi) REFERENCES deposit(doi)
 );
 
 -- Frame table
 CREATE TABLE IF NOT EXISTS frame (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     version_doi TEXT NOT NULL,
     original_filename TEXT NOT NULL,
     filename TEXT NOT NULL,
@@ -115,7 +117,7 @@ INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, descript
 
 -- Multilabel label
 CREATE TABLE IF NOT EXISTS multilabel_label (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
     creation_date DATETIME NOT NULL
@@ -123,7 +125,7 @@ CREATE TABLE IF NOT EXISTS multilabel_label (
 
 -- Multilabel model
 CREATE TABLE IF NOT EXISTS multilabel_model (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     link TEXT NOT NULL,
     doi TEXT,
@@ -132,7 +134,7 @@ CREATE TABLE IF NOT EXISTS multilabel_model (
 
 -- Multilabel class
 CREATE TABLE IF NOT EXISTS multilabel_class (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT COMMENT `Alias to multilabel_label.name`,
     threshold REAL NOT NULL,
     multilabel_label_id INTEGER NOT NULL,
@@ -143,7 +145,7 @@ CREATE TABLE IF NOT EXISTS multilabel_class (
 
 -- Multilabel predictions
 CREATE TABLE IF NOT EXISTS multilabel_predictions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     score REAL NOT NULL,
     prediction_date DATETIME NOT NULL,
     version_doi TEXT NOT NULL,
@@ -156,7 +158,7 @@ CREATE TABLE IF NOT EXISTS multilabel_predictions (
 
 -- Multilabel annotation
 CREATE TABLE IF NOT EXISTS multilabel_annotation (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     value TINYINT NOT NULL,
     annotation_date DATETIME NOT NULL,
     frame_id INTEGER NOT NULL,
