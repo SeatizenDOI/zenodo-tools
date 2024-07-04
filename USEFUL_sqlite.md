@@ -19,3 +19,10 @@ Interresting features to change
 By default, all table have a rowid as unique identifiers and can be access like `SELECT rowid, * FROM table_name`
 
 SQLite has a selftest table to perform unit test see `.selftest`
+
+Pour accéder à une valeur rentré en wkb : 
+* `SELECT ST_AsText(ST_GeomFromWKB(footprint)) FROM deposit;` pour deposit
+* `SELECT ST_AsText(ST_PointFromWKB(GPSPosition)) FROM frame;` pour frame si on a pas coché z dans gpkg_geometry_columns
+* `SELECT ST_AsText(ST_GeomFromWKB(GPSPosition)) FROM frame;` pour frame si on a pas coché z dans gpkg_geometry_columns
+
+

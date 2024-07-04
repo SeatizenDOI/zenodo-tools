@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ..sql_connector.connector import SQLiteConnector
+from ..sql_connector.sc_connector import SQLiteConnector
 
 class AtlasExport:
 
@@ -17,7 +17,6 @@ class AtlasExport:
     def session_doi_csv(self) -> None:
         session_doi_file = Path(self.seatizen_folder_path, "session_doi.csv")
         print(f"Generate {session_doi_file}")
-
 
 
     def metadata_images_csv(self) -> None:

@@ -76,6 +76,16 @@ class SQLiteConnector:
         self._connection.commit()
         cursor.close()
     
+    def _executemany(self, query, params):
+        if self._connection is None:
+            print("Error: database connection not established")
+            return None
+        
+        cursor = self._connection.cursor()
+        cursor.executemany(query, params)
+        self._connection.commit()
+        cursor.close()
+    
 
     def execute_query(self, query: str, params=None):
         """ Perform custom query. """
@@ -85,7 +95,10 @@ class SQLiteConnector:
         if query.strip().lower().startswith('select'):
             return self._query(query, params)
         else:
-            self._execute(query, params)
+            if isinstance(params, tuple) or len(params) == 0:
+                self._execute(query, params)
+            else:
+                self._executemany(query, params)
             return None
     
     def generate(self, sqlite_filepath: Path):

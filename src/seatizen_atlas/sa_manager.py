@@ -9,7 +9,7 @@ from ..utils.constants import SEATIZEN_ATLAS_DOI, SEATIZEN_ATLAS_GPKG
 from ..zenodo_api.za_token import ZenodoAPI
 from ..zenodo_api.za_tokenless import download_manager_without_token, get_version_from_doi
 
-from ..sql_connector.connector import SQLiteConnector
+from ..sql_connector.sc_connector import SQLiteConnector
 
 class AtlasManager:
     def __init__(self, config: dict, seatizen_folder_path: str, from_local: bool, force_regenerate: bool) -> None:

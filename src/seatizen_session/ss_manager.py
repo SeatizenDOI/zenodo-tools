@@ -13,7 +13,7 @@ from natsort import natsorted
 from scipy.spatial import ConvexHull
 
 from .ss_zipper import SessionZipper
-from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE
+from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE, JACQUES_MODEL_NAME, MULTILABEL_MODEL_NAME
 
 
 class BaseType(Enum):
@@ -388,36 +388,59 @@ class SessionManager:
         isGeoreferenced = "GPSLongitude" in metadata_df and "GPSLatitude" in metadata_df
         return nb_frames, isGeoreferenced
 
-    # !FIXME This method take last model name found 
-    def get_jacques_stat(self) -> tuple[str, float, float]:
-        """ Get jacques model name and return proportion of useful/useless. """
+
+    def get_jacques_csv(self) -> pd.DataFrame:
+        " Return jacques model data from csv."
+        IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
+        if not Path.exists(IA_path) or not IA_path.is_dir(): return {}
+
+        jacques_name = ""
+        for file in IA_path.iterdir():
+            if JACQUES_MODEL_NAME in file.name:
+                jacques_name = file
+                break
+        
+        if jacques_name == "":
+            print("[WARNING] Cannot find jacques predictions file.")
+            return {}
+
+        jacques_csv = pd.read_csv(jacques_name)
+        if len(jacques_csv) == 0: return {}
+
+        return jacques_csv
+
+
+    def get_jacques_stat(self) -> tuple[float, float]:
+        """ Return proportion of useful/useless. """
+        
+        jacques_csv = self.get_jacques_csv()
+        if len(jacques_csv) == 0: return "", 0, 0
+        
+        useful = round(len(jacques_csv[jacques_csv["Useless"] == 0]) * 100 / len(jacques_csv), 2)
+        useless = round(len(jacques_csv[jacques_csv["Useless"] == 1]) * 100 / len(jacques_csv), 2)
+        
+        return useful, useless
+
+
+    def get_multilabel_csv(self, isScore: bool = False) -> pd.DataFrame:
+        """ Return multilabel model data from csv. """
+
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
         if not Path.exists(IA_path) or not IA_path.is_dir():
-            return "", 0, 0
-
-        jacques_name, useful, useless = "", 0, 0
-        for file in IA_path.iterdir():
-            if "jacques" in file.name:
-                jacques_name = file.name.split("_")[-1].replace(".csv", "")
-                df = pd.read_csv(file)
-                if len(df) > 0:
-                    useful = round(len(df[df["Useless"] == 0]) * 100 / len(df), 2)
-                    useless = round(len(df[df["Useless"] == 1]) * 100 / len(df), 2)
+            return {}
         
-        return jacques_name, useful, useless
-
-    # !FIXME This method assume model come from lombardata
-    def get_hugging_face(self) -> str:
-        """ Return hugging face model name"""
-        IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
-        if not Path.exists(IA_path) or not IA_path.is_dir():
-            return ""
-        
+        multilabel_model = ""
         for file in IA_path.iterdir():
-            if "lombardata" in file.name:
-                return file.name.replace(self.session_name + "_", "").replace(".csv", "")
+            if MULTILABEL_MODEL_NAME not in file.name: continue
+            if not isScore and "_scores" in file.name or isScore and "_scores" not in file.name: continue
+            
+            multilabel_model = file
+        
+        if multilabel_model == "": return {}
 
-        return ""
+        multilabel_model_csv = pd.read_csv(multilabel_model)
+        if len(multilabel_model_csv) == 0: return {}
+        return multilabel_model_csv
 
 
     def get_echo_sounder_name(self) -> str:
@@ -497,7 +520,6 @@ class SessionManager:
         return list_parents[0][1:] if list_parents[0][0] == "/" else list_parents[0]
     
 
-    # !FIXME get last jacques file  
     def get_useful_frames_path(self) -> list:
         """ Return a list of frames path predicted useful by jacques. """
         useful_frames = []
@@ -514,15 +536,11 @@ class SessionManager:
 
         print("We didn't find predictions gps, so we try with jacques csv anotations to select useful frames.")
         # Cannot find predictions_gps, try with jacques annotation_files
-        IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
-        if not Path.exists(IA_path) or not IA_path.is_dir():
-            return useful_frames
+        
+        df_jacques = self.get_jacques_csv()
+        if len(df_jacques) == 0: return useful_frames
 
-        for file in IA_path.iterdir():
-            if "jacques" not in file.name: continue
-            df_jacques = pd.read_csv(file)
-
-            useful_frames = df_jacques[df_jacques["Useless"] == 0]["FileName"].to_list()
+        useful_frames = df_jacques[df_jacques["Useless"] == 0]["FileName"].to_list()
 
         return useful_frames        
     

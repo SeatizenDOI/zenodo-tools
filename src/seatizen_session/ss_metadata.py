@@ -1,4 +1,5 @@
 from .ss_manager import SessionManager, BaseType, DCIMType
+from ..utils.constants import JACQUES_MODEL_NAME, MULTILABEL_MODEL_NAME, MULTILABEL_AUTHOR
 
 class SessionMetadata:
 
@@ -148,9 +149,8 @@ class SessionMetadata:
         nb_frames, isGeoreferenced = self.plancha_session.check_frames()
 
         # Check for predictions
-        j_name, j_useful, j_useless = self.plancha_session.get_jacques_stat()
-        huggingface_name = self.plancha_session.get_hugging_face()
-        link_hugging = "https://huggingface.co/"+huggingface_name.replace("lombardata_","lombardata/")
+        j_useful, j_useless = self.plancha_session.get_jacques_stat()
+        link_hugging = f"https://huggingface.co/{MULTILABEL_AUTHOR}/{MULTILABEL_MODEL_NAME}"
         
         prog_json = self.plancha_session.get_prog_json()
         if len(prog_json) == 0: return None
@@ -161,7 +161,7 @@ class SessionMetadata:
         return f"""
                 This session has {size_media} GB of {isVideo.value}, which were trimmed into {nb_frames} frames (at {fps} fps). <br> 
                 The frames are {'' if isGeoreferenced else 'not'} georeferenced. <br>
-                {j_useful}% of these extracted images are useful and {j_useless}% are useless, according to predictions made by <a href="{j_name}" target="_blank">Jacques model</a>. <br>
+                {j_useful}% of these extracted images are useful and {j_useless}% are useless, according to predictions made by <a href="{JACQUES_MODEL_NAME}" target="_blank">Jacques model</a>. <br>
                 Multilabel predictions have been made on useful frames using <a href="{link_hugging}" target="_blank">DinoVd'eau</a> model. <br>
             """
 

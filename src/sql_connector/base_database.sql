@@ -14,10 +14,10 @@ CREATE TABLE IF NOT EXISTS gpkg_spatial_ref_sys (
 INSERT OR IGNORE INTO gpkg_spatial_ref_sys (srs_name, srs_id, organization, organization_coordsys_id, definition, description) VALUES 
 ('WGS 84', 4326, 'EPSG', 4326, 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]]', 'World Geodetic System 1984'),
 ('undefined Cartesian coordinate', -1, 'NONE', -1, 'undefined', "undefined Cartesian coordinate reference systems"),
-('undefined geographic coordinate', 0, 'NONE', 0, 'undefined', "ndefined geographic coordinate reference systems");
+('undefined geographic coordinate', 0, 'NONE', 0, 'undefined', "undefined geographic coordinate reference systems");
 
 -- gpkg_contents table
-CREATE TABLE IF NOT EXISTS gpkg_contents (
+CREATE TABLE gpkg_contents (
     table_name TEXT NOT NULL PRIMARY KEY,
     data_type TEXT NOT NULL,
     identifier TEXT UNIQUE,
@@ -45,8 +45,37 @@ CREATE TABLE gpkg_geometry_columns (
 );
 
 INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) VALUES
-('deposit', 'footprint', 'MULTIPOINT', 4326, 0, 0),
-('frame', 'location', 'POINT', 4326, 1, 0);
+('deposit', 'footprint', 'POLYGON', 4326, 0, 0),
+('frame', 'GPSPosition', 'POINT', 4326, 0, 0);
+
+CREATE TABLE gpkg_extensions (
+    table_name TEXT,
+    column_name TEXT,
+    extension_name TEXT NOT NULL,
+    definition TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    CONSTRAINT ge_tce UNIQUE (table_name, column_name, extension_name)
+);
+
+CREATE TABLE gpkg_metadata (
+    id INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL,
+    md_scope TEXT NOT NULL DEFAULT 'dataset',
+    md_standard_uri TEXT NOT NULL,
+    mime_type TEXT NOT NULL DEFAULT 'text/xml',
+    metadata TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE gpkg_metadata_reference (
+    reference_scope TEXT NOT NULL,
+    table_name TEXT,
+    column_name TEXT,
+    row_id_value INTEGER,
+    timestamp DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    md_file_id INTEGER NOT NULL,
+    md_parent_id INTEGER,
+    CONSTRAINT crmr_mfi_fk FOREIGN KEY (md_file_id) REFERENCES gpkg_metadata(id),
+    CONSTRAINT crmr_mpi_fk FOREIGN KEY (md_parent_id) REFERENCES gpkg_metadata(id)
+);
 
 ----------------------------------------
 -- Base table for zenodo architecture --
@@ -56,7 +85,7 @@ INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, 
 CREATE TABLE IF NOT EXISTS deposit (
     doi TEXT NOT NULL PRIMARY KEY,
     session_name TEXT NOT NULL,
-    footprint BLOB,
+    footprint POLYGON,
     have_processed_data INTEGER NOT NULL,
     have_raw_data INTEGER NOT NULL,
     session_date DATE GENERATED ALWAYS AS (SUBSTR(session_name, 0, 9)) VIRTUAL,
@@ -83,7 +112,7 @@ CREATE TABLE IF NOT EXISTS deposit (
 );
 
 INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES 
-('deposit', 'features', 'deposit', 'Table with deposit polygons', 4326);
+('deposit', 'features', 'deposit', 'Table with deposit Polygon as footprint', 4326);
 
 
 -- Version table
@@ -100,7 +129,8 @@ CREATE TABLE IF NOT EXISTS frame (
     original_filename TEXT NOT NULL,
     filename TEXT NOT NULL,
     relative_path TEXT NOT NULL,
-    GPSPosition BLOB, -- Latitude, Longitude, Depth
+    GPSPosition POINT, -- Latitude, Longitude
+    GPSAltitude REAL,
     GPSPitch REAL,
     GPSRoll REAL,
     GPSTrack REAL,
@@ -108,8 +138,8 @@ CREATE TABLE IF NOT EXISTS frame (
     CONSTRAINT fk_frame_version FOREIGN KEY (version_doi) REFERENCES version(doi)
 );
 
-INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES 
-('frame', 'features', 'frame', 'Table with frame points', 4326);
+INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, description, srs_id, min_x, min_y, max_x, max_y) VALUES 
+('frame', 'features', 'frame', 'Table with frame points', 4326, -200, -80, 200, 80);
 
 ------------------------------------
 -- All table for multilabel stuff --
@@ -144,7 +174,7 @@ CREATE TABLE IF NOT EXISTS multilabel_class (
 );
 
 -- Multilabel predictions
-CREATE TABLE IF NOT EXISTS multilabel_predictions (
+CREATE TABLE IF NOT EXISTS multilabel_prediction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     score REAL NOT NULL,
     prediction_date DATETIME NOT NULL,
@@ -232,7 +262,8 @@ INSERT INTO multilabel_label (name, creation_date) VALUES
 ("Useless",DATE('now')),
 ("Waste",DATE('now'));
 
-INSERT INTO multilabel_model (name, link, creation_date) VALUES ("DinoVdeau", "https://huggingface.co/lombardata/DinoVdeau-large-2024_04_03-with_data_aug_batch-size32_epochs150_freeze", "2024-04-03");
+INSERT INTO multilabel_model (name, link, creation_date) VALUES 
+("DinoVdeau", "https://huggingface.co/lombardata/DinoVdeau-large-2024_04_03-with_data_aug_batch-size32_epochs150_freeze", "2024-04-03");
 
 INSERT INTO multilabel_class (name, threshold, multilabel_label_id, multilabel_model_id) VALUES 
 ("Acropore_branched", 0.351, 2, 1),
