@@ -3,9 +3,9 @@ import argparse
 import traceback
 from pathlib import Path
 
-from zenodo_api.za_token import ZenodoAPI
-from seatizen_session.ss_manager import SessionManager
-from seatizen_session.ss_metadata import SessionMetadata
+from src.zenodo_api.za_token import ZenodoAPI
+from src.seatizen_session.ss_manager import SessionManager
+from src.seatizen_session.ss_metadata import SessionMetadata
 from src.utils.constants import TMP_PATH, RESTRICTED_FILES
 from src.utils.lib_tools import get_list_sessions, get_processed_folders_to_upload
 

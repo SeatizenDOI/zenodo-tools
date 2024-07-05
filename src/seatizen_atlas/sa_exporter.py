@@ -1,5 +1,5 @@
-from tqdm import tqdm
 import pandas as pd
+from tqdm import tqdm
 from shapely import wkb
 import geopandas as gpd
 from pathlib import Path

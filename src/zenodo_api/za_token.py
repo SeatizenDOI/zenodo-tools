@@ -277,7 +277,7 @@ class ZenodoAPI:
     def set_deposit_id(self) -> None:
         """ Find deposit id with identifiers equal to session_name. If more than one deposit have the same session_name return None """
 
-        query = f'metadata.identifiers.identifier:"urn:{self.session_name}"'
+        query = f'q=metadata.identifiers.identifier:"urn:{self.session_name}" metadata.related_identifiers.identifier:"urn:{self.session_name}"'
         r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, 'q': query})
         
         if r.status_code == 404:
@@ -301,12 +301,13 @@ class ZenodoAPI:
 
         raw_data_ids, processed_data_ids = [], []
         for deposit in r.json():
-            if "RAW_DATA" in deposit["metadata"]["version"]:
+            version = deposit["metadata"]["version"].replace(" ", "_")
+            if "RAW_DATA" in version:
                 raw_data_ids.append(deposit["id"])
-            elif "PROCESSED_DATA" in deposit["metadata"]["version"]:
+            elif "PROCESSED_DATA" in version:
                 processed_data_ids.append(deposit["id"])
             else:
-                print(f"No match for version {deposit['metadata']['version']}")
+                print(f"No match for version {version}")
         return raw_data_ids, processed_data_ids
 
 

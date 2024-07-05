@@ -2,14 +2,15 @@ import datetime
 from tqdm import tqdm
 from pathlib import Path
 
-from ..sql_connector.sc_connector import SQLiteConnector
 from ..sql_connector.sc_base_dto import *
 from ..sql_connector.sc_multilabel_dto import *
+from ..sql_connector.sc_connector import SQLiteConnector
 
 from ..zenodo_api.za_tokenless import get_all_versions_from_session_name
 
-from ..seatizen_session.ss_manager import SessionManager
 from ..utils.constants import TMP_PATH
+
+from ..seatizen_session.ss_manager import SessionManager
 
 class AtlasImport:
 

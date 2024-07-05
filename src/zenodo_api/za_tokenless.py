@@ -70,7 +70,7 @@ def get_version_from_doi(doi: str) -> dict:
 def get_version_from_session_name(session_name: str) -> dict:
     """ Retrieve last version about a session with a session_name. """
 
-    query = f'q=metadata.identifiers.identifier:"urn:{session_name}"'
+    query = f'q=metadata.identifiers.identifier:"urn:{session_name}" metadata.related_identifiers.identifier:"urn:{session_name}"'
     r = requests.get(f"{ZENODO_LINK_WITHOUT_TOKEN}?{query}")
 
     version_json = {}
@@ -95,7 +95,7 @@ def get_version_from_session_name(session_name: str) -> dict:
 def get_all_versions_from_session_name(session_name: str) -> list:
     """ Retrieve all versions about a session with a session_name. """
 
-    query = f'q=metadata.identifiers.identifier:"urn:{session_name}"&allversions=true'
+    query = f'q=metadata.identifiers.identifier:"urn:{session_name}" metadata.related_identifiers.identifier:"urn:{session_name}"&allversions=true'
     r = requests.get(f"{ZENODO_LINK_WITHOUT_TOKEN}?{query}")
 
     version_json = []

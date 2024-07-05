@@ -3,8 +3,8 @@ import argparse
 import traceback
 from pathlib import Path
 
-from zenodo_api.za_token import ZenodoAPI
-from zenodo_api.za_tokenless import get_version_from_doi, download_manager_without_token
+from src.zenodo_api.za_token import ZenodoAPI
+from src.zenodo_api.za_tokenless import get_version_from_doi, download_manager_without_token
 
 from src.utils.lib_tools import get_session_name_doi_from_opt
 

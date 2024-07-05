@@ -1,7 +1,8 @@
 import abc
 from dataclasses import dataclass, field
-from shapely.geometry import Polygon, Point
+
 from shapely import wkb
+from shapely.geometry import Polygon, Point
 
 from .sc_connector import SQLiteConnector
 

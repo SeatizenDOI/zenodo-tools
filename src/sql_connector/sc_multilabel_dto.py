@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 
 from .sc_base_dto import AbstractManagerDTO
-from ..utils.constants import MULTILABEL_MODEL_NAME
+
 from ..utils.lib_tools import map_id_by_name
+from ..utils.constants import MULTILABEL_MODEL_NAME
 
 @dataclass
 class MultilabelModel():

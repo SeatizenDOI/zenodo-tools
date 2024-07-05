@@ -18,9 +18,6 @@ class SQLiteConnector:
         """ Establishes connection with database """
         try:
             self._connection = sqlite3.connect(sqlite_filepath)
-            # Enable spatial features
-            # self._connection.enable_load_extension(True)    
-            # self._connection.execute('SELECT load_extension("mod_spatialite")')
             self._connection.execute('PRAGMA application_id = 0x47504B47;')  # GP = GeoPackage in hex
             self._connection.execute('PRAGMA user_version = 10300;')  # GeoPackage version 1.3
         except sqlite3.Error:
