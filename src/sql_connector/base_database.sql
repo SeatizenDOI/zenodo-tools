@@ -137,6 +137,7 @@ CREATE TABLE IF NOT EXISTS frame (
     GPSDatetime DATETIME,
     CONSTRAINT fk_frame_version FOREIGN KEY (version_doi) REFERENCES version(doi)
 );
+CREATE INDEX idx_filename_version_doi ON frame (filename, version_doi);
 
 INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, description, srs_id, min_x, min_y, max_x, max_y) VALUES 
 ('frame', 'features', 'frame', 'Table with frame points', 4326, -200, -80, 200, 80);
@@ -177,7 +178,6 @@ CREATE TABLE IF NOT EXISTS multilabel_class (
 CREATE TABLE IF NOT EXISTS multilabel_prediction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     score REAL NOT NULL,
-    prediction_date DATETIME NOT NULL,
     version_doi TEXT NOT NULL,
     frame_id INTEGER NOT NULL,
     multilabel_class_id INTEGER NOT NULL,

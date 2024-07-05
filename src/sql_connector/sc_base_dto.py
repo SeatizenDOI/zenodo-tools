@@ -12,6 +12,10 @@ class AbstractBaseDTO(abc.ABC):
     @abc.abstractmethod
     def table_name(self): pass
 
+class AbstractManagerDTO(abc.ABC):
+
+    sql_connector = SQLiteConnector()
+
 @dataclass
 class Deposit(AbstractBaseDTO):
 
@@ -19,6 +23,9 @@ class Deposit(AbstractBaseDTO):
     session_name: str
     have_raw_data: bool
     have_processed_data: bool
+    place: str | None = field(default=None)
+    date: str | None = field(default=None)
+    platform: str | None = field(default=None)
     footprint: list[tuple[float, float]] = field(default_factory=list)
     table_name = "deposit"
     
@@ -30,6 +37,30 @@ class Deposit(AbstractBaseDTO):
     @property
     def wkb_footprint(self):
         return MultiPoint(self.footprint).wkb
+
+class DepositManager(AbstractManagerDTO):
+
+    __deposits: list[Deposit] = None
+
+    def get_deposits(self) -> list[Deposit]:
+        if self.__deposits == None:
+            self.__deposits = []
+            self.__retrieve_deposits()
+        return self.__deposits
+    
+    def __retrieve_deposits(self) -> None:
+
+        query = "SELECT doi, session_name, alpha3_country_code, session_date, have_raw_data, have_processed_data FROM deposit;"
+        results = self.sql_connector.execute_query(query)
+        for doi, session_name, place, date, have_raw_data, have_processed_data in results:
+            self.__deposits.append(Deposit(
+                doi=doi,
+                session_name=session_name,
+                have_raw_data=have_raw_data,
+                have_processed_data=have_processed_data,
+                date=date,
+                place=place
+            ))
 
 
 @dataclass
@@ -63,9 +94,9 @@ class Frame():
         return Point(self.gps_longitude, self.gps_latitude).wkb
 
 
-class FrameManager(AbstractBaseDTO):
+class FrameManager(AbstractManagerDTO):
     __frames: list[Frame] = None
-    table_name = "frame"
+
 
     def append(self, frame: Frame) -> None:
         if self.__frames == None:
@@ -73,8 +104,11 @@ class FrameManager(AbstractBaseDTO):
         self.__frames.append(frame)
 
     def insert(self) -> None:
+        if self.__frames == None:
+            print("[WARNING] Cannot insert frames in database, we don't have frames.")
+            return 
         query = f"""
-        INSERT OR IGNORE INTO {self.table_name} 
+        INSERT OR IGNORE INTO frame
         (version_doi, filename, original_filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime) 
         VALUES (?,?,?,?,?,?,?,?,?,?) 
         """
@@ -95,7 +129,7 @@ class FrameManager(AbstractBaseDTO):
         self.sql_connector.execute_query(query, values)
     
     def get_frame_id_from_filename(self, filename: str, frame_doi: str) -> int:
-        query = f"SELECT id FROM {self.table_name} WHERE filename = ? AND version_doi = ?;"
+        query = f"SELECT id FROM frame WHERE filename = ? AND version_doi = ?;"
         params = (filename, frame_doi)
         result = self.sql_connector.execute_query(query, params)
 

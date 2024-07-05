@@ -23,7 +23,6 @@ class AtlasImport:
 
 
     def import_seatizen_session(self, session_path: Path) -> None: # TODO Add choices by parameters
-
         if not Path.exists(session_path) or not session_path.is_dir():
             print("[ERROR] Session not found in importer. ")
         
@@ -39,7 +38,6 @@ class AtlasImport:
         filename_with_zipsize = session.get_bit_size_zip_folder()
         session.cleanup()
 
-        
         # Found doi for frames and predictions.
         filename_with_doi = {}
         have_raw_data, have_processed_data = False, False
@@ -66,13 +64,14 @@ class AtlasImport:
 
         # Insert versions
         for version in versions:
-            v = Version(doi=version["doi"], deposit_doi=deposit.doi)
+            v = Version(doi=version["id"], deposit_doi=deposit.doi)
             v.insert()
         
         # Check another time if we have all our filename with doi and if not raise an error.
         if len(filename_with_doi) != len(filename_with_zipsize):
-            raise NameError("Not enough doi to peuplate database")
-
+            print("\n[WARNING] Not enough doi to peuplate database")
+            return
+        
         # Iterate over frames.
         frame_version = Version(doi=filename_with_doi["METADATA.zip"], deposit_doi=deposit.doi)
         self.frames_importer(session, frame_version)
@@ -81,14 +80,15 @@ class AtlasImport:
         prediction_version = Version(doi=filename_with_doi["PROCESSED_DATA_IA.zip"], deposit_doi=deposit.doi)
         self.multilabel_prediction_importer(session, prediction_version, frame_version)
 
+
     def frames_importer(self, session: SessionManager, frame_version: Version) -> None:
-        print("\nImporting frames")
-        metadata_csv = session.get_metadata_csv()
+        print("\nfunc: Importing frames")
+        metadata_csv = session.get_metadata_csv(indexingByFilename=True)
         framesManager = FrameManager() 
         
         for frame_name in tqdm(session.get_useful_frames_path()):
             
-            row = metadata_csv[metadata_csv["FileName"] == frame_name].iloc[0]
+            row = metadata_csv.loc[frame_name]
             
             # Datetime formatting
             creation_date = ""
@@ -98,7 +98,6 @@ class AtlasImport:
                 date, time = row["SubSecDateTimeOriginal"].split(".")[0].split(" ")
                 date = date.replace(":", "-")
                 creation_date = date + " " + time
-
 
             frame = Frame(
                 version_doi = frame_version.doi,
@@ -115,18 +114,20 @@ class AtlasImport:
             )
             framesManager.append(frame)
         framesManager.insert()
-    
+
+
     def multilabel_prediction_importer(self, session: SessionManager, prediction_version: Version, frame_version: Version) -> None:
-        print("\nImporting predictions")
-        scores_csv = session.get_multilabel_csv(isScore=True)
+        print("\nfunc: Importing predictions")
+        scores_csv = session.get_multilabel_csv(isScore=True, indexingByFilename=True)
         scores_csv_header = list(scores_csv)
         general_multilabel = GeneralMultilabelManager()
         frameManager = FrameManager()
 
-        for _ , row in tqdm(scores_csv.iterrows(), total=len(scores_csv)):
-            frame_id = frameManager.get_frame_id_from_filename(row["FileName"], frame_version.doi)
+        for frame_name in tqdm(session.get_useful_frames_path()):
+            frame_id = frameManager.get_frame_id_from_filename(frame_name, frame_version.doi)
             if frame_id == -1: continue # No frames found
-
+            
+            row = scores_csv.loc[frame_name]
             
             for cls in scores_csv_header:
                 
@@ -136,10 +137,7 @@ class AtlasImport:
                 general_multilabel.append(MultilabelPrediction(
                     score=row[cls],
                     frame_id=frame_id,
-                    prediction_date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     multilabel_class_id=class_id,
                     version_doi=prediction_version.doi
                 ))
-
-
         general_multilabel.insert_predictions()

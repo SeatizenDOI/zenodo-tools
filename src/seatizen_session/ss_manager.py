@@ -422,23 +422,32 @@ class SessionManager:
         return useful, useless
 
 
-    def get_multilabel_csv(self, isScore: bool = False) -> pd.DataFrame:
+    def get_multilabel_csv(self, isScore: bool = False, indexingByFilename: bool = False) -> pd.DataFrame:
         """ Return multilabel model data from csv. """
 
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
         if not Path.exists(IA_path) or not IA_path.is_dir():
             return {}
         
-        multilabel_model = ""
+        multilabel_model_filename = None
         for file in IA_path.iterdir():
             if MULTILABEL_MODEL_NAME not in file.name: continue
             if not isScore and "_scores" in file.name or isScore and "_scores" not in file.name: continue
             
-            multilabel_model = file
+            multilabel_model_filename = file
         
-        if multilabel_model == "": return {}
+        if multilabel_model_filename == None: return {}
+        
+        index_col = None
+        if indexingByFilename:
+            with open(multilabel_model_filename, "r") as f:
+                try:
+                    index_col = f.readline().strip('\n').split(",").index("FileName")
+                except ValueError:
+                    print("[WARNING] FileName column not found in csv file.")
 
-        multilabel_model_csv = pd.read_csv(multilabel_model)
+
+        multilabel_model_csv = pd.read_csv(multilabel_model_filename, index_col=index_col)
         if len(multilabel_model_csv) == 0: return {}
         return multilabel_model_csv
 
@@ -545,13 +554,21 @@ class SessionManager:
         return useful_frames        
     
     
-    def get_metadata_csv(self) -> pd.DataFrame:
+    def get_metadata_csv(self, indexingByFilename: bool = False) -> pd.DataFrame:
         """ Getter to access metadata csv file. """
         metadata_path = Path(self.session_path, "METADATA/metadata.csv")
         if not Path.exists(metadata_path):
             print(f"No metadata_csv found for session {self.session_name}\n")
             return {}
-        return pd.read_csv(metadata_path)
+
+        index_col = None
+        if indexingByFilename:
+            with open(metadata_path, "r") as f:
+                try:
+                    index_col = f.readline().strip('\n').split(",").index("FileName")
+                except ValueError:
+                    print("[WARNING] FileName column not found in csv file.")
+        return pd.read_csv(metadata_path, index_col=index_col)
     
     
     def get_waypoints_file(self) -> pd.DataFrame:

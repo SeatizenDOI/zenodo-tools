@@ -68,8 +68,8 @@ class AtlasManager:
         print("\t\t")
         self.exporter.session_doi_csv()
         self.exporter.metadata_images_csv()
-        self.exporter.metadata_annotation_csv()
-        self.exporter.darwincore_annotation_csv()
+        # self.exporter.metadata_annotation_csv()
+        # self.exporter.darwincore_annotation_csv()
         self.exporter.global_map_shp()
 
 

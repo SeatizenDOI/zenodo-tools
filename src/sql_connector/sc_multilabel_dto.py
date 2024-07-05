@@ -1,7 +1,6 @@
-import abc
 from dataclasses import dataclass, field
 
-from .sc_base_dto import AbstractBaseDTO
+from .sc_base_dto import AbstractBaseDTO, AbstractManagerDTO
 from ..utils.constants import MULTILABEL_MODEL_NAME
 from ..utils.lib_tools import map_id_by_name
 
@@ -28,7 +27,6 @@ class MultilabelClass():
 @dataclass
 class MultilabelPrediction():
     score: float
-    prediction_date: str
     version_doi: str
     frame_id: int
     multilabel_class_id: int
@@ -54,7 +52,7 @@ class MultilabelLabel():
     table_name = "multilabel_label"
 
 @dataclass
-class GeneralMultilabelManager(AbstractBaseDTO):
+class GeneralMultilabelManager(AbstractManagerDTO):
     
     __model: MultilabelModel = field(default=None)
     __class: list[MultilabelClass] = field(default_factory=list)
@@ -98,7 +96,7 @@ class GeneralMultilabelManager(AbstractBaseDTO):
         query = f"""
             SELECT mc.id, mc.name, mc.threshold, mc.multilabel_label_id, mc.multilabel_model_id 
             FROM multilabel_class mc
-            JOIN multilabel_model mm ON mm.id = mc.multilabel_model_id
+            INNER JOIN multilabel_model mm ON mm.id = mc.multilabel_model_id
             WHERE mm.id = ?;
         """
         params = (self.__model.id, )
@@ -136,20 +134,19 @@ class GeneralMultilabelManager(AbstractBaseDTO):
 
     def insert_predictions(self):
         if len(self.__predictions) == 0:
-            print("[Warning] Cannot insert predictions in database, we have no predictions.")
+            print("[WARNING] Cannot insert predictions in database, we don't have predictions.")
             return 
 
         query = f"""
         INSERT OR IGNORE INTO multilabel_prediction
-        (score, frame_id, multilabel_class_id, version_doi, prediction_date) 
-        VALUES (?,?,?,?,?);
+        (score, frame_id, multilabel_class_id, version_doi) 
+        VALUES (?,?,?,?);
         """
         values = []
         for f in self.__predictions:
             values.append((f.score, 
                            f.frame_id, 
                            f.multilabel_class_id, 
-                           f.version_doi, 
-                           f.prediction_date
+                           f.version_doi
                         ))
         self.sql_connector.execute_query(query, values)

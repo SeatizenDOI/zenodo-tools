@@ -17,6 +17,8 @@ def parse_args():
     arg_input.add_argument("-efol", "--enable_folder", action="store_true", help="Work from a folder of session")
     arg_input.add_argument("-eses", "--enable_session", action="store_true", help="Work with one session")
     arg_input.add_argument("-ecsv", "--enable_csv", action="store_true", help="Work from csv")
+    arg_input.add_argument("-eno", "--enable_nothing", action="store_true", help="Use with generate")
+
 
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Path to folder of session")
@@ -57,30 +59,31 @@ def main(opt):
     seatizenManager = AtlasManager(config_json, opt.path_seatizen_atlas_folder, opt.use_from_local, opt.force_regenerate)
 
     # Stat
-    sessions_fail = []
-    list_session = get_list_sessions(opt)
-    index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_session) else 0
-    
-    for session_path in list_session[index_start:]:
+    if not opt.enable_nothing:
+        sessions_fail = []
+        list_session = get_list_sessions(opt)
+        index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_session) else 0
+        
+        for session_path in list_session[index_start:]:
 
-        try:
-            if not Path.exists(session_path):
-                print(f"Session not found for {session_path.name}")
-                continue
-            
-            print(f"\n\nWorking with session {session_path.name}")
-            seatizenManager.import_session(session_path)
+            try:
+                if not Path.exists(session_path):
+                    print(f"Session not found for {session_path.name}")
+                    continue
+                
+                print(f"\n\nWorking with session {session_path.name}")
+                seatizenManager.import_session(session_path)
 
 
-        except Exception:
-            print(traceback.format_exc(), end="\n\n")
+            except Exception:
+                print(traceback.format_exc(), end="\n\n")
 
-            sessions_fail.append(session_path.name)
+                sessions_fail.append(session_path.name)
 
-    # Stat
-    print("\nEnd of process. On {} sessions, {} fails. ".format(len(list_session), len(sessions_fail)))
-    if (len(sessions_fail)):
-        [print("\t* " + session_name) for session_name in sessions_fail]
+        # Stat
+        print("\nEnd of process. On {} sessions, {} fails. ".format(len(list_session), len(sessions_fail)))
+        if (len(sessions_fail)):
+            [print("\t* " + session_name) for session_name in sessions_fail]
     
 
     # Export all value we wants.
