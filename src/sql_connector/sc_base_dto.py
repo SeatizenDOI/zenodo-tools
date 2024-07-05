@@ -1,6 +1,7 @@
 import abc
 from dataclasses import dataclass, field
-from shapely.geometry import MultiPoint, Point
+from shapely.geometry import Polygon, Point
+from shapely import wkb
 
 from .sc_connector import SQLiteConnector
 
@@ -36,7 +37,7 @@ class Deposit(AbstractBaseDTO):
     
     @property
     def wkb_footprint(self):
-        return MultiPoint(self.footprint).wkb
+        return Polygon(self.footprint).wkb
 
 class DepositManager(AbstractManagerDTO):
 
@@ -50,16 +51,18 @@ class DepositManager(AbstractManagerDTO):
     
     def __retrieve_deposits(self) -> None:
 
-        query = "SELECT doi, session_name, alpha3_country_code, session_date, have_raw_data, have_processed_data FROM deposit;"
+        query = "SELECT doi, session_name, alpha3_country_code, session_date, have_raw_data, have_processed_data, footprint, platform_type FROM deposit;"
         results = self.sql_connector.execute_query(query)
-        for doi, session_name, place, date, have_raw_data, have_processed_data in results:
+        for doi, session_name, place, date, have_raw_data, have_processed_data, footprint, platform_type in results:
             self.__deposits.append(Deposit(
                 doi=doi,
                 session_name=session_name,
                 have_raw_data=have_raw_data,
                 have_processed_data=have_processed_data,
                 date=date,
-                place=place
+                place=place,
+                footprint=footprint,
+                platform=platform_type
             ))
 
 
@@ -88,6 +91,7 @@ class Frame():
     gps_roll: float | None
     gps_track: float | None
     gps_datetime: str
+    id: int | None = field(default=None)
 
     @property
     def position(self) -> any:
@@ -102,6 +106,7 @@ class FrameManager(AbstractManagerDTO):
         if self.__frames == None:
             self.__frames = []
         self.__frames.append(frame)
+
 
     def insert(self) -> None:
         if self.__frames == None:
@@ -128,6 +133,7 @@ class FrameManager(AbstractManagerDTO):
         
         self.sql_connector.execute_query(query, values)
     
+
     def get_frame_id_from_filename(self, filename: str, frame_doi: str) -> int:
         query = f"SELECT id FROM frame WHERE filename = ? AND version_doi = ?;"
         params = (filename, frame_doi)
@@ -141,5 +147,33 @@ class FrameManager(AbstractManagerDTO):
 
         return result[0][0]
     
+
     def __len__(self):
         return len(self.__frames) if self.__frames != None else 0
+
+
+    def retrieve_frames(self) -> list[Frame]:
+        """ Get all frames and parse output as csv file. """
+
+        query = "SELECT id, version_doi, original_filename, filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime FROM frame ORDER BY filename"
+        result = self.sql_connector.execute_query(query)
+        
+        for id, version_doi, original_filename, filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime in result:
+            position = wkb.loads(GPSPosition)
+
+            self.append(Frame(
+                id=id,
+                version_doi=version_doi,
+                original_filename=original_filename,
+                filename=filename,
+                relative_path=relative_path,
+                gps_latitude=position.y,
+                gps_longitude=position.x,
+                gps_altitude=GPSAltitude,
+                gps_pitch=GPSPitch,
+                gps_roll=GPSRoll,
+                gps_track=GPSTrack,
+                gps_datetime=GPSDatetime
+            ))
+
+        return self.__frames

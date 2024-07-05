@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 
-from .sc_base_dto import AbstractBaseDTO, AbstractManagerDTO
+from .sc_base_dto import AbstractManagerDTO
 from ..utils.constants import MULTILABEL_MODEL_NAME
 from ..utils.lib_tools import map_id_by_name
 
 @dataclass
-class MultilabelModel(AbstractBaseDTO):
+class MultilabelModel():
     id: int
     name: str
     link: str
@@ -55,7 +55,7 @@ class MultilabelLabel():
 class GeneralMultilabelManager(AbstractManagerDTO):
     
     __model: MultilabelModel = field(default=None)
-    __class: list[MultilabelClass] = field(default_factory=list)
+    __class_ml: list[MultilabelClass] = field(default_factory=list)
     __labels: list[MultilabelLabel] = field(default_factory=list)
     __predictions: list[MultilabelPrediction] = field(default_factory=list)
     __annotations: list[MultilabelAnnotation] = field(default_factory=list)
@@ -64,18 +64,22 @@ class GeneralMultilabelManager(AbstractManagerDTO):
     labelIdMapByClassName: dict[str, int] = field(default=dict)
 
     
-    table_name = ""
-    
     def __post_init__(self) -> None:
         self.setup_model()
         self.setup_class()
         self.setup_label()
 
-        self.classIdMapByClassName = map_id_by_name(self.__class, "name", "id")
+        self.classIdMapByClassName = map_id_by_name(self.__class_ml, "name", "id")
         self.labelIdMapByClassName = map_id_by_name(self.__labels, "name", "id")
 
     
+    @property
+    def class_ml(self) -> list[MultilabelClass]:
+        return self.__class_ml
+
+
     def setup_model(self) -> None:
+        """ Get the model link to constant """
         query = f"""
             SELECT *
             FROM multilabel_model
@@ -93,6 +97,7 @@ class GeneralMultilabelManager(AbstractManagerDTO):
 
 
     def setup_class(self) -> None:
+        """ Get all class link to the model. """
         query = f"""
             SELECT mc.id, mc.name, mc.threshold, mc.multilabel_label_id, mc.multilabel_model_id 
             FROM multilabel_class mc
@@ -110,10 +115,11 @@ class GeneralMultilabelManager(AbstractManagerDTO):
                 multilabel_label_id=ml_label_id,
                 multilabel_model_id=ml_model_id
             )
-            self.__class.append(ml_class)
+            self.__class_ml.append(ml_class)
     
 
     def setup_label(self) -> None:
+        """ Get all labels for the class. """
         query = "SELECT * FROM multilabel_label"
         result = self.sql_connector.execute_query(query)
         for id, name, creation_date, description in result:
@@ -126,13 +132,15 @@ class GeneralMultilabelManager(AbstractManagerDTO):
     
 
     def append(self, value: MultilabelPrediction | MultilabelAnnotation) -> None:
+        """ Add predictions or annotations to object. """
         if isinstance(value, MultilabelPrediction):
             self.__predictions.append(value)
         elif isinstance(value, MultilabelAnnotation):
             self.__annotations.append(value)
 
 
-    def insert_predictions(self):
+    def insert_predictions(self) -> None:
+        """ Insert all predictions store in obkect into sql database. """
         if len(self.__predictions) == 0:
             print("[WARNING] Cannot insert predictions in database, we don't have predictions.")
             return 
@@ -150,3 +158,25 @@ class GeneralMultilabelManager(AbstractManagerDTO):
                            f.version_doi
                         ))
         self.sql_connector.execute_query(query, values)
+    
+
+    def get_predictions_from_frame_id(self, frame_id: int) -> tuple[dict[str, bool], str]:
+        """ Return an object with class_name map with prediction. """
+        query = """
+                SELECT mp.score, mc.name, mc.threshold, (mp.score >= mc.threshold) AS pred, mp.version_doi
+                FROM multilabel_prediction mp 
+                JOIN frame f ON mp.frame_id = f.id
+                JOIN multilabel_class mc ON mc.id = mp.multilabel_class_id
+                WHERE f.id = ?;
+            """
+        params = (frame_id, )
+        result = self.sql_connector.execute_query(query, params)
+
+        class_name_with_pred, version_doi = {}, ""
+        for score, class_name, threshold, pred, version_doi in result:
+            class_name_with_pred[class_name] = pred
+            version_doi = str(version_doi)
+        
+        return class_name_with_pred, version_doi
+
+        

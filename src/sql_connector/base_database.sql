@@ -48,35 +48,6 @@ INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, 
 ('deposit', 'footprint', 'POLYGON', 4326, 0, 0),
 ('frame', 'GPSPosition', 'POINT', 4326, 0, 0);
 
-CREATE TABLE gpkg_extensions (
-    table_name TEXT,
-    column_name TEXT,
-    extension_name TEXT NOT NULL,
-    definition TEXT NOT NULL,
-    scope TEXT NOT NULL,
-    CONSTRAINT ge_tce UNIQUE (table_name, column_name, extension_name)
-);
-
-CREATE TABLE gpkg_metadata (
-    id INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL,
-    md_scope TEXT NOT NULL DEFAULT 'dataset',
-    md_standard_uri TEXT NOT NULL,
-    mime_type TEXT NOT NULL DEFAULT 'text/xml',
-    metadata TEXT NOT NULL DEFAULT ''
-);
-
-CREATE TABLE gpkg_metadata_reference (
-    reference_scope TEXT NOT NULL,
-    table_name TEXT,
-    column_name TEXT,
-    row_id_value INTEGER,
-    timestamp DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-    md_file_id INTEGER NOT NULL,
-    md_parent_id INTEGER,
-    CONSTRAINT crmr_mfi_fk FOREIGN KEY (md_file_id) REFERENCES gpkg_metadata(id),
-    CONSTRAINT crmr_mpi_fk FOREIGN KEY (md_parent_id) REFERENCES gpkg_metadata(id)
-);
-
 ----------------------------------------
 -- Base table for zenodo architecture --
 ----------------------------------------
@@ -185,6 +156,7 @@ CREATE TABLE IF NOT EXISTS multilabel_prediction (
     CONSTRAINT fk_multilabel_prediction_frame FOREIGN KEY (frame_id) REFERENCES frame(id),
     CONSTRAINT fk_multilabel_prediction_multilabel_class FOREIGN KEY (multilabel_class_id) REFERENCES multilabel_class(id)
 );
+CREATE INDEX idx_frame_id ON multilabel_prediction (frame_id);
 
 -- Multilabel annotation
 CREATE TABLE IF NOT EXISTS multilabel_annotation (

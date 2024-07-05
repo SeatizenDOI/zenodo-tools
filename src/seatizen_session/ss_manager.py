@@ -585,9 +585,16 @@ class SessionManager:
             waypoints = []
             with open(file, "r") as f:
                 for row in f:
+                    # Extract row and filter if not a gps row
                     row = row.replace("\n", "").split("\t")
-                    if len(row) < 12 or row[2] != '3': continue # 3 is the line for gps coordinate
-                    waypoints.append((float(row[8]), float(row[9])))
+                    if len(row) < 12 or row[2] != '3' or row[3] != '16': continue # 3 is the line for gps coordinate, 16 is more navigation
+                    
+                    # Check if coordinates is not 0,0 due to bad filtering.
+                    lat, lon = float(row[8]), float(row[9])
+                    if lat != 0 and lon != 0: continue # Avoid 0,0 point 
+                    
+                    waypoints.append((lat, lon))
+                    
             return pd.DataFrame(waypoints, columns=["GPSLatitude", "GPSLongitude"])
 
         print(f"No waypoints file found for session {self.session_name}")
@@ -610,10 +617,10 @@ class SessionManager:
     def get_footprint(self) -> list:
         "Return the footprint of the session"
 
-        coordinates = self.get_waypoints_file()
-        if len(coordinates) == 0:
-            coordinates = self.get_metadata_csv()
-            if len(coordinates) == 0 or "GPSLatitude" not in coordinates or "GPSLongitude" not in coordinates: return 
+        coordinates = self.get_metadata_csv() # With metadata, we get the real footprint of the image acquisition.
+        if len(coordinates) == 0 or "GPSLatitude" not in coordinates or "GPSLongitude" not in coordinates: 
+            coordinates = self.get_waypoints_file()
+            if len(coordinates) == 0: return
 
         points = coordinates[['GPSLongitude', 'GPSLatitude']].values
 
