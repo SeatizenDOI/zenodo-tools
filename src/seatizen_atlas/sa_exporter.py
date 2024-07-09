@@ -4,7 +4,6 @@ from shapely import wkb
 import geopandas as gpd
 from pathlib import Path
 
-
 from ..sql_connector.sc_connector import SQLiteConnector
 from ..sql_connector.sc_base_dto import  DepositManager, FrameManager
 from ..sql_connector.sc_multilabel_dto import GeneralMultilabelManager

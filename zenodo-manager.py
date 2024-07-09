@@ -19,7 +19,6 @@ def parse_args():
     arg_input.add_argument("-ecsv", "--enable_csv", action="store_true", help="Work from csv")
     arg_input.add_argument("-eno", "--enable_nothing", action="store_true", help="Use with generate")
 
-
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Path to folder of session")
     parser.add_argument("-pses", "--path_session", default="/home/bioeos/Documents/Bioeos/plancha-session/20240517_REU-TROU-DEAU_ASV-1_01/", help="Path to the session")
