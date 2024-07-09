@@ -1,4 +1,5 @@
 import datetime
+import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 
@@ -118,7 +119,7 @@ class AtlasImport:
 
 
     def multilabel_prediction_importer(self, session: SessionManager, prediction_version: Version, frame_version: Version) -> None:
-        print("\nfunc: Importing predictions")
+        print("\nfunc: Importing multilabel predictions")
         scores_csv = session.get_multilabel_csv(isScore=True, indexingByFilename=True)
         scores_csv_header = list(scores_csv)
         general_multilabel = GeneralMultilabelManager()
@@ -142,3 +143,38 @@ class AtlasImport:
                     version_doi=prediction_version.doi
                 ))
         general_multilabel.insert_predictions()
+    
+    def multilabel_annotation_importer(self, annotation_file: Path) -> None:
+        print(f"func: multilabel annotation importer with {annotation_file}")
+        if not Path.exists(annotation_file) or not annotation_file.is_file() or annotation_file.suffix.lower() != ".csv": return
+
+        try:
+            df_annotation = pd.read_csv(annotation_file)
+        except Exception:
+            print(f"[WARNING] Cannot open {annotation_file} when loading multilabel annotation.")
+            return
+        
+        general_multilabel = GeneralMultilabelManager()
+        cpt_error = 0
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        for _, row in tqdm(df_annotation.iterrows(), total=len(df_annotation)):
+            frame_id = general_multilabel.get_frame_id_from_frame_name(row["FileName"])
+            if frame_id == None:
+                cpt_error += 1
+                continue
+
+            for label_name in list(df_annotation):
+                label_id = general_multilabel.labelIdMapByClassName.get(label_name, None)
+                if label_id == None: continue
+
+                general_multilabel.append(MultilabelAnnotation(
+                    value=row[label_name],
+                    frame_id=frame_id,
+                    multilabel_label_id=label_id,
+                    annotation_date=now
+                ))
+
+        print(f"On {len(df_annotation)} images, {cpt_error} where not imported because frame was not in db.")
+
+        general_multilabel.insert_annotations()

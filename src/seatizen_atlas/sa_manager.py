@@ -3,6 +3,7 @@ from pathlib import Path
 from .sa_importer import AtlasImport
 from .sa_exporter import AtlasExport
 from .sa_metadata import build_metadata
+from .sa_tools import get_annotation_type_from_opt, AnnotationType
 
 from ..utils.constants import SEATIZEN_ATLAS_DOI, SEATIZEN_ATLAS_GPKG
 
@@ -78,6 +79,32 @@ class AtlasManager:
             file.unlink()
 
 
+    def load_annotation(self, opt_annotation_path: str, opt_annotation_type: str) -> None:
+        """ Add annotation in database from a file or a folder of csv. If image not found or multiple image found do nothing. """
+        
+        print("func: Preprocess to load annotations")
+        annotation_path = Path(opt_annotation_path)
+        if not Path.exists(annotation_path):
+            print(f"[WARNING] Path {annotation_path} doesn't exist.")
+            return
+
+        annotation_type = get_annotation_type_from_opt(opt_annotation_type)
+
+        list_files = []
+        if annotation_path.is_file():
+            list_files.append(annotation_path)
+        elif annotation_path.is_dir():
+            list_files = list(annotation_path.iterdir())
+        else:
+            print(f"[WARNING] {annotation_path} is not a file or a folder.")
+            return # Argument provide is not a file or a folder.
+
+        for file in list_files:
+            if annotation_type == AnnotationType.MULTILABEL:
+                self.importer.multilabel_annotation_importer(file)
+
+
+
     def publish(self, metadata_json_path) -> None:
         if self.from_local: 
             print("Work from local, don't publish data on zenodo.")
@@ -88,8 +115,7 @@ class AtlasManager:
 
         metadata = build_metadata(metadata_json_path)
 
-        zenodoAPI = ZenodoAPI("", self.config)
-        zenodoAPI.deposit_id = SEATIZEN_ATLAS_DOI
+        zenodoAPI = ZenodoAPI("seatizen-atlas", self.config_json)
 
         # Previous files to not propagate.
         previous_files = zenodoAPI.list_files()

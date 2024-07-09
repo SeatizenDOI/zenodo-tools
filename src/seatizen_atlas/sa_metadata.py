@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 
-from ..utils.constants import SEATIZEN_ATLAS_DOI
-
 from ..zenodo_api.za_token import ZenodoAPI
 
 def seatizen_atlas_metadata(config_json: dict, metadata_json_path: str) -> None:
@@ -11,8 +9,7 @@ def seatizen_atlas_metadata(config_json: dict, metadata_json_path: str) -> None:
     
     metadata = build_metadata(metadata_json_path)
 
-    zenodoAPI = ZenodoAPI("", config_json)
-    zenodoAPI.deposit_id = SEATIZEN_ATLAS_DOI
+    zenodoAPI = ZenodoAPI("seatizen-atlas", config_json)
 
     zenodoAPI.edit_metadata(metadata)
     

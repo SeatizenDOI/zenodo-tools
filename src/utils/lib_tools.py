@@ -4,8 +4,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from typing import List, TypeVar, Dict
-
 class Sources(enum.Enum):
     CSV_SESSION = 0
     FOLDER = 1

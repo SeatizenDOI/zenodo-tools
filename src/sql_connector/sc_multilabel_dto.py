@@ -141,7 +141,7 @@ class GeneralMultilabelManager(AbstractManagerDTO):
 
 
     def insert_predictions(self) -> None:
-        """ Insert all predictions store in obkect into sql database. """
+        """ Insert all predictions store in object into sql database. """
         if len(self.__predictions) == 0:
             print("[WARNING] Cannot insert predictions in database, we don't have predictions.")
             return 
@@ -152,11 +152,31 @@ class GeneralMultilabelManager(AbstractManagerDTO):
         VALUES (?,?,?,?);
         """
         values = []
-        for f in self.__predictions:
-            values.append((f.score, 
-                           f.frame_id, 
-                           f.multilabel_class_id, 
-                           f.version_doi
+        for p in self.__predictions:
+            values.append((p.score, 
+                           p.frame_id, 
+                           p.multilabel_class_id, 
+                           p.version_doi
+                        ))
+        self.sql_connector.execute_query(query, values)
+    
+    def insert_annotations(self) -> None:
+        """ Insert all annotations store in object into sql database. """
+        if len(self.__annotations) == 0:
+            print("[WARNING] Cannot insert annotations in database, we don't have annotations.")
+            return 
+
+        query = f"""
+        INSERT OR IGNORE INTO multilabel_annotation
+        (value, frame_id, multilabel_label_id, annotation_date) 
+        VALUES (?,?,?,?);
+        """
+        values = []
+        for a in self.__annotations:
+            values.append((a.value, 
+                           a.frame_id, 
+                           a.multilabel_label_id, 
+                           a.annotation_date
                         ))
         self.sql_connector.execute_query(query, values)
     
@@ -180,4 +200,13 @@ class GeneralMultilabelManager(AbstractManagerDTO):
         
         return class_name_with_pred, version_doi
 
-        
+
+    def get_frame_id_from_frame_name(self, frame_name: str) -> int | None:
+        """ Return frame id is frame is in db else None """
+        query = """
+                SELECT id from frame WHERE filename = ?;
+            """
+        params = (frame_name, )
+        result = self.sql_connector.execute_query(query, params)
+        if len(result) == 1: return result[0][0] # Access to frame_id
+        return None

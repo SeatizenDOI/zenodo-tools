@@ -29,6 +29,9 @@ def parse_args():
     parser.add_argument("-ulo", "--use_from_local", action="store_true", help="Work from a local folder. Update if exists else Create. Default behaviour is to download data from zenodo.")
     parser.add_argument("-um", "--update_metadata", action="store_true", help="Update last version metadata")
     
+    parser.add_argument("-la", "--load_annotations", default=None, help="If not none, try to load all annotations in path. Can be a file or a folder of files")
+    parser.add_argument("-at", "--annotation_type", default="multilabel", help="Annotation type to parse.")
+
     # Seatizen Atlas path.
     parser.add_argument("-psa", "--path_seatizen_atlas_folder", default="./seatizen_atlas_folder", help="Folder to store data")
     parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata_seatizen_atlas.json", help="Path to metadata file")
@@ -58,7 +61,6 @@ def main(opt):
 
     seatizenManager = AtlasManager(config_json, opt.path_seatizen_atlas_folder, opt.use_from_local, opt.force_regenerate)
 
-    # Stat
     if not opt.enable_nothing:
         sessions_fail = []
         list_session = get_list_sessions(opt)
@@ -85,9 +87,12 @@ def main(opt):
         if (len(sessions_fail)):
             [print("\t* " + session_name) for session_name in sessions_fail]
     
+    # Import annotation
+    if opt.load_annotations != None:
+        seatizenManager.load_annotation(opt.load_annotations, opt.annotation_type)
 
     # Export all value we wants.
-    seatizenManager.export_csv()
+    # seatizenManager.export_csv()
     
     # Upload all data.
     # seatizenManager.publish(opt.path_metadata_json)

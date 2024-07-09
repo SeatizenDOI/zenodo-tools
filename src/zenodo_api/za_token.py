@@ -277,9 +277,9 @@ class ZenodoAPI:
     def set_deposit_id(self) -> None:
         """ Find deposit id with identifiers equal to session_name. If more than one deposit have the same session_name return None """
 
-        query = f'q=metadata.identifiers.identifier:"urn:{self.session_name}" metadata.related_identifiers.identifier:"urn:{self.session_name}"'
+        query = f'metadata.identifiers.identifier:"urn:{self.session_name}" metadata.related_identifiers.identifier:"urn:{self.session_name}"'
         r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, 'q': query})
-        
+        print(r.request.url, r.request.headers, r.request.body)
         if r.status_code == 404:
             raise NameError(f"Cannot access to {self.session_name}.")
         

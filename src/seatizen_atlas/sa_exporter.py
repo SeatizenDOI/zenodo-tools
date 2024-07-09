@@ -32,7 +32,7 @@ class AtlasExport:
         list_deposit_data = []
         deposit_header = ["session_name", "place", "date", "have_raw_data", "have_processed_data", "doi"]
         for d in deposit_manager.get_deposits():
-            list_deposit_data.append([d.session_name, d.place, d.date, d.have_raw_data, d.have_processed_data, f"https://zenodo.org/records/{d.doi}"])
+            list_deposit_data.append([d.session_name, d.place, d.date, d.have_raw_data, d.have_processed_data, f"10.5281/zenodo.{d.doi}"])
                 
         df_deposits = pd.DataFrame(list_deposit_data, columns=deposit_header)
         df_deposits.to_csv(session_doi_file, index=False)
@@ -56,7 +56,7 @@ class AtlasExport:
                 frame.original_filename,
                 frame.filename,
                 frame.relative_path,
-                f"https://zenodo.org/records/{frame.version_doi}",
+                f"10.5281/zenodo.{frame.version_doi}",
                 frame.gps_latitude,
                 frame.gps_longitude,
                 frame.gps_altitude,
@@ -64,7 +64,7 @@ class AtlasExport:
                 frame.gps_pitch,
                 frame.gps_track,
                 frame.gps_datetime,
-                f"https://zenodo.org/records/{pred_doi}"
+                f"10.5281/zenodo.{pred_doi}"
             ]+[predictions_for_frame[cls_name] for cls_name in class_name])
         
         df_data = pd.DataFrame(data, columns=df_header)
