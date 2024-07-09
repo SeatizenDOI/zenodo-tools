@@ -145,7 +145,7 @@ class AtlasImport:
         general_multilabel.insert_predictions()
     
     def multilabel_annotation_importer(self, annotation_file: Path) -> None:
-        print(f"func: multilabel annotation importer with {annotation_file}")
+        print(f"\n\nfunc: multilabel annotation importer with {annotation_file}")
         if not Path.exists(annotation_file) or not annotation_file.is_file() or annotation_file.suffix.lower() != ".csv": return
 
         try:
@@ -175,6 +175,6 @@ class AtlasImport:
                     annotation_date=now
                 ))
 
-        print(f"On {len(df_annotation)} images, {cpt_error} where not imported because frame was not in db.")
+        print(f"On {len(df_annotation)} images, only {len(df_annotation) - cpt_error} were load in database.")
 
         general_multilabel.insert_annotations()

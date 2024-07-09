@@ -92,7 +92,7 @@ def main(opt):
         seatizenManager.load_annotation(opt.load_annotations, opt.annotation_type)
 
     # Export all value we wants.
-    # seatizenManager.export_csv()
+    seatizenManager.export_csv()
     
     # Upload all data.
     # seatizenManager.publish(opt.path_metadata_json)
