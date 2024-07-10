@@ -201,7 +201,7 @@ class AtlasImport:
                 continue
 
             for label_name in list(df_annotation):
-                label_id = general_multilabel.labelIdMapByClassName.get(label_name, None)
+                label_id = general_multilabel.labelIdMapByLabelName.get(label_name, None)
                 if label_id == None: continue
 
                 if general_multilabel.check_annotation_in_db(annotation_date, frame_id, label_id): continue
