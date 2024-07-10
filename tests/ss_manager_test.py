@@ -1,7 +1,7 @@
 import unittest
 
-from ..utils.constants import TMP_PATH
-from ..seatizen_session.ss_manager import SessionManager
+from src.utils.constants import TMP_PATH
+from src.seatizen_session.ss_manager import SessionManager
 
 
 class TestSessionManager(unittest.TestCase):
@@ -55,6 +55,7 @@ class TestSessionManager(unittest.TestCase):
         self.assertEqual(session.country, "Seychelles")
         self.assertEqual(session.date, "1547-12-12")
         self.assertEqual(session.platform, "UAV")
+        print("Aled je suis confiné")
 
 
 if __name__ == "__main__":
