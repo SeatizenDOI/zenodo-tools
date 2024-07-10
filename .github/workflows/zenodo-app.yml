@@ -16,7 +16,7 @@ jobs:
         auto-update-conda: true
         activate-environment: zenodo_env
         environment-file: zenodo_env.yml
-        auto-activate-base: false
+        auto-activate-base: true
     - run: |
         conda info
         conda list
