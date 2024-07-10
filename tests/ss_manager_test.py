@@ -54,8 +54,7 @@ class TestSessionManager(unittest.TestCase):
         self.assertEqual(session.place, "Cap-Horne-Bleu")
         self.assertEqual(session.country, "Seychelles")
         self.assertEqual(session.date, "1547-12-12")
-        self.assertEqual(session.platform, "UAV")
-        print("Aled je suis confiné")
+        self.assertEqual(session.platform, "UAVsd")
 
 
 if __name__ == "__main__":
