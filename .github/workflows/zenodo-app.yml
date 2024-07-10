@@ -17,7 +17,7 @@ jobs:
         python-version: 3.11  # This can be removed as it's specified in your environment file
     
     - name: Create environment from .yml file
-      run: conda env create -f environment.yml
+      run: conda env create -f zenodo_env.yml
   
     - name: Activate Conda environment
       run: conda activate zenodo_env
