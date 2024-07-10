@@ -137,6 +137,7 @@ class AtlasImport:
 
 
     def multilabel_prediction_importer(self, session: SessionManager, prediction_version: Version, frame_version: Version) -> None:
+        """ Method to import prediction multilabel. """
         print("\nfunc: Importing multilabel predictions")
         scores_csv = session.get_multilabel_csv(isScore=True, indexingByFilename=True)
         scores_csv_header = list(scores_csv)
@@ -169,7 +170,9 @@ class AtlasImport:
                 ))
         general_multilabel.insert_predictions()
     
+
     def multilabel_annotation_importer(self, annotation_file: Path) -> None:
+        """ Method to import multilabel annotation. """
         print(f"\n\nfunc: Multilabel annotation importer with {annotation_file}")
         if not Path.exists(annotation_file) or not annotation_file.is_file() or annotation_file.suffix.lower() != ".csv": return
 

@@ -64,7 +64,7 @@ class SQLiteConnector:
         
         if params is None:
             params = []
-        if query.strip().lower().startswith('select'):
+        if query.strip().lower().startswith('select') or query.strip().lower().startswith('with'):
             return self._query(query, params)
         else:
             if isinstance(params, tuple) or len(params) == 0:

@@ -62,7 +62,7 @@ class GeneralMultilabelManager(AbstractManagerDTO):
     __annotations: list[MultilabelAnnotation] = field(default_factory=list)
 
     classIdMapByClassName: dict[str, int] = field(default=dict)
-    labelIdMapByClassName: dict[str, int] = field(default=dict)
+    labelIdMapByLabelName: dict[str, int] = field(default=dict)
 
     
     def __post_init__(self) -> None:
@@ -71,9 +71,8 @@ class GeneralMultilabelManager(AbstractManagerDTO):
         self.setup_label()
 
         self.classIdMapByClassName = map_id_by_name(self.__class_ml, "name", "id")
-        self.labelIdMapByClassName = map_id_by_name(self.__labels, "name", "id")
+        self.labelIdMapByLabelName = map_id_by_name(self.__labels, "name", "id")
 
-    
     @property
     def class_ml(self) -> list[MultilabelClass]:
         return self.__class_ml
@@ -217,6 +216,7 @@ class GeneralMultilabelManager(AbstractManagerDTO):
         if len(result) == 1: return result[0][0] # Access to frame_id
         return None
     
+
     def get_number_of_predictions_for_specific_version(self, prediction_version: str, frame_id: int) -> int:
         """ Return the count of predictions for the frame id and specific version. """
         query = """ SELECT COUNT(score) FROM multilabel_prediction WHERE version_doi = ? AND frame_id = ? ;"""
@@ -224,6 +224,7 @@ class GeneralMultilabelManager(AbstractManagerDTO):
         result = self.sql_connector.execute_query(query, params)
         return result[0][0]
     
+
     def check_annotation_in_db(self, annotation_date: str, frame_id: int, label_id: int) -> bool:
         """ Check if annotation is not already in database. """
         query = """ SELECT id FROM multilabel_annotation WHERE annotation_date = ? AND frame_id = ? AND multilabel_label_id = ?;"""
@@ -231,3 +232,24 @@ class GeneralMultilabelManager(AbstractManagerDTO):
         result = self.sql_connector.execute_query(query, params)
 
         return len(result)
+
+
+    def get_latest_annotations(self) -> list:
+        """ Return latest annotations. """
+
+        query = """
+                WITH latest_annotations AS (
+                    SELECT frame_id, multilabel_label_id, MAX(annotation_date) AS most_recent_annotation_date
+                    FROM multilabel_annotation
+                    GROUP BY frame_id, multilabel_label_id
+                )
+                SELECT ma.value, ma.annotation_date, f.filename, f.relative_path, f.version_doi, ml.name
+                FROM multilabel_annotation ma
+                JOIN latest_annotations la
+                ON ma.frame_id = la.frame_id 
+                    AND ma.annotation_date = la.most_recent_annotation_date
+                    AND ma.multilabel_label_id = la.multilabel_label_id
+                JOIN frame f ON f.id = ma.frame_id
+                JOIN multilabel_label ml on ml.id = ma.multilabel_label_id;
+        """
+        return self.sql_connector.execute_query(query)
