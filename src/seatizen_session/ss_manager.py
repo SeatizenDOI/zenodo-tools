@@ -543,7 +543,7 @@ class SessionManager:
         
         if not try_ia: return useful_frames
 
-        print("We didn't find predictions gps, so we try with jacques csv anotations to select useful frames.")
+        print("We didn't find predictions gps, so we try with jacques csv annotations to select useful frames.")
         # Cannot find predictions_gps, try with jacques annotation_files
         
         df_jacques = self.get_jacques_csv()

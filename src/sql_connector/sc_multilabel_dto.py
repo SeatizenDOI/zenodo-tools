@@ -78,6 +78,14 @@ class GeneralMultilabelManager(AbstractManagerDTO):
     def class_ml(self) -> list[MultilabelClass]:
         return self.__class_ml
 
+    @property
+    def annotations_size(self) -> int:
+        return len(self.__annotations)
+    
+    @property
+    def predictions_size(self) -> int:
+        return len(self.__predictions)
+
 
     def setup_model(self) -> None:
         """ Get the model link to constant """
@@ -142,12 +150,12 @@ class GeneralMultilabelManager(AbstractManagerDTO):
 
     def insert_predictions(self) -> None:
         """ Insert all predictions store in object into sql database. """
-        if len(self.__predictions) == 0:
+        if self.predictions_size == 0:
             print("[WARNING] Cannot insert predictions in database, we don't have predictions.")
             return 
 
         query = f"""
-        INSERT OR IGNORE INTO multilabel_prediction
+        INSERT INTO multilabel_prediction
         (score, frame_id, multilabel_class_id, version_doi) 
         VALUES (?,?,?,?);
         """
@@ -162,12 +170,12 @@ class GeneralMultilabelManager(AbstractManagerDTO):
     
     def insert_annotations(self) -> None:
         """ Insert all annotations store in object into sql database. """
-        if len(self.__annotations) == 0:
+        if self.annotations_size == 0:
             print("[WARNING] Cannot insert annotations in database, we don't have annotations.")
             return 
 
         query = f"""
-        INSERT OR IGNORE INTO multilabel_annotation
+        INSERT INTO multilabel_annotation
         (value, frame_id, multilabel_label_id, annotation_date) 
         VALUES (?,?,?,?);
         """
@@ -202,11 +210,24 @@ class GeneralMultilabelManager(AbstractManagerDTO):
 
 
     def get_frame_id_from_frame_name(self, frame_name: str) -> int | None:
-        """ Return frame id is frame is in db else None """
-        query = """
-                SELECT id from frame WHERE filename = ?;
-            """
+        """ Return frame_id is frame in db and we only have one frame_id else None """
+        query = """ SELECT id from frame WHERE filename = ?; """
         params = (frame_name, )
         result = self.sql_connector.execute_query(query, params)
         if len(result) == 1: return result[0][0] # Access to frame_id
         return None
+    
+    def get_number_of_predictions_for_specific_version(self, prediction_version: str, frame_id: int) -> int:
+        """ Return the count of predictions for the frame id and specific version. """
+        query = """ SELECT COUNT(score) FROM multilabel_prediction WHERE version_doi = ? AND frame_id = ? ;"""
+        params = (prediction_version, frame_id, )
+        result = self.sql_connector.execute_query(query, params)
+        return result[0][0]
+    
+    def check_annotation_in_db(self, annotation_date: str, frame_id: int, label_id: int) -> bool:
+        """ Check if annotation is not already in database. """
+        query = """ SELECT id FROM multilabel_annotation WHERE annotation_date = ? AND frame_id = ? AND multilabel_label_id = ?;"""
+        params = (annotation_date, frame_id, label_id, )
+        result = self.sql_connector.execute_query(query, params)
+
+        return len(result)

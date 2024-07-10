@@ -32,6 +32,7 @@ class Deposit(AbstractBaseDTO):
     table_name = "deposit"
     
     def insert(self):
+        # We can do INSERT OR IGNORE because primary key is not an autoincrement.
         query = f"INSERT OR IGNORE INTO {self.table_name} (doi, session_name, footprint, have_raw_data, have_processed_data) VALUES (?,?,?,?,?) "
         values = (self.doi, self.session_name, self.wkb_footprint, self.have_raw_data, self.have_processed_data, )
         self.sql_connector.execute_query(query, values)
@@ -74,7 +75,8 @@ class Version(AbstractBaseDTO):
     table_name = "version"
     
     def insert(self):
-        query = f"INSERT OR IGNORE INTO {self.table_name} (doi, deposit_doi) VALUES (?,?) "
+        # We can do INSERT OR IGNORE because primary key is not an autoincrement.
+        query = f"INSERT OR IGNORE INTO {self.table_name} (doi, deposit_doi) VALUES (?,?) " 
         values = (self.doi, self.deposit_doi, )
         self.sql_connector.execute_query(query, values)
 
@@ -114,7 +116,7 @@ class FrameManager(AbstractManagerDTO):
             print("[WARNING] Cannot insert frames in database, we don't have frames.")
             return 
         query = f"""
-        INSERT OR IGNORE INTO frame
+        INSERT INTO frame
         (version_doi, filename, original_filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime) 
         VALUES (?,?,?,?,?,?,?,?,?,?) 
         """
@@ -136,8 +138,8 @@ class FrameManager(AbstractManagerDTO):
     
 
     def get_frame_id_from_filename(self, filename: str, frame_doi: str) -> int:
-        query = f"SELECT id FROM frame WHERE filename = ? AND version_doi = ?;"
-        params = (filename, frame_doi)
+        query = f"SELECT id FROM frame WHERE version_doi = ? AND filename = ?;"
+        params = (frame_doi, filename, )
         result = self.sql_connector.execute_query(query, params)
 
         if len(result) > 1:
@@ -178,3 +180,12 @@ class FrameManager(AbstractManagerDTO):
             ))
 
         return self.__frames
+
+    def get_all_frame_name_for_specific_version(self, frame_doi: str) -> list[str]:
+        """ Get all frame name for specific version """
+
+        query = "SELECT filename FROM frame WHERE version_doi = ?"
+        params = (frame_doi, )
+        result = self.sql_connector.execute_query(query, params)
+
+        return [filename for filename, in result]

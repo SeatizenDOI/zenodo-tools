@@ -106,8 +106,7 @@ CREATE TABLE IF NOT EXISTS frame (
     GPSRoll REAL,
     GPSTrack REAL,
     GPSDatetime DATETIME,
-    CONSTRAINT fk_frame_version FOREIGN KEY (version_doi) REFERENCES version(doi),
-    CONSTRAINT unique_filename_version_doi UNIQUE (filename, version_doi)
+    CONSTRAINT fk_frame_version FOREIGN KEY (version_doi) REFERENCES version(doi)
 );
 CREATE INDEX idx_filename_version_doi ON frame (filename, version_doi);
 
@@ -155,8 +154,7 @@ CREATE TABLE IF NOT EXISTS multilabel_prediction (
     multilabel_class_id INTEGER NOT NULL,
     CONSTRAINT fk_multilabel_prediction_version FOREIGN KEY (version_doi) REFERENCES version(doi),
     CONSTRAINT fk_multilabel_prediction_frame FOREIGN KEY (frame_id) REFERENCES frame(id),
-    CONSTRAINT fk_multilabel_prediction_multilabel_class FOREIGN KEY (multilabel_class_id) REFERENCES multilabel_class(id),
-    CONSTRAINT unique_frame_id_version_doi_multilabel_class_id UNIQUE (frame_id, version_doi, multilabel_class_id)
+    CONSTRAINT fk_multilabel_prediction_multilabel_class FOREIGN KEY (multilabel_class_id) REFERENCES multilabel_class(id)
 );
 CREATE INDEX idx_frame_id ON multilabel_prediction (frame_id);
 
@@ -168,9 +166,9 @@ CREATE TABLE IF NOT EXISTS multilabel_annotation (
     frame_id INTEGER NOT NULL,
     multilabel_label_id INTEGER NOT NULL,
     CONSTRAINT fk_multilabel_annotation_frame FOREIGN KEY (frame_id) REFERENCES frame(id),
-    CONSTRAINT fk_multilabel_annotation_multilabel_label FOREIGN KEY (multilabel_label_id) REFERENCES multilabel_label(id),
-    CONSTRAINT unique_frame_id_multilabel_label_id UNIQUE (frame_id, multilabel_label_id)
+    CONSTRAINT fk_multilabel_annotation_multilabel_label FOREIGN KEY (multilabel_label_id) REFERENCES multilabel_label(id)
 );
+CREATE INDEX idx_date_f_id_ml_label_id ON multilabel_annotation (annotation_date, frame_id, multilabel_label_id);
 
 
 -- FIXED DATA

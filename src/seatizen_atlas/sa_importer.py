@@ -78,6 +78,11 @@ class AtlasImport:
         frame_version = Version(doi=filename_with_doi["METADATA.zip"], deposit_doi=deposit.doi)
         self.frames_importer(session, frame_version)
 
+
+        if "PROCESSED_DATA_IA.zip" not in filename_with_doi:
+            print("[WARNING] No IA folder found, cannot add predictions.")
+            return
+        
         # Iterate and add predictions
         prediction_version = Version(doi=filename_with_doi["PROCESSED_DATA_IA.zip"], deposit_doi=deposit.doi)
         self.multilabel_prediction_importer(session, prediction_version, frame_version)
@@ -87,9 +92,22 @@ class AtlasImport:
         print("\nfunc: Importing frames")
         metadata_csv = session.get_metadata_csv(indexingByFilename=True)
         framesManager = FrameManager() 
+
+        # Get all frames already in database for a specific version to avoid duplicata.
+        frame_in_database_for_specific_version = framesManager.get_all_frame_name_for_specific_version(frame_version.doi)
         
-        for frame_name in tqdm(session.get_useful_frames_path()):
-            
+        useful_frame = session.get_useful_frames_path()
+        if len(useful_frame) == 0:
+            print("[WARNING] No useful frame to add in database.")
+            return
+
+        frame_to_add_in_database = list(set(useful_frame) - set(frame_in_database_for_specific_version))
+        if len(frame_to_add_in_database) == 0:
+            print("[WARNING] We already have all the frame for this specific version in database.")
+            return
+        
+        for frame_name in tqdm(frame_to_add_in_database):
+    
             row = metadata_csv.loc[frame_name]
             
             # Datetime formatting
@@ -129,6 +147,13 @@ class AtlasImport:
             frame_id = frameManager.get_frame_id_from_filename(frame_name, frame_version.doi)
             if frame_id == -1: continue # No frames found
             
+            # Manual check to avoid add duplicate data.
+            predictions_number = general_multilabel.get_number_of_predictions_for_specific_version(prediction_version.doi, frame_id)
+            if predictions_number == len(scores_csv_header): continue
+            elif predictions_number > 0 and predictions_number < len(scores_csv_header):
+                print(f"[WARNING] Frame {frame_name} doesn't have the correct number of predictions in database. It's an error please fix.")
+                continue
+
             row = scores_csv.loc[frame_name]
             
             for cls in scores_csv_header:
@@ -145,8 +170,16 @@ class AtlasImport:
         general_multilabel.insert_predictions()
     
     def multilabel_annotation_importer(self, annotation_file: Path) -> None:
-        print(f"\n\nfunc: multilabel annotation importer with {annotation_file}")
+        print(f"\n\nfunc: Multilabel annotation importer with {annotation_file}")
         if not Path.exists(annotation_file) or not annotation_file.is_file() or annotation_file.suffix.lower() != ".csv": return
+
+
+        # Extract datetime from file.
+        annotation_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            annotation_date = datetime.datetime.strptime(annotation_file.name[0:15], "%Y%m%d_%H%M%S").strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            print("Cannot get datetime. Please start your file name like 20001212_001122")
 
         try:
             df_annotation = pd.read_csv(annotation_file)
@@ -156,9 +189,9 @@ class AtlasImport:
         
         general_multilabel = GeneralMultilabelManager()
         cpt_error = 0
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         for _, row in tqdm(df_annotation.iterrows(), total=len(df_annotation)):
+            # Check if we have frame in database
             frame_id = general_multilabel.get_frame_id_from_frame_name(row["FileName"])
             if frame_id == None:
                 cpt_error += 1
@@ -168,13 +201,15 @@ class AtlasImport:
                 label_id = general_multilabel.labelIdMapByClassName.get(label_name, None)
                 if label_id == None: continue
 
+                if general_multilabel.check_annotation_in_db(annotation_date, frame_id, label_id): continue
+
                 general_multilabel.append(MultilabelAnnotation(
                     value=row[label_name],
                     frame_id=frame_id,
                     multilabel_label_id=label_id,
-                    annotation_date=now
+                    annotation_date=annotation_date
                 ))
 
-        print(f"On {len(df_annotation)} images, only {len(df_annotation) - cpt_error} were load in database.")
+        print(f"{len(df_annotation) - cpt_error}/{len(df_annotation)} images, traduct by {general_multilabel.annotations_size} annotations load in database.")
 
         general_multilabel.insert_annotations()

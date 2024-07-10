@@ -82,7 +82,7 @@ class AtlasManager:
     def load_annotation(self, opt_annotation_path: str, opt_annotation_type: str) -> None:
         """ Add annotation in database from a file or a folder of csv. If image not found or multiple image found do nothing. """
         
-        print("func: Preprocess to load annotations")
+        print("\n\nfunc: Preprocess to load annotations in database.")
         annotation_path = Path(opt_annotation_path)
         if not Path.exists(annotation_path):
             print(f"[WARNING] Path {annotation_path} doesn't exist.")
@@ -100,6 +100,9 @@ class AtlasManager:
             return # Argument provide is not a file or a folder.
 
         for file in list_files:
+            if file.suffix.lower() != ".csv": 
+                print(f"File {file} is not a csv file.")
+
             if annotation_type == AnnotationType.MULTILABEL:
                 self.importer.multilabel_annotation_importer(file)
 
