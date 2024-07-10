@@ -20,6 +20,11 @@ jobs:
     - run: |
         conda info
         conda list
+        conda env list
+        conda activate zenodo_env
+        conda info
+        conda list
+
 
     - name: Run tests
       run: |
