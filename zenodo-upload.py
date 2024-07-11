@@ -102,7 +102,8 @@ def main(opt):
                 folders, needFrames = get_processed_folders_to_upload(opt)
                 plancha_session.prepare_processed_data(folders, needFrames)
                 processed_metadata = plancha_metadata.build_for_processed_data()
-                zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, RESTRICTED_FILES, dontUploadWhenLastVersionIsProcessedData=True)
+                print(processed_metadata)
+                # zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, RESTRICTED_FILES, dontUploadWhenLastVersionIsProcessedData=True)
                 plancha_session.cleanup()
             
             if opt.update_metadata:

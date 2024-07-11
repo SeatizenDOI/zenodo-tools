@@ -122,6 +122,9 @@ class SessionManager:
 
         # Retrieve relative path of frame.
         frames_list = self.get_frames_list()
+        if len(frames_list) == 0:
+            print("[WARNING] No frames.")
+            return
         
         # Get all useful images.
         useful_frames = self.get_useful_frames_path()        
@@ -414,7 +417,7 @@ class SessionManager:
         """ Return proportion of useful/useless. """
         
         jacques_csv = self.get_jacques_csv()
-        if len(jacques_csv) == 0: return "", 0, 0
+        if len(jacques_csv) == 0: return 0, 0
         
         useful = round(len(jacques_csv[jacques_csv["Useless"] == 0]) * 100 / len(jacques_csv), 2)
         useless = round(len(jacques_csv[jacques_csv["Useless"] == 1]) * 100 / len(jacques_csv), 2)
@@ -518,12 +521,18 @@ class SessionManager:
     def get_frame_parent_folder(self, list_frames: str) -> str:
         """ Extract common parent name from all relative path. """
 
+        if len(list_frames) == 0: return ""
+
         # Remove image name and remove session name to get only intermediate folder.
         list_parents = list(set([str(Path(frame).parent).split(self.session_path.name)[1] for frame in list_frames]))
 
         # While we don't have a unique intermediate folder we keep reducing path
-        while len(list_parents) != 1:
+        avoid_stay_stuck = 0
+        while len(list_parents) != 1 and avoid_stay_stuck < 10:
             list_parents = list(set([str(Path(p).parent) for p in list_parents]))
+            avoid_stay_stuck += 1
+
+        if avoid_stay_stuck == 10: return ""
 
         # Remove first underscore.
         return list_parents[0][1:] if list_parents[0][0] == "/" else list_parents[0]

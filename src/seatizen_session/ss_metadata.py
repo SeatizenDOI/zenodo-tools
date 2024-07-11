@@ -144,19 +144,20 @@ class SessionMetadata:
     def __get_image_acquistion_text(self) -> str:
         # Check for video
         isVideo, size_media = self.plancha_session.is_video_or_images()
+        if isVideo == DCIMType.NONE: return "No image or video acquisition for this session. <br>"
 
         # Check for frames and georeferenced frames
         nb_frames, isGeoreferenced = self.plancha_session.check_frames()
+        if nb_frames == 0: return f"This session has {size_media} GB of {isVideo.value}, but no images were trimmed."
 
         # Check for predictions
         j_useful, j_useless = self.plancha_session.get_jacques_stat()
         link_hugging = f"https://huggingface.co/{MULTILABEL_AUTHOR}/{MULTILABEL_MODEL_NAME}"
         
         prog_json = self.plancha_session.get_prog_json()
-        if len(prog_json) == 0: return None
+        if len(prog_json) == 0: return ""
         fps = prog_json["dcim"]["frames_per_second"]
 
-        if isVideo == DCIMType.NONE: return "No image or video acquisition for this session. <br>"
 
         return f"""
                 This session has {size_media} GB of {isVideo.value}, which were trimmed into {nb_frames} frames (at {fps} fps). <br> 
