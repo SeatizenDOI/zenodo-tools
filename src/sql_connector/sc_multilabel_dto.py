@@ -1,3 +1,4 @@
+from shapely import wkb
 from dataclasses import dataclass, field
 
 from .sc_base_dto import AbstractManagerDTO
@@ -13,35 +14,34 @@ class MultilabelModel():
     doi: str | None
     creation_date: str
 
-    table_name = "multilabel_model"
-
 @dataclass
 class MultilabelClass():
     id: int | None
     name: str
     threshold: float
-    multilabel_label_id: int
-    multilabel_model_id: int
-
-    table_name = "multilabel_class"
+    ml_label_id: int
+    ml_model_id: int
 
 @dataclass
 class MultilabelPrediction():
     score: float
     version_doi: str
     frame_id: int
-    multilabel_class_id: int
+    ml_class_id: int
 
-    table_name = "multilabel_prediction"
+@dataclass
+class MultilabelAnnotationSession():
+    annotation_date: str
+    author_name: str
+    dataset_name: str
+    id: int | None
 
 @dataclass
 class MultilabelAnnotation():
     value: str
-    annotation_date: str
     frame_id: int
-    multilabel_label_id: int
-
-    table_name = "multilabel_annotation"
+    ml_label_id: int
+    ml_annotation_session_id: int
 
 @dataclass
 class MultilabelLabel():
@@ -50,7 +50,28 @@ class MultilabelLabel():
     creation_date: str
     description: str
 
-    table_name = "multilabel_label"
+@dataclass
+class MultilabelAnnotationSessionManager(AbstractManagerDTO):
+
+    annotation_session: MultilabelAnnotationSession
+    
+    def get_all_annotations_informations(self) -> None:
+        query = """SELECT ml.name, f.GPSPosition, f.GPSDatetime, f.version_doi, f.filename
+                    FROM multilabel_annotation ma
+                    JOIN multilabel_annotation_session mas ON mas.id = ma.ml_annotation_session_id
+                    JOIN frame f ON f.id = ma.frame_id
+                    JOIN multilabel_label ml on ml.id = ma.ml_label_id
+                    WHERE mas.id = ? AND ma.value = 1;
+                """
+        params = (self.annotation_session.id, )
+
+        result = []
+        for label, GPSPosition, GPSDatetime, version_doi, filename in self.sql_connector.execute_query(query, params):
+            position = wkb.loads(GPSPosition)
+            result.append((label, position.y, position.x, GPSDatetime, f"{version_doi}/{filename}"))
+        return result
+        
+
 
 @dataclass
 class GeneralMultilabelManager(AbstractManagerDTO):
@@ -107,9 +128,9 @@ class GeneralMultilabelManager(AbstractManagerDTO):
     def setup_class(self) -> None:
         """ Get all class link to the model. """
         query = f"""
-            SELECT mc.id, mc.name, mc.threshold, mc.multilabel_label_id, mc.multilabel_model_id 
+            SELECT mc.id, mc.name, mc.threshold, mc.ml_label_id, mc.ml_model_id 
             FROM multilabel_class mc
-            INNER JOIN multilabel_model mm ON mm.id = mc.multilabel_model_id
+            INNER JOIN multilabel_model mm ON mm.id = mc.ml_model_id
             WHERE mm.id = ?;
         """
         params = (self.__model.id, )
@@ -120,8 +141,8 @@ class GeneralMultilabelManager(AbstractManagerDTO):
                 id=id,
                 name=name,
                 threshold=threshold,
-                multilabel_label_id=ml_label_id,
-                multilabel_model_id=ml_model_id
+                ml_label_id=ml_label_id,
+                ml_model_id=ml_model_id
             )
             self.__class_ml.append(ml_class)
     
@@ -155,14 +176,14 @@ class GeneralMultilabelManager(AbstractManagerDTO):
 
         query = f"""
         INSERT INTO multilabel_prediction
-        (score, frame_id, multilabel_class_id, version_doi) 
+        (score, frame_id, ml_class_id, version_doi) 
         VALUES (?,?,?,?);
         """
         values = []
         for p in self.__predictions:
             values.append((p.score, 
                            p.frame_id, 
-                           p.multilabel_class_id, 
+                           p.ml_class_id, 
                            p.version_doi
                         ))
         self.sql_connector.execute_query(query, values)
@@ -175,15 +196,15 @@ class GeneralMultilabelManager(AbstractManagerDTO):
 
         query = f"""
         INSERT INTO multilabel_annotation
-        (value, frame_id, multilabel_label_id, annotation_date) 
+        (value, frame_id, ml_label_id, ml_annotation_session_id) 
         VALUES (?,?,?,?);
         """
         values = []
         for a in self.__annotations:
             values.append((a.value, 
                            a.frame_id, 
-                           a.multilabel_label_id, 
-                           a.annotation_date
+                           a.ml_label_id, 
+                           a.ml_annotation_session_id
                         ))
         self.sql_connector.execute_query(query, values)
     
@@ -194,7 +215,7 @@ class GeneralMultilabelManager(AbstractManagerDTO):
                 SELECT mp.score, mc.name, mc.threshold, (mp.score >= mc.threshold) AS pred, mp.version_doi
                 FROM multilabel_prediction mp 
                 JOIN frame f ON mp.frame_id = f.id
-                JOIN multilabel_class mc ON mc.id = mp.multilabel_class_id
+                JOIN multilabel_class mc ON mc.id = mp.ml_class_id
                 WHERE f.id = ?;
             """
         params = (frame_id, )
@@ -225,31 +246,66 @@ class GeneralMultilabelManager(AbstractManagerDTO):
         return result[0][0]
     
 
-    def check_annotation_in_db(self, annotation_date: str, frame_id: int, label_id: int) -> bool:
-        """ Check if annotation is not already in database. """
-        query = """ SELECT id FROM multilabel_annotation WHERE annotation_date = ? AND frame_id = ? AND multilabel_label_id = ?;"""
-        params = (annotation_date, frame_id, label_id, )
+    def get_specific_annotation_session(self, ml_annotation_session: MultilabelAnnotationSession) -> int: # TODO Use enum
+        """ Return id if annotation exist else -1"""
+        query = """ SELECT id from multilabel_annotation_session WHERE author_name = ? AND dataset_name = ? AND annotation_date = ?; """
+        params = (ml_annotation_session.author_name, ml_annotation_session.dataset_name, ml_annotation_session.annotation_date, )
         result = self.sql_connector.execute_query(query, params)
+        return -1 if len(result) == 0 else result[0][0]
 
-        return len(result)
 
+    def insert_annotations_session(self, ml_annotation_session: MultilabelAnnotationSession) -> int:
+
+        # Check if not in db.
+        id = self.get_specific_annotation_session(ml_annotation_session)
+        if id != -1: return -1 # Already exist 
+        
+        # Insert
+        query = """ INSERT INTO multilabel_annotation_session (author_name, dataset_name, annotation_date) VALUES (?,?,?); """
+        params = (ml_annotation_session.author_name, ml_annotation_session.dataset_name, ml_annotation_session.annotation_date, )
+        self.sql_connector.execute_query(query, params)
+
+        return self.get_specific_annotation_session(ml_annotation_session)
+
+
+    def drop_annotation_session(self, id) -> None:
+        query = """ DELETE FROM multilabel_annotation_session WHERE id = ?; """
+        params = (id, )
+        self.sql_connector.execute_query(query, params)
+    
+    
+    def get_all_ml_annotations_session(self) -> list[MultilabelAnnotationSession]:
+        query = """SELECT id, author_name, annotation_date, dataset_name FROM multilabel_annotation_session"""
+        
+        ml_anno_session = []
+        for id, author_name, annotation_date, dataset_name in self.sql_connector.execute_query(query):
+            ml_anno_session.append(MultilabelAnnotationSession(
+                annotation_date=annotation_date,
+                author_name=author_name,
+                dataset_name=dataset_name,
+                id=id
+            ))
+        return ml_anno_session
 
     def get_latest_annotations(self) -> list:
         """ Return latest annotations. """
 
         query = """
                 WITH latest_annotations AS (
-                    SELECT frame_id, multilabel_label_id, MAX(annotation_date) AS most_recent_annotation_date
-                    FROM multilabel_annotation
-                    GROUP BY frame_id, multilabel_label_id
+                    SELECT ma.frame_id, ma.ml_label_id, MAX(mas.annotation_date) AS most_recent_annotation_date
+                    FROM multilabel_annotation ma
+                    JOIN multilabel_annotation_session mas ON mas.id = ma.ml_annotation_session_id
+                    GROUP BY ma.frame_id, ma.ml_label_id
+
                 )
-                SELECT ma.value, ma.annotation_date, f.filename, f.relative_path, f.version_doi, ml.name
+                SELECT ma.value, mas.annotation_date, f.filename, f.relative_path, f.version_doi, ml.name
                 FROM multilabel_annotation ma
+                JOIN multilabel_annotation_session mas ON mas.id = ma.ml_annotation_session_id
                 JOIN latest_annotations la
                 ON ma.frame_id = la.frame_id 
-                    AND ma.annotation_date = la.most_recent_annotation_date
-                    AND ma.multilabel_label_id = la.multilabel_label_id
+                    AND mas.annotation_date = la.most_recent_annotation_date
+                    AND ma.ml_label_id = la.ml_label_id
                 JOIN frame f ON f.id = ma.frame_id
-                JOIN multilabel_label ml on ml.id = ma.multilabel_label_id;
+                JOIN multilabel_label ml on ml.id = ma.ml_label_id;
         """
         return self.sql_connector.execute_query(query)

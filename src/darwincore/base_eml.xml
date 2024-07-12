@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<eml:eml
+    packageId="doi:10.xxxx/eml.1.1" system="https://doi.org"
+    xmlns:eml="https://eml.ecoinformatics.org/eml-2.2.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:stmml="http://www.xml-cml.org/schema/stmml-1.1"
+    xsi:schemaLocation="https://eml.ecoinformatics.org/eml-2.2.0 xsd/eml.xsd">
+    
+    <dataset>
+        <title>Image annotation in reef coral</title>
+        <introduction> Underwater or aerial images collected by scientists or citizens can have a wide variety of use for science, management, or conservation. 
+        These images can be annotated and shared to train IA models which can in turn predict the objects on the images. </introduction>
+
+        <creator id="https://orcid.org/0009-0007-2143-8027">
+            <individualName>
+                <givenName>ILLIEN</givenName>
+                <surName>Victor</surName>
+            </individualName>
+            <electronicMailAddress>villien@ifremer.fr</electronicMailAddress>
+            <userId directory="https://orcid.org">https://orcid.org/0009-0007-2143-8027</userId>
+        </creator>
+        <contact id="https://orcid.org/0000-0002-0882-5918">
+            <individualName>
+                <givenName>BONHOMMEAU</givenName>
+                <surName>Sylvain</surName>
+            </individualName>
+            <electronicMailAddress>sbonhom@ifremer.fr</electronicMailAddress>
+            <references>https://orcid.org/0000-0002-0882-5918</references>
+        </contact>
+        <keywordSet>
+            <keyword>Coral Reef</keyword>
+            <keyword>Coral Reef Habitat</keyword>
+            <keyword>Citizen Sciences</keyword>
+            <keyword>Deep Learning</keyword>
+            <keyword>Machine Learning</keyword>
+            <keyword>Computer Vision</keyword>
+            <keyword>Ecology</keyword>
+            <keyword>Mapping</keyword>
+            <keyword>Remote Sensing</keyword>
+            <keyword>GeoAI</keyword>
+            <keyword>Indian Ocean</keyword>
+            <keyword>Global Coral Reef Monitoring Network</keyword>
+            <keyword>Artificial Intelligence</keyword>
+            <keyword>Reef Ecosystem</keyword>
+        </keywordSet>
+    </dataset>
+</eml:eml>

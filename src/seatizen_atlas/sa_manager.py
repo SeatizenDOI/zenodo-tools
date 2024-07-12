@@ -15,7 +15,7 @@ from ..sql_connector.sc_connector import SQLiteConnector
 class AtlasManager:
     def __init__(self, config: dict, seatizen_folder_path: str, from_local: bool, force_regenerate: bool) -> None:
         
-        # Config
+        # Config.
         self.config = config
 
         # Bool.
@@ -27,7 +27,7 @@ class AtlasManager:
         self.seatizen_atlas_gpkg = Path(self.seatizen_folder_path, SEATIZEN_ATLAS_GPKG)
         self.sql_connector = SQLiteConnector()
 
-        # Seatizen session importer and exporter
+        # Seatizen session importer and exporter.
         self.importer = AtlasImport(self.seatizen_atlas_gpkg)
         self.exporter = AtlasExport(self.seatizen_atlas_gpkg, self.seatizen_folder_path)
         
@@ -70,7 +70,7 @@ class AtlasManager:
         self.exporter.session_doi_csv()
         self.exporter.metadata_images_csv()
         self.exporter.metadata_annotation_csv()
-        # self.exporter.darwincore_annotation_csv()
+        self.exporter.darwincore_annotation_csv()
         self.exporter.global_map_shp()
 
 

@@ -139,6 +139,7 @@ class AtlasImport:
     def multilabel_prediction_importer(self, session: SessionManager, prediction_version: Version, frame_version: Version) -> None:
         """ Method to import prediction multilabel. """
         print("\nfunc: Importing multilabel predictions")
+        
         scores_csv = session.get_multilabel_csv(isScore=True, indexingByFilename=True)
         scores_csv_header = list(scores_csv)
         general_multilabel = GeneralMultilabelManager()
@@ -165,7 +166,7 @@ class AtlasImport:
                 general_multilabel.append(MultilabelPrediction(
                     score=row[cls],
                     frame_id=frame_id,
-                    multilabel_class_id=class_id,
+                    ml_class_id=class_id,
                     version_doi=prediction_version.doi
                 ))
         general_multilabel.insert_predictions()
@@ -177,42 +178,57 @@ class AtlasImport:
         if not Path.exists(annotation_file) or not annotation_file.is_file() or annotation_file.suffix.lower() != ".csv": return
 
 
-        # Extract datetime from file.
-        annotation_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Extract datetime, dataset_name and author from filename.
+        annotation_date, dataset_name, author_name = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "", ""
         try:
-            annotation_date = datetime.datetime.strptime(annotation_file.name[0:15], "%Y%m%d_%H%M%S").strftime("%Y-%m-%d %H:%M:%S")
+            splitting_name = annotation_file.name.split("__")
+            annotation_date = datetime.datetime.strptime(splitting_name[0], "%Y%m%d_%H%M%S").strftime("%Y-%m-%d %H:%M:%S")
+            dataset_name = splitting_name[2].replace("_labels.csv", "")
+            author_name = splitting_name[1]
         except Exception:
-            print("Cannot get datetime. Please start your file name like 20001212_001122")
+            print("Cannot get datetime. Please start your file name like date_time__author-name__dataset-name__")
 
+        # Read annotations from csv file.
         try:
             df_annotation = pd.read_csv(annotation_file)
         except Exception:
             print(f"[WARNING] Cannot open {annotation_file} when loading multilabel annotation.")
             return
-        
-        general_multilabel = GeneralMultilabelManager()
-        cpt_error = 0
 
+
+        general_multilabel = GeneralMultilabelManager()
+        ml_annotation_session = MultilabelAnnotationSession(annotation_date=annotation_date, author_name=author_name, dataset_name=dataset_name, id=None)
+        
+        id_annotation_session = general_multilabel.insert_annotations_session(ml_annotation_session)
+        if id_annotation_session == -1:
+            print("This annotation session is already in database.")
+            return
+
+        cpt_error = 0
+        # Iter on all annotation and insert in database.
         for _, row in tqdm(df_annotation.iterrows(), total=len(df_annotation)):
-            # Check if we have frame in database
+            
+            # Check if we have frame in database.
             frame_id = general_multilabel.get_frame_id_from_frame_name(row["FileName"])
             if frame_id == None:
                 cpt_error += 1
                 continue
-
+            
             for label_name in list(df_annotation):
+                
+                # Check if label exist.
                 label_id = general_multilabel.labelIdMapByLabelName.get(label_name, None)
                 if label_id == None: continue
-
-                if general_multilabel.check_annotation_in_db(annotation_date, frame_id, label_id): continue
-
+                
                 general_multilabel.append(MultilabelAnnotation(
                     value=row[label_name],
                     frame_id=frame_id,
-                    multilabel_label_id=label_id,
-                    annotation_date=annotation_date
+                    ml_label_id=label_id,
+                    ml_annotation_session_id=id_annotation_session
                 ))
 
         print(f"{len(df_annotation) - cpt_error}/{len(df_annotation)} images, traduct by {general_multilabel.annotations_size} annotations load in database.")
-
-        general_multilabel.insert_annotations()
+        if general_multilabel.annotations_size == 0:
+            general_multilabel.drop_annotation_session(id_annotation_session)
+        else:
+            general_multilabel.insert_annotations()

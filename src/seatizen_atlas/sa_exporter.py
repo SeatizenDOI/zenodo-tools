@@ -8,6 +8,7 @@ from datetime import datetime
 from ..sql_connector.sc_connector import SQLiteConnector
 from ..sql_connector.sc_base_dto import  DepositManager, FrameManager
 from ..sql_connector.sc_multilabel_dto import GeneralMultilabelManager
+from ..darwincore.d_manager import DarwinCoreManager
 
 
 class AtlasExport:
@@ -32,13 +33,13 @@ class AtlasExport:
         list_deposit_data = []
         deposit_header = ["session_name", "place", "date", "have_raw_data", "have_processed_data", "doi"]
         for d in deposit_manager.get_deposits():
-            list_deposit_data.append([d.session_name, d.place, d.date, d.have_raw_data, d.have_processed_data, f"10.5281/zenodo.{d.doi}"])
+            list_deposit_data.append([d.session_name, d.place, d.date, d.have_raw_data, d.have_processed_data, f"https://doi.org/10.5281/zenodo.{d.doi}"])
                 
         df_deposits = pd.DataFrame(list_deposit_data, columns=deposit_header)
         df_deposits.to_csv(session_doi_file, index=False)
 
 
-    def metadata_images_csv(self) -> None:
+    def metadata_images_csv(self) -> None: # !FIXME Doesn't support multiple model
         """ Generate a csv file with all information about frames. """
         metadata_images_file = Path(self.seatizen_folder_path, "metadata_images.csv")
         print(f"Generate {metadata_images_file}")
@@ -56,7 +57,7 @@ class AtlasExport:
                 frame.original_filename,
                 frame.filename,
                 frame.relative_path,
-                f"10.5281/zenodo.{frame.version_doi}",
+                f"https://doi.org/10.5281/zenodo.{frame.version_doi}",
                 frame.gps_latitude,
                 frame.gps_longitude,
                 frame.gps_altitude,
@@ -64,7 +65,7 @@ class AtlasExport:
                 frame.gps_pitch,
                 frame.gps_track,
                 frame.gps_datetime,
-                f"10.5281/zenodo.{pred_doi}"
+                f"https://doi.org/10.5281/zenodo.{pred_doi}"
             ]+[predictions_for_frame[cls_name] for cls_name in class_name])
         
         df_data = pd.DataFrame(data, columns=df_header)
@@ -92,7 +93,6 @@ class AtlasExport:
 
 
         # Convert the dictionary to a DataFrame
-
         df = pd.DataFrame.from_dict(data, orient='index').reset_index().rename(columns={'index': 'FileName'}).fillna("-1")
 
         # Ensure all target columns are in the DataFrame, fill missing columns with -1
@@ -107,8 +107,13 @@ class AtlasExport:
 
 
     def darwincore_annotation_csv(self) -> None:
-        darwincore_annotation_file = Path(self.seatizen_folder_path, "darwincore_annotation.csv")
+        darwincore_annotation_file = Path(self.seatizen_folder_path, "darwincore_annotation.zip")
         print(f"Generate {darwincore_annotation_file}")
+
+        general_ml_manager = GeneralMultilabelManager()
+        
+        darwincoreManager = DarwinCoreManager(darwincore_annotation_file)
+        darwincoreManager.create_darwincore_package(general_ml_manager.get_all_ml_annotations_session())
 
 
     def global_map_shp(self) -> None:

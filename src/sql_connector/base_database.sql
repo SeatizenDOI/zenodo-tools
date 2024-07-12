@@ -139,10 +139,10 @@ CREATE TABLE IF NOT EXISTS multilabel_class (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT COMMENT `Alias to multilabel_label.name`,
     threshold REAL NOT NULL,
-    multilabel_label_id INTEGER NOT NULL,
-    multilabel_model_id INTEGER NOT NULL,
-    CONSTRAINT fk_multilabel_class_multilabel_label FOREIGN KEY (multilabel_label_id) REFERENCES multilabel_label(id),
-    CONSTRAINT fk_multilabel_class_multilabel_model FOREIGN KEY (multilabel_model_id) REFERENCES multilabel_model(id)
+    ml_label_id INTEGER NOT NULL,
+    ml_model_id INTEGER NOT NULL,
+    CONSTRAINT fk_ml_class_ml_label FOREIGN KEY (ml_label_id) REFERENCES multilabel_label(id),
+    CONSTRAINT fk_ml_class_ml_model FOREIGN KEY (ml_model_id) REFERENCES multilabel_model(id)
 );
 
 -- Multilabel predictions
@@ -151,24 +151,32 @@ CREATE TABLE IF NOT EXISTS multilabel_prediction (
     score REAL NOT NULL,
     version_doi TEXT NOT NULL,
     frame_id INTEGER NOT NULL,
-    multilabel_class_id INTEGER NOT NULL,
-    CONSTRAINT fk_multilabel_prediction_version FOREIGN KEY (version_doi) REFERENCES version(doi),
-    CONSTRAINT fk_multilabel_prediction_frame FOREIGN KEY (frame_id) REFERENCES frame(id),
-    CONSTRAINT fk_multilabel_prediction_multilabel_class FOREIGN KEY (multilabel_class_id) REFERENCES multilabel_class(id)
+    ml_class_id INTEGER NOT NULL,
+    CONSTRAINT fk_ml_prediction_version FOREIGN KEY (version_doi) REFERENCES version(doi),
+    CONSTRAINT fk_ml_prediction_frame FOREIGN KEY (frame_id) REFERENCES frame(id),
+    CONSTRAINT fk_ml_prediction_ml_class FOREIGN KEY (ml_class_id) REFERENCES multilabel_class(id)
 );
 CREATE INDEX idx_frame_id ON multilabel_prediction (frame_id);
 
--- Multilabel annotation
+-- Multilabel annotation session
+CREATE TABLE IF NOT EXISTS multilabel_annotation_session (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    annotation_date DATETIME NOT NULL,
+    dataset_name TEXT NOT NULL,
+    author_name TEXT NOT NULL
+);
+
+-- Multilabel annotation 
 CREATE TABLE IF NOT EXISTS multilabel_annotation (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     value TINYINT NOT NULL,
-    annotation_date DATETIME NOT NULL,
     frame_id INTEGER NOT NULL,
-    multilabel_label_id INTEGER NOT NULL,
-    CONSTRAINT fk_multilabel_annotation_frame FOREIGN KEY (frame_id) REFERENCES frame(id),
-    CONSTRAINT fk_multilabel_annotation_multilabel_label FOREIGN KEY (multilabel_label_id) REFERENCES multilabel_label(id)
+    ml_label_id INTEGER NOT NULL,
+    ml_annotation_session_id INTEGER NOT NULL,
+    CONSTRAINT fk_ml_annotation_frame FOREIGN KEY (frame_id) REFERENCES frame(id),
+    CONSTRAINT fk_ml_annotation_ml_label FOREIGN KEY (ml_label_id) REFERENCES multilabel_label(id),
+    CONSTRAINT fk_ml_annotation_ml_anno_session FOREIGN KEY (ml_annotation_session_id) REFERENCES multilabel_annotation_session(id)
 );
-CREATE INDEX idx_date_f_id_ml_label_id ON multilabel_annotation (annotation_date, frame_id, multilabel_label_id);
 
 
 -- FIXED DATA
@@ -236,7 +244,7 @@ INSERT INTO multilabel_label (name, creation_date, description) VALUES
 INSERT INTO multilabel_model (name, link, creation_date) VALUES 
 ("DinoVdeau", "https://huggingface.co/lombardata/DinoVdeau-large-2024_04_03-with_data_aug_batch-size32_epochs150_freeze", "2024-04-03");
 
-INSERT INTO multilabel_class (name, threshold, multilabel_label_id, multilabel_model_id) VALUES 
+INSERT INTO multilabel_class (name, threshold, ml_label_id, ml_model_id) VALUES 
 ("Acropore_branched", 0.351, 2, 1),
 ("Acropore_digitised", 0.349, 3, 1),
 ("Acropore_sub_massive", 0.123, 4, 1),
