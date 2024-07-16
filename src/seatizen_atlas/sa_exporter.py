@@ -111,8 +111,8 @@ class AtlasExport:
         print(f"Generate {darwincore_annotation_file}")
 
         general_ml_manager = GeneralMultilabelManager()
-        
         darwincoreManager = DarwinCoreManager(darwincore_annotation_file)
+        
         darwincoreManager.create_darwincore_package(general_ml_manager.get_all_ml_annotations_session())
 
 

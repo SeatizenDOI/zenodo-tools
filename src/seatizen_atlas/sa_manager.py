@@ -79,7 +79,7 @@ class AtlasManager:
             file.unlink()
 
 
-    def load_annotation(self, opt_annotation_path: str, opt_annotation_type: str) -> None:
+    def load_annotation_files(self, opt_annotation_path: str, opt_annotation_type: str) -> None:
         """ Add annotation in database from a file or a folder of csv. If image not found or multiple image found do nothing. """
         
         print("\n\nfunc: Preprocess to load annotations in database.")

@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument("-um", "--update_metadata", action="store_true", help="Update last version metadata")
     
     parser.add_argument("-la", "--load_annotations", default=None, help="If not none, try to load all annotations in path. Can be a file or a folder of files")
-    parser.add_argument("-at", "--annotation_type", default="multilabel", help="Annotation type to parse.")
+    parser.add_argument("-at", "--annotation_type", default="multilabel", help="Annotation type to parse. Default multilabel")
 
     # Seatizen Atlas path.
     parser.add_argument("-psa", "--path_seatizen_atlas_folder", default="./seatizen_atlas_folder", help="Folder to store data")
@@ -88,7 +88,7 @@ def main(opt):
     
     # Import annotation
     if opt.load_annotations != None:
-        seatizenManager.load_annotation(opt.load_annotations, opt.annotation_type)
+        seatizenManager.load_annotation_files(opt.load_annotations, opt.annotation_type)
 
     # Export all value we wants.
     seatizenManager.export_csv()
