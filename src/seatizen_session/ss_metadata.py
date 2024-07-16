@@ -252,13 +252,17 @@ class SessionMetadata:
         return ""
 
     def __get_all_contributors(self) -> tuple[list, list]:
+        """ Retrieve all contributors from csv. Warning, will fail if multiple abbr. """
         suivi_session_path = Path(Path.cwd(),self.metadata_json["csv_session_name_name_abbr_path"])
         contributors_path = Path(Path.cwd(),self.metadata_json["csv_contributors_path"])
 
-        df_contributors = pd.read_csv(contributors_path, index_col=0, encoding='latin1')
-        df_suivi_session = pd.read_csv(suivi_session_path, index_col=0, encoding='latin1')
+        df_contributors = pd.read_csv(contributors_path, index_col=0)
+        df_suivi_session = pd.read_csv(suivi_session_path, index_col=0)
 
         def build_colaborator_information(data: dict, type_work: str = "Creators") -> dict:
+            if isinstance(data, pd.DataFrame):
+                raise NameError("Your contributors file have two contributors with the same abbreviation. Please change it.")
+            
             a = {
                     "name": data["name"],
                     "affiliation": "" if data["affiliation"] != data["affiliation"] else data["affiliation"] 
