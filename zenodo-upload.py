@@ -21,7 +21,7 @@ def parse_args():
 
     # Path of input.
     parser.add_argument("-pfol", "--path_folder", default="/home/bioeos/Documents/Bioeos/plancha-session", help="Path to folder of session")
-    parser.add_argument("-pses", "--path_session", default="/media/bioeos/E/2021_plancha_session/20210317_REU-HERMITAGE_SCUBA-2_00", help="Path to the session")
+    parser.add_argument("-pses", "--path_session", default="/media/bioeos/F/202210_plancha_session/20221020_SYC-ALDABRA-ARM01_ASV-01_00/", help="Path to the session")
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/retry.csv", help="Path to the csv file")
 
     # Data type to upload or update.
@@ -102,8 +102,7 @@ def main(opt):
                 folders, needFrames = get_processed_folders_to_upload(opt)
                 plancha_session.prepare_processed_data(folders, needFrames)
                 processed_metadata = plancha_metadata.build_for_processed_data()
-                print(processed_metadata)
-                # zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, RESTRICTED_FILES, dontUploadWhenLastVersionIsProcessedData=True)
+                zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, RESTRICTED_FILES, dontUploadWhenLastVersionIsProcessedData=True)
                 plancha_session.cleanup()
             
             if opt.update_metadata:

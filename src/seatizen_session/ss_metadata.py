@@ -1,3 +1,7 @@
+import numpy as np
+import pandas as pd
+from pathlib import Path
+
 from .ss_manager import SessionManager, BaseType, DCIMType
 from ..utils.constants import JACQUES_MODEL_NAME, MULTILABEL_MODEL_NAME, MULTILABEL_AUTHOR
 
@@ -6,6 +10,7 @@ class SessionMetadata:
     def __init__(self, plancha_session: SessionManager, metadata_json: dict) -> None:
         self.plancha_session = plancha_session
         self.metadata_json = metadata_json
+        self.creators, self.contributors = self.__get_all_contributors()
 
 
     def build_for_raw(self) -> dict:
@@ -17,10 +22,10 @@ class SessionMetadata:
                 'access_right': 'restricted',
                 'keywords': self.__build_keywords(),
                 'version': "RAW_DATA",
-                'creators': self.metadata_json["creators"],
+                'creators': self.creators,
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
                 'language': "eng",
-                'contributors': self.metadata_json['contributors'],
+                'contributors': self.contributors,
                 'access_conditions': "Everyone who ask"
             }
         }
@@ -33,14 +38,15 @@ class SessionMetadata:
                 'title': self.__build_title(),
                 'upload_type': 'dataset',
                 'keywords': self.__build_keywords(),
-                'creators': self.metadata_json["creators"],
+                'creators': self.creators,
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
                 'language': "eng",
                 'description': self.__build_processed_description(),
                 'access_right': 'open',
                 'version': "PROCESSED_DATA",
                 'license': self.metadata_json["license"],
-                'contributors': self.metadata_json['contributors']
+                'contributors': self.contributors,
+                'notes': self.__get_fundings()
             }
         }
         return data
@@ -53,14 +59,14 @@ class SessionMetadata:
                 'title': self.__build_title(),
                 'upload_type': 'dataset',
                 'keywords': self.__build_keywords(),
-                'creators': self.metadata_json["creators"],
+                'contributors': self.creators,
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
                 'language': "eng",
                 'description': self.__get_description_custom(self.metadata_json["description"]),
                 'access_right': 'open',
                 'version': "RAW_DATA",
                 'license': self.metadata_json["license"],
-                'contributors': self.metadata_json['contributors']
+                'contributors': self.contributors,
             }
         }
         return data
@@ -135,9 +141,6 @@ class SessionMetadata:
 
                     <h2> Software </h2>
                     <br> {self.__get_software()}
-
-                    <h2> Fundings </h2>
-                    <br> {self.__get_fundings()}
                 """
 
 
@@ -209,7 +212,7 @@ class SessionMetadata:
 
         fundings = ""
         for f in self.metadata_json["fundings"]:
-            fundings += f"<notes><strong><i>{f}</i></strong></notes><br>"
+            fundings += f"{f}<br>"
         
         return fundings
     
@@ -247,3 +250,44 @@ class SessionMetadata:
             return self.__get_description_2015()
         
         return ""
+
+    def __get_all_contributors(self) -> tuple[list, list]:
+        suivi_session_path = Path(Path.cwd(),self.metadata_json["csv_session_name_name_abbr_path"])
+        contributors_path = Path(Path.cwd(),self.metadata_json["csv_contributors_path"])
+
+        df_contributors = pd.read_csv(contributors_path, index_col=0, encoding='latin1')
+        df_suivi_session = pd.read_csv(suivi_session_path, index_col=0, encoding='latin1')
+
+        def build_colaborator_information(data: dict, type_work: str = "Creators") -> dict:
+            a = {
+                    "name": data["name"],
+                    "affiliation": "" if data["affiliation"] != data["affiliation"] else data["affiliation"] 
+            }
+            if type_work.lower() != "creators": a["type"] = type_work
+            if not data["orcid"] != data["orcid"] and not data["orcid"] in ["", None, np.nan]:
+                a["orcid"] = data["orcid"]
+            return a
+
+
+        session_info = df_suivi_session.loc[self.plancha_session.session_name]
+        creators, contributors, memory = [], [], []
+
+        # Add creators.
+        for creator_abbr in session_info["Creators"].replace(" ", "").split(","):
+            memory.append(creator_abbr)
+            creators.append(build_colaborator_information(df_contributors.loc[creator_abbr]))
+        
+        # Add all abbr name for each classes.
+        for col in [n for n in list(df_suivi_session) if n not in ["session_name", "Creators"]]:
+            if session_info[col] != session_info[col]: continue
+            for other_abbr in session_info[col].replace(" ", "").split(","):
+                memory.append(other_abbr)
+                contributors.append(build_colaborator_information(df_contributors.loc[other_abbr], col)) 
+        
+        # To avoid forgetting someone, we check if the people have been added somewhere and if not, we put them in ProjectMember.
+        for remain_people_id in (df_contributors.index):
+            if remain_people_id in memory: continue
+            contributors.append(build_colaborator_information(df_contributors.loc[remain_people_id], "ProjectMember"))
+
+
+        return creators, contributors

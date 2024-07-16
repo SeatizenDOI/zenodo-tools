@@ -11,35 +11,8 @@
         "PADDLE": "Paddle"
     },
     "project_name": "Hyscores",
-    "creators": [
-        {
-            "name": "Pascal Mouquet",
-            "affiliation": "Ifremer DOI, La Réunion, France",
-            "orcid": "0000-0003-0361-4131"
-        },
-        {
-            "name": "Touria Bajjouk",
-            "affiliation": "Ifremer, Brest, France",
-            "orcid": "0000-0001-9039-0660"
-        },
-        {
-            "name": "Michel Ropert",
-            "affiliation": "Ifremer DOI, La Réunion, France",
-            "orcid": "0000-0002-5837-6268"
-        },
-        {
-            "name": "Laurence Maurel",
-            "affiliation": "Kart'eau, La Réunion, France"
-        }
-    ],
-    "contributors": [
-        {
-            "name": "Victor Illien",
-            "type": "DataCurator",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0009-0007-2143-8027"
-        }
-    ],
+    "csv_session_name_name_abbr_path": "./metadata/contributors/suivi_session.csv",
+    "csv_contributors_path": "./metadata/contributors/contributors_2015.csv",
     "related_identifiers": [
         {
             "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",

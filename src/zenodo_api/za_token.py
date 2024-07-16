@@ -285,7 +285,7 @@ class ZenodoAPI:
         
         deposits = r.json()
         if len(deposits) > 1:
-            raise NameError("Retrieve more than one version, abort.")
+            raise NameError("Retrieve more than one deposit, abort.")
         elif len(deposits) == 0:
             print(f"[WARNING] No id found for session {self.session_name}") # Only warning print
             return None
