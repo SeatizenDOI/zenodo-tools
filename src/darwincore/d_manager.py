@@ -107,6 +107,11 @@ class DarwinCoreManager:
             df_occurence = pd.DataFrame(occurence_data, columns=list(occurence_data[0]))
             df_occurence.to_csv(occurence_path, index=False)
         
+        # If no data, no export.
+        if len(header_data) == 0:
+            print("No annotations to export to darwincore format.")
+            return
+
         # Save header data to csv.
         df_header_data = pd.DataFrame(header_data, columns=list(header_data[0]))
         df_header_data.to_csv(self.header_path, index=False)

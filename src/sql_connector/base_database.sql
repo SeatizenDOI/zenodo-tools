@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS frame (
     GPSRoll REAL,
     GPSTrack REAL,
     GPSDatetime DATETIME,
+    GPSFix INTEGER,
     CONSTRAINT fk_frame_version FOREIGN KEY (version_doi) REFERENCES version(doi)
 );
 CREATE INDEX idx_filename_version_doi ON frame (filename, version_doi);

@@ -38,6 +38,7 @@ def parse_args():
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start.")
     parser.add_argument("-fr", "--force_regenerate", action="store_true", help="Regenerate gpkg file from scracth even if exist.")
+    parser.add_argument("-cp", "--confirm_upload", action="store_true", help="Upload to zenodo.")
 
     return parser.parse_args()
 
@@ -94,7 +95,8 @@ def main(opt):
     seatizenManager.export_csv()
     
     # Upload all data.
-    # seatizenManager.publish(opt.path_metadata_json)
+    if opt.confirm_upload:
+        seatizenManager.publish(opt.path_metadata_json)
 
     # Close database connection.
     seatizenManager.sql_connector.close()

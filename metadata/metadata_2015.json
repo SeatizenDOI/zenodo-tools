@@ -40,5 +40,11 @@
     "workflow-link": "https://github.com/SeatizenDOI/plancha-workflow/releases/tag/v1.0.3",
     "inference-link": "https://github.com/SeatizenDOI/plancha-inference/releases/tag/v1.0.0",
     "zenodo-link": "https://github.com/SeatizenDOI/zenodo-tools",
-    "software-link": "https://github.com/SeatizenDOI"
+    "software-link": "https://github.com/SeatizenDOI",
+    "fundings": [
+        "Internal fund by IFREMER."
+    ],
+    "communities": [
+        "umr-marbec"
+    ]
 }

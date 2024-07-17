@@ -129,6 +129,7 @@ class AtlasImport:
                 gps_pitch = None if "GPSPitch" not in row else row["GPSPitch"],
                 gps_roll = None if "GPSRoll" not in row else row["GPSRoll"],
                 gps_track = None if "GPSTrack" not in row else row["GPSTrack"],
+                gps_fix = None if "GPSFix" not in row else row["GPSFix"],
                 gps_datetime =  creation_date,
                 relative_path = row["relative_file_path"]
             )

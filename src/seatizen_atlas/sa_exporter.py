@@ -48,7 +48,7 @@ class AtlasExport:
         generalMultilabelManager = GeneralMultilabelManager()
 
         class_name = list(map(lambda x: getattr(x, "name"), generalMultilabelManager.class_ml))
-        df_header = "OriginalFileName,FileName,relative_file_path,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,GPSPitch,GPSTrack,GPSDatetime,prediction_doi".split(",") + class_name
+        df_header = "OriginalFileName,FileName,relative_file_path,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,GPSPitch,GPSTrack,GPSDatetime,GPSFix,prediction_doi".split(",") + class_name
         data = []
         for frame in tqdm(frameManager.retrieve_frames()):
             predictions_for_frame, pred_doi = generalMultilabelManager.get_predictions_from_frame_id(frame.id)
@@ -65,6 +65,7 @@ class AtlasExport:
                 frame.gps_pitch,
                 frame.gps_track,
                 frame.gps_datetime,
+                frame.gps_fix,
                 f"https://doi.org/10.5281/zenodo.{pred_doi}"
             ]+[predictions_for_frame[cls_name] for cls_name in class_name])
         
@@ -116,7 +117,7 @@ class AtlasExport:
         darwincoreManager.create_darwincore_package(general_ml_manager.get_all_ml_annotations_session())
 
 
-    def global_map_shp(self) -> None:
+    def global_map_gpkg(self) -> None:
         """ Lighter geopackage to resume all trajectory. """
         global_map_file = Path(self.seatizen_folder_path, "global_map.gpkg")
         print(f"Generate {global_map_file}")

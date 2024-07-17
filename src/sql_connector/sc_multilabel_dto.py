@@ -56,7 +56,7 @@ class MultilabelAnnotationSessionManager(AbstractManagerDTO):
     annotation_session: MultilabelAnnotationSession
     
     def get_all_annotations_informations(self) -> None:
-        query = """SELECT ml.name, f.GPSPosition, f.GPSDatetime, f.version_doi, f.filename
+        query = """SELECT ml.name, f.GPSPosition, f.GPSDatetime, f.GPSFix, f.version_doi, f.filename
                     FROM multilabel_annotation ma
                     JOIN multilabel_annotation_session mas ON mas.id = ma.ml_annotation_session_id
                     JOIN frame f ON f.id = ma.frame_id

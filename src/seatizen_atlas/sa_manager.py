@@ -71,12 +71,21 @@ class AtlasManager:
         self.exporter.metadata_images_csv()
         self.exporter.metadata_annotation_csv()
         self.exporter.darwincore_annotation_csv()
-        self.exporter.global_map_shp()
+        self.exporter.global_map_gpkg()
 
 
     def clean_seatizen_folder(self) -> None:
         for file in self.seatizen_folder_path.iterdir():
-            file.unlink()
+            try:
+
+                if file.is_dir():
+                    for subfile in file.iterdir():
+                        subfile.unlink()
+                    file.rmdir()
+                else:
+                    file.unlink()
+            except:
+                print(f"[WARNING] Something happen when trying to delete {file}")
 
 
     def load_annotation_files(self, opt_annotation_path: str, opt_annotation_type: str) -> None:

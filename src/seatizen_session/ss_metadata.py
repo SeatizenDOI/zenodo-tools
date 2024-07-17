@@ -5,12 +5,23 @@ from pathlib import Path
 from .ss_manager import SessionManager, BaseType, DCIMType
 from ..utils.constants import JACQUES_MODEL_NAME, MULTILABEL_MODEL_NAME, MULTILABEL_AUTHOR
 
+from .ss_tools import *
+
+
 class SessionMetadata:
 
     def __init__(self, plancha_session: SessionManager, metadata_json: dict) -> None:
+        
+        # JSON DATA.
         self.plancha_session = plancha_session
         self.metadata_json = metadata_json
+        
+        # Check if all key are presents in JSON File.
+        self.check_keys()
+
+        # Create global data.
         self.creators, self.contributors = self.__get_all_contributors()
+        self.communities = self.__build_communities()
 
 
     def build_for_raw(self) -> dict:
@@ -26,7 +37,8 @@ class SessionMetadata:
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
                 'language': "eng",
                 'contributors': self.contributors,
-                'access_conditions': "Everyone who ask"
+                'access_conditions': "Everyone who ask",
+                'communities': self.communities
             }
         }
         return data
@@ -39,14 +51,15 @@ class SessionMetadata:
                 'upload_type': 'dataset',
                 'keywords': self.__build_keywords(),
                 'creators': self.creators,
-                'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
+                'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json[IDENTIFIER_KEY],
                 'language': "eng",
                 'description': self.__build_processed_description(),
                 'access_right': 'open',
                 'version': "PROCESSED_DATA",
-                'license': self.metadata_json["license"],
+                'license': self.metadata_json[LICENSE_KEY],
                 'contributors': self.contributors,
-                'notes': self.__get_fundings()
+                'notes': self.__get_fundings(),
+                'communities': self.communities
             }
         }
         return data
@@ -54,31 +67,35 @@ class SessionMetadata:
 
     def build_for_custom(self) -> dict:
         """ Build for custom deposit. self.metadata_json["description"] value refer to the enum. """
+        if DESCRIPTION_KEY not in self.metadata_json:
+            raise KeyError("Description is a mandatory for custom upload.")
+        
         data = {
             'metadata': {
                 'title': self.__build_title(),
                 'upload_type': 'dataset',
                 'keywords': self.__build_keywords(),
                 'contributors': self.creators,
-                'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json["related_identifiers"],
+                'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json[IDENTIFIER_KEY],
                 'language': "eng",
-                'description': self.__get_description_custom(self.metadata_json["description"]),
+                'description': self.__get_description_custom(self.metadata_json[DESCRIPTION_KEY]),
                 'access_right': 'open',
                 'version': "RAW_DATA",
-                'license': self.metadata_json["license"],
+                'license': self.metadata_json[LICENSE_KEY],
                 'contributors': self.contributors,
+                'communities': self.communities
             }
         }
         return data
 
 
     def __build_title(self) -> str:
-        type = self.metadata_json["image_type"]
+        type = self.metadata_json[IMG_TYPE_KEY]
         return f"{type} images collected {self.__sub_title()}"
 
 
     def __sub_title(self) -> str:
-        hp = self.metadata_json["platform"][self.plancha_session.platform] if self.plancha_session.platform in self.metadata_json["platform"] else "No key for platform"
+        hp = self.metadata_json[PLATFORM_KEY][self.plancha_session.platform] if self.plancha_session.platform in self.metadata_json[PLATFORM_KEY] else "No key for platform"
         place = self.plancha_session.place
         country = self.plancha_session.country if self.plancha_session.country else "Somewhere"
         date = self.plancha_session.date
@@ -92,10 +109,10 @@ class SessionMetadata:
 
 
     def __build_keywords(self) -> list:
-        hp = [self.metadata_json["platform"][self.plancha_session.platform]] if self.plancha_session.platform in self.metadata_json["platform"] else []
-        keywords = self.metadata_json["keywords"] + [
+        hp = [self.metadata_json[PLATFORM_KEY][self.plancha_session.platform]] if self.plancha_session.platform in self.metadata_json[PLATFORM_KEY] else []
+        keywords = self.metadata_json[KEYWORDS_KEY] + [
             self.plancha_session.country, 
-            self.metadata_json["project_name"],
+            self.metadata_json[PROJECT_KEY],
             self.plancha_session.platform
         ] + hp
         return sorted(keywords)
@@ -211,17 +228,17 @@ class SessionMetadata:
     def __get_fundings(self) -> str:
 
         fundings = ""
-        for f in self.metadata_json["fundings"]:
+        for f in self.metadata_json[FUNDINGS_KEY]:
             fundings += f"{f}<br>"
         
         return fundings
     
     def __get_software(self) -> str:
         return f"""
-            All the raw data was processed using our <a href="{self.metadata_json["workflow-link"]}" target="_blank">plancha-worflow</a>. <br>
-            All predictions were generated by our <a href="{self.metadata_json["inference-link"]}" target="_blank">inference pipeline</a>. <br>
-            You can find all the necessary scripts to download this data in this <a href="{self.metadata_json["zenodo-link"]}" target="_blank">repository</a>. <br>
-            Enjoy your data with <a href="{self.metadata_json["software-link"]}" target="_blank">SeatizenDOI</a>! <br>
+            All the raw data was processed using our <a href="{self.metadata_json[LINK_W_KEY]}" target="_blank">plancha-worflow</a>. <br>
+            All predictions were generated by our <a href="{self.metadata_json[LINK_I_KEY]}" target="_blank">inference pipeline</a>. <br>
+            You can find all the necessary scripts to download this data in this <a href="{self.metadata_json[LINK_Z_KEY]}" target="_blank">repository</a>. <br>
+            Enjoy your data with <a href="{self.metadata_json[LINK_S_KEY]}" target="_blank">SeatizenDOI</a>! <br>
         """
 
     def __get_description_2015(self) -> str:
@@ -253,8 +270,8 @@ class SessionMetadata:
 
     def __get_all_contributors(self) -> tuple[list, list]:
         """ Retrieve all contributors from csv. Warning, will fail if multiple abbr. """
-        suivi_session_path = Path(Path.cwd(),self.metadata_json["csv_session_name_name_abbr_path"])
-        contributors_path = Path(Path.cwd(),self.metadata_json["csv_contributors_path"])
+        suivi_session_path = Path(Path.cwd(),self.metadata_json[CSV_SESSION_KEY])
+        contributors_path = Path(Path.cwd(),self.metadata_json[CSV_CONTRIBUTORS_KEY])
 
         df_contributors = pd.read_csv(contributors_path, index_col=0)
         df_suivi_session = pd.read_csv(suivi_session_path, index_col=0)
@@ -295,3 +312,12 @@ class SessionMetadata:
 
 
         return creators, contributors
+    
+    def __build_communities(self) -> dict | None:
+        communities = [{'identifier': name} for name in self.metadata_json[COMMUNITIES_KEY]]
+        return None if len(communities) == 0 else communities
+    
+    def check_keys(self) -> None:
+        for key_mandatory in ALL_MANDATORY_KEY_METADATA_JSON:
+            if key_mandatory not in self.metadata_json:
+                raise KeyError(f"{key_mandatory} is a mandatory field for metadata_json.")

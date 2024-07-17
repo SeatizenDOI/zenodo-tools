@@ -93,11 +93,13 @@ class Frame():
     gps_pitch: float | None
     gps_roll: float | None
     gps_track: float | None
+    gps_fix: int | None
     gps_datetime: str
     id: int | None = field(default=None)
 
     @property
     def position(self) -> any:
+        if self.gps_longitude == None and self.gps_latitude == None: return None
         return Point(self.gps_longitude, self.gps_latitude).wkb
 
 
@@ -117,8 +119,8 @@ class FrameManager(AbstractManagerDTO):
             return 
         query = f"""
         INSERT INTO frame
-        (version_doi, filename, original_filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime) 
-        VALUES (?,?,?,?,?,?,?,?,?,?) 
+        (version_doi, filename, original_filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime, GPSFix) 
+        VALUES (?,?,?,?,?,?,?,?,?,?,?) 
         """
         values = []
         for f in self.__frames:
@@ -131,7 +133,8 @@ class FrameManager(AbstractManagerDTO):
                            f.gps_pitch, 
                            f.gps_roll, 
                            f.gps_track, 
-                           f.gps_datetime, 
+                           f.gps_datetime,
+                           f.gps_fix
                         ))
         
         self.sql_connector.execute_query(query, values)
@@ -158,11 +161,15 @@ class FrameManager(AbstractManagerDTO):
     def retrieve_frames(self) -> list[Frame]:
         """ Get all frames and parse output as csv file. """
 
-        query = "SELECT id, version_doi, original_filename, filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime FROM frame ORDER BY filename"
+        query = "SELECT id, version_doi, original_filename, filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime, GPSFix FROM frame ORDER BY filename"
         result = self.sql_connector.execute_query(query)
         
-        for id, version_doi, original_filename, filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime in result:
-            position = wkb.loads(GPSPosition)
+        for id, version_doi, original_filename, filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime, GPSFix in result:
+            lat, lon = None, None
+            if GPSPosition != None:
+                position = wkb.loads(GPSPosition)
+                lat = position.y
+                lon = position.x
 
             self.append(Frame(
                 id=id,
@@ -170,13 +177,14 @@ class FrameManager(AbstractManagerDTO):
                 original_filename=original_filename,
                 filename=filename,
                 relative_path=relative_path,
-                gps_latitude=position.y,
-                gps_longitude=position.x,
+                gps_latitude=lat,
+                gps_longitude=lon,
                 gps_altitude=GPSAltitude,
                 gps_pitch=GPSPitch,
                 gps_roll=GPSRoll,
                 gps_track=GPSTrack,
-                gps_datetime=GPSDatetime
+                gps_datetime=GPSDatetime,
+                gps_fix=GPSFix
             ))
 
         return self.__frames
