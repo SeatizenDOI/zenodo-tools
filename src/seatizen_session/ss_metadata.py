@@ -45,6 +45,8 @@ class SessionMetadata:
 
 
     def build_for_processed_data(self) -> dict:
+        # Can add custom description for processed data.
+        description = self.__build_processed_description() if DESCRIPTION_KEY not in self.metadata_json else self.__get_description_custom(self.metadata_json[DESCRIPTION_KEY])
         data = {
             'metadata': {
                 'title': self.__build_title(),
@@ -53,7 +55,7 @@ class SessionMetadata:
                 'creators': self.creators,
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json[IDENTIFIER_KEY],
                 'language': "eng",
-                'description': self.__build_processed_description(),
+                'description': description,
                 'access_right': 'open',
                 'version': "PROCESSED_DATA",
                 'license': self.metadata_json[LICENSE_KEY],
@@ -75,7 +77,7 @@ class SessionMetadata:
                 'title': self.__build_title(),
                 'upload_type': 'dataset',
                 'keywords': self.__build_keywords(),
-                'contributors': self.creators,
+                'creators': self.creators,
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json[IDENTIFIER_KEY],
                 'language': "eng",
                 'description': self.__get_description_custom(self.metadata_json[DESCRIPTION_KEY]),
@@ -83,6 +85,7 @@ class SessionMetadata:
                 'version': "RAW_DATA",
                 'license': self.metadata_json[LICENSE_KEY],
                 'contributors': self.contributors,
+                'notes': self.__get_fundings(),
                 'communities': self.communities
             }
         }

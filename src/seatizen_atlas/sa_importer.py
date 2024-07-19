@@ -24,7 +24,7 @@ class AtlasImport:
         self.sql_connector = SQLiteConnector()
 
 
-    def import_seatizen_session(self, session_path: Path) -> None: # TODO Add choices by parameters
+    def import_seatizen_session(self, session_path: Path, force_frames_insertion: bool) -> None: # TODO Add choices by parameters
         if not Path.exists(session_path) or not session_path.is_dir():
             print("[ERROR] Session not found in importer. ")
         
@@ -52,7 +52,7 @@ class AtlasImport:
                 have_raw_data = True
 
             for file in version["files"]:
-                if file["key"] in filename_with_zipsize and filename_with_zipsize[file["key"]] == file["size"]:
+                if file["key"] in filename_with_zipsize and (filename_with_zipsize[file["key"]] == file["size"] or abs(filename_with_zipsize[file["key"]] - file["size"]) < 1000):
                     filename_with_doi[file["key"]] = version["id"]
         
         # Create or update deposit
@@ -76,7 +76,7 @@ class AtlasImport:
         
         # Iterate over frames.
         frame_version = Version(doi=filename_with_doi["METADATA.zip"], deposit_doi=deposit.doi)
-        self.frames_importer(session, frame_version)
+        self.frames_importer(session, frame_version, force_frames_insertion)
 
 
         if "PROCESSED_DATA_IA.zip" not in filename_with_doi:
@@ -88,7 +88,7 @@ class AtlasImport:
         self.multilabel_prediction_importer(session, prediction_version, frame_version)
 
 
-    def frames_importer(self, session: SessionManager, frame_version: Version) -> None:
+    def frames_importer(self, session: SessionManager, frame_version: Version, force_frames_insertion: bool) -> None:
         print("\nfunc: Importing frames")
         metadata_csv = session.get_metadata_csv(indexingByFilename=True)
         framesManager = FrameManager() 
@@ -96,10 +96,14 @@ class AtlasImport:
         # Get all frames already in database for a specific version to avoid duplicata.
         frame_in_database_for_specific_version = framesManager.get_all_frame_name_for_specific_version(frame_version.doi)
         
-        useful_frame = session.get_useful_frames_path()
-        if len(useful_frame) == 0:
-            print("[WARNING] No useful frame to add in database.")
-            return
+        useful_frame = []
+        if force_frames_insertion:
+            useful_frame = list(metadata_csv.index)
+        else:
+            useful_frame = session.get_useful_frames_path()
+            if len(useful_frame) == 0:
+                print("[WARNING] No useful frame to add in database.")
+                return
 
         frame_to_add_in_database = list(set(useful_frame) - set(frame_in_database_for_specific_version))
         if len(frame_to_add_in_database) == 0:
@@ -129,9 +133,9 @@ class AtlasImport:
                 gps_pitch = None if "GPSPitch" not in row else row["GPSPitch"],
                 gps_roll = None if "GPSRoll" not in row else row["GPSRoll"],
                 gps_track = None if "GPSTrack" not in row else row["GPSTrack"],
-                gps_fix = None if "GPSFix" not in row else row["GPSFix"],
+                gps_fix = None if "GPSfix" not in row else row["GPSfix"],
                 gps_datetime =  creation_date,
-                relative_path = row["relative_file_path"]
+                relative_path = None if "relative_file_path" not in row else row["relative_file_path"]
             )
             framesManager.append(frame)
         framesManager.insert()

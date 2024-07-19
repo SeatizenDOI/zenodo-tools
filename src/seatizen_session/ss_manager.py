@@ -574,7 +574,7 @@ class SessionManager:
         if indexingByFilename:
             with open(metadata_path, "r") as f:
                 try:
-                    index_col = f.readline().strip('\n').split(",").index("FileName")
+                    index_col = f.readline().strip('\n').replace('"', "").split(",").index("FileName")
                 except ValueError:
                     print("[WARNING] FileName column not found in csv file.")
         return pd.read_csv(metadata_path, index_col=index_col)
@@ -631,7 +631,10 @@ class SessionManager:
             coordinates = self.get_waypoints_file()
             if len(coordinates) == 0: return
 
-        points = coordinates[['GPSLongitude', 'GPSLatitude']].values
+        if round(coordinates["GPSLatitude"].std(), 10) == 0.0 or round(coordinates["GPSLongitude"].std(), 10) == 0.0: 
+            return [] # All coordinates are the same.
+        
+        points = [[lat ,lon] for lat, lon in coordinates[['GPSLongitude', 'GPSLatitude']].values if lat != 0.0 and lon != 0.0] # Remove 0, 0 coordinates
 
         # Compute the convex hull for the original points
         hull = ConvexHull(points)

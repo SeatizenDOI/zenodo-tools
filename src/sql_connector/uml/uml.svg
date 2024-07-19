@@ -487,7 +487,7 @@
 </symbol>
 </g>
 </defs>
-<g id="surface7446">
+<g id="surface3763">
 <rect x="0" y="0" width="1569" height="1614" style="fill:rgb(100%,100%,100%);fill-opacity:1;stroke:none;"/>
 <path style="fill-rule:evenodd;fill:rgb(100%,79.215688%,76.078433%);fill-opacity:1;stroke-width:0.1;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;" d="M -5 -13 L 8.235352 -13 L 8.235352 -11.4 L -5 -11.4 Z M -5 -13 " transform="matrix(20,0,0,20,581,361)"/>
 <g style="fill:rgb(0%,0%,0%);fill-opacity:1;">
@@ -3550,7 +3550,7 @@
   <use xlink:href="#glyph2-10" x="766.453993" y="924.005968"/>
   <use xlink:href="#glyph2-8" x="774.231771" y="924.005968"/>
 </g>
-<path style=" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;" d="M 608 934 C 608 936.667969 604 936.667969 604 934 C 604 931.332031 608 931.332031 608 934 "/>
+<path style="fill:none;stroke-width:0.05;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;" d="M 1.35 28.65 C 1.35 28.783398 1.15 28.783398 1.15 28.65 C 1.15 28.516602 1.35 28.516602 1.35 28.65 " transform="matrix(20,0,0,20,581,361)"/>
 <g style="fill:rgb(0%,0%,0%);fill-opacity:1;">
   <use xlink:href="#glyph2-2" x="610" y="940.005968"/>
   <use xlink:href="#glyph2-7" x="617.777778" y="940.005968"/>

@@ -38,7 +38,10 @@ def parse_args():
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start.")
     parser.add_argument("-fr", "--force_regenerate", action="store_true", help="Regenerate gpkg file from scracth even if exist.")
+    parser.add_argument("-ffi", "--force_frames_insertion", action="store_true", help="Force inserting all frames in database without useful check")
     parser.add_argument("-cp", "--confirm_upload", action="store_true", help="Upload to zenodo.")
+    parser.add_argument("-ne", "--no_export", action="store_true", help="No export.")
+
 
     return parser.parse_args()
 
@@ -74,8 +77,7 @@ def main(opt):
                     continue
                 
                 print(f"\n\nWorking with session {session_path.name}")
-                seatizenManager.import_session(session_path)
-
+                seatizenManager.import_session(session_path, opt.force_frames_insertion)
 
             except Exception:
                 print(traceback.format_exc(), end="\n\n")
@@ -92,7 +94,8 @@ def main(opt):
         seatizenManager.load_annotation_files(opt.load_annotations, opt.annotation_type)
 
     # Export all value we wants.
-    seatizenManager.export_csv()
+    if not opt.no_export:
+        seatizenManager.export_csv()
     
     # Upload all data.
     if opt.confirm_upload:

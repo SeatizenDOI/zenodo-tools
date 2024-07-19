@@ -86,7 +86,7 @@ class Frame():
     version_doi: str 
     filename: str
     original_filename: str
-    relative_path: str
+    relative_path: str | None
     gps_latitude: float | None
     gps_longitude: float | None
     gps_altitude: float | None
@@ -134,7 +134,7 @@ class FrameManager(AbstractManagerDTO):
                            f.gps_roll, 
                            f.gps_track, 
                            f.gps_datetime,
-                           f.gps_fix
+                           f.gps_fix,
                         ))
         
         self.sql_connector.execute_query(query, values)
@@ -187,7 +187,7 @@ class FrameManager(AbstractManagerDTO):
                 gps_fix=GPSFix
             ))
 
-        return self.__frames
+        return self.__frames if self.__frames != None else []
 
     def get_all_frame_name_for_specific_version(self, frame_doi: str) -> list[str]:
         """ Get all frame name for specific version """

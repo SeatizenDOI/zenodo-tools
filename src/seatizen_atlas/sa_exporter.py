@@ -26,7 +26,7 @@ class AtlasExport:
     def session_doi_csv(self) -> None:
         """ Generate a csv file to map doi and session_name. """
         session_doi_file = Path(self.seatizen_folder_path, "session_doi.csv")
-        print(f"Generate {session_doi_file}")
+        print(f"\n-- Generate {session_doi_file}")
 
         deposit_manager = DepositManager()
         
@@ -42,7 +42,7 @@ class AtlasExport:
     def metadata_images_csv(self) -> None: # !FIXME Doesn't support multiple model
         """ Generate a csv file with all information about frames. """
         metadata_images_file = Path(self.seatizen_folder_path, "metadata_images.csv")
-        print(f"Generate {metadata_images_file}")
+        print(f"\n-- Generate {metadata_images_file}")
 
         frameManager = FrameManager()
         generalMultilabelManager = GeneralMultilabelManager()
@@ -52,6 +52,7 @@ class AtlasExport:
         data = []
         for frame in tqdm(frameManager.retrieve_frames()):
             predictions_for_frame, pred_doi = generalMultilabelManager.get_predictions_from_frame_id(frame.id)
+            predictions_to_add = [predictions_for_frame[cls_name] for cls_name in class_name] if len(predictions_for_frame) != 0  else [None for _ in class_name]
 
             data.append([
                 frame.original_filename,
@@ -67,7 +68,11 @@ class AtlasExport:
                 frame.gps_datetime,
                 frame.gps_fix,
                 f"https://doi.org/10.5281/zenodo.{pred_doi}"
-            ]+[predictions_for_frame[cls_name] for cls_name in class_name])
+            ]+predictions_to_add)
+        
+        if len(data) == 0:
+            print("[WARNING] No data to export.")
+            return
         
         df_data = pd.DataFrame(data, columns=df_header)
         df_data.to_csv(metadata_images_file, index=False)
@@ -75,7 +80,7 @@ class AtlasExport:
 
     def metadata_annotation_csv(self) -> None:
         metadata_annotation_file = Path(self.seatizen_folder_path, "metadata_annotation.csv")
-        print(f"Generate {metadata_annotation_file}")
+        print(f"\n-- Generate {metadata_annotation_file}")
         
         generalMultilabelManager = GeneralMultilabelManager()
         all_labels = ["FileName", "frame_doi", "annotation_date", "relative_file_path"] + list(generalMultilabelManager.labelIdMapByLabelName)
@@ -109,7 +114,7 @@ class AtlasExport:
 
     def darwincore_annotation_csv(self) -> None:
         darwincore_annotation_file = Path(self.seatizen_folder_path, "darwincore_annotation.zip")
-        print(f"Generate {darwincore_annotation_file}")
+        print(f"\n-- Generate {darwincore_annotation_file}")
 
         general_ml_manager = GeneralMultilabelManager()
         darwincoreManager = DarwinCoreManager(darwincore_annotation_file)
@@ -120,19 +125,25 @@ class AtlasExport:
     def global_map_gpkg(self) -> None:
         """ Lighter geopackage to resume all trajectory. """
         global_map_file = Path(self.seatizen_folder_path, "global_map.gpkg")
-        print(f"Generate {global_map_file}")
+        print(f"\n-- Generate {global_map_file}")
 
         depositManager = DepositManager()
 
         # Extract geometries and names
-        geometries, names = [], []
+        geometries, names, platform = [], [], []
         for deposit in depositManager.get_deposits():
+            if deposit.platform not in ["ASV", "UAV"]: continue
             polygon = wkb.loads(deposit.footprint)
             if polygon.area == 0: continue
             geometries.append(polygon)
-            names.append(deposit.session_name)
+            names.append(deposit.session_name), 
+            platform.append(deposit.platform)
 
+        if len(names) == 0:
+            print("[WARNING] No session to export in global_map.")
+            return
+        
         # Create a GeoDataFrame with geometry and name
-        gdf = gpd.GeoDataFrame({'name': names, 'geometry': geometries})
+        gdf = gpd.GeoDataFrame({'name': names, 'geometry': geometries, 'platform': platform})
         gdf.set_crs(epsg=4326, inplace=True)
         gdf.to_file(global_map_file, driver="GPKG")

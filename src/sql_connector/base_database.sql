@@ -72,12 +72,13 @@ CREATE TABLE IF NOT EXISTS deposit (
         UPPER(SUBSTR (
             SUBSTR(session_name, INSTR(session_name, '_') + 1), 
             INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '_') + 1,
-            CASE
-                WHEN INSTR(SUBSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '_') + 1), '-') > 0 
+			CASE
+                WHEN INSTR(SUBSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '_') + 1), '-') > 0 -- 20230906_REU-BOUCAN_ASV-1_01
                 THEN INSTR(SUBSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '_') + 1), '-') - 1
-                ELSE INSTR(SUBSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '_') + 1), '_') - 1
+				WHEN INSTR(SUBSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '_') + 1), '_') = 0 -- 20230906_REU-BOUCAN_ASV
+				THEN LENGTH(SUBSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '_') + 1))
+                ELSE INSTR(SUBSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '_') + 1), '_') - 1 -- 20230906_REU-BOUCAN_ASV_01
             END
-            
         ))
     ) VIRTUAL
 );
@@ -99,7 +100,7 @@ CREATE TABLE IF NOT EXISTS frame (
     version_doi TEXT NOT NULL,
     original_filename TEXT NOT NULL,
     filename TEXT NOT NULL,
-    relative_path TEXT NOT NULL,
+    relative_path TEXT,
     GPSPosition POINT, -- Latitude, Longitude
     GPSAltitude REAL,
     GPSPitch REAL,

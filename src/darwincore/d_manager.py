@@ -70,7 +70,7 @@ class DarwinCoreManager:
             sa_manager = MultilabelAnnotationSessionManager(annotation_session=sa)
 
             occurence_data = []
-            for label, GPSLongitude, GPSLatitude, GPSDatetime, filename in sa_manager.get_all_annotations_informations():
+            for label, GPSLongitude, GPSLatitude, GPSDatetime, GPSFix, filename in sa_manager.get_all_annotations_informations():
                 if label not in classes_taxon_mapping['CLASSES']: continue
 
                 eventDate, eventTime, year, month, day = "", "", "", "", ""
@@ -98,7 +98,7 @@ class DarwinCoreManager:
                     "vernacularName": classes_taxon_mapping["CLASSES"][label]["vernacularName"],
                     "decimalLatitude": GPSLatitude,
                     "decimalLongitude": GPSLongitude,
-                    "coordinatePrecision": "à une vache près",
+                    "coordinatePrecision": GPSFix,
                     "associatedMedia": "",
                     "occurrenceStatus": "present"
                 } | scientific_data)

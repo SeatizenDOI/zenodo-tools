@@ -55,7 +55,7 @@ class MultilabelAnnotationSessionManager(AbstractManagerDTO):
 
     annotation_session: MultilabelAnnotationSession
     
-    def get_all_annotations_informations(self) -> None:
+    def get_all_annotations_informations(self) -> list:
         query = """SELECT ml.name, f.GPSPosition, f.GPSDatetime, f.GPSFix, f.version_doi, f.filename
                     FROM multilabel_annotation ma
                     JOIN multilabel_annotation_session mas ON mas.id = ma.ml_annotation_session_id
@@ -66,9 +66,9 @@ class MultilabelAnnotationSessionManager(AbstractManagerDTO):
         params = (self.annotation_session.id, )
 
         result = []
-        for label, GPSPosition, GPSDatetime, version_doi, filename in self.sql_connector.execute_query(query, params):
+        for label, GPSPosition, GPSDatetime, GPSFix, version_doi, filename in self.sql_connector.execute_query(query, params):
             position = wkb.loads(GPSPosition)
-            result.append((label, position.y, position.x, GPSDatetime, f"{version_doi}/{filename}"))
+            result.append((label, position.y, position.x, GPSDatetime, GPSFix, f"{version_doi}/{filename}"))
         return result
         
 

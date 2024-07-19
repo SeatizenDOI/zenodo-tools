@@ -61,8 +61,8 @@ class AtlasManager:
             # If we have a file, connect with it
             self.sql_connector.connect(self.seatizen_atlas_gpkg)
 
-    def import_session(self, session: Path) -> None:
-        self.importer.import_seatizen_session(session)
+    def import_session(self, session: Path, force_frames_insertion: bool = False) -> None:
+        self.importer.import_seatizen_session(session, force_frames_insertion)
 
     
     def export_csv(self) -> None:
