@@ -5,10 +5,10 @@ from .sa_exporter import AtlasExport
 from .sa_metadata import build_metadata
 from .sa_tools import get_annotation_type_from_opt, AnnotationType
 
-from ..utils.constants import SEATIZEN_ATLAS_DOI, SEATIZEN_ATLAS_GPKG
+from ..utils.constants import SEATIZEN_ATLAS_DOI, SEATIZEN_ATLAS_GPKG, SEATIZEN_ATLAS_URN
 
 from ..zenodo_api.za_token import ZenodoAPI
-from ..zenodo_api.za_tokenless import download_manager_without_token, get_version_from_doi
+from ..zenodo_api.za_tokenless import download_manager_without_token, get_version_from_session_name
 
 from ..sql_connector.sc_connector import SQLiteConnector
 
@@ -45,14 +45,23 @@ class AtlasManager:
         
         # Download data if we don't force to regenerate.
         if not self.force_regenerate and not self.from_local:
-            print("Download seatizen atlas files from zenodo.")
 
             # Get last version information.
-            version_json = get_version_from_doi(SEATIZEN_ATLAS_DOI)
+            version_json = get_version_from_session_name(SEATIZEN_ATLAS_URN)
 
-            # Download data.
-            download_manager_without_token(version_json["files"], self.seatizen_folder_path, ".", SEATIZEN_ATLAS_DOI)
-        
+            # Extract data.
+            filesize = -1
+            for file in version_json["files"]:
+                if file["key"] == SEATIZEN_ATLAS_GPKG:
+                    filesize = file["size"]
+
+            # Verify if local gpkg is the same as online gpkg.
+            if filesize != -1 and (not Path.exists(self.seatizen_atlas_gpkg) or not self.seatizen_atlas_gpkg.is_file() or self.seatizen_atlas_gpkg.stat().st_size != filesize):                
+                print("Download seatizen atlas files from zenodo.")
+                
+                # Download data.
+                download_manager_without_token(version_json["files"], self.seatizen_folder_path, ".", version_json["id"])
+
         # Try to figure out if we have a gpkg file.
         if not Path.exists(self.seatizen_atlas_gpkg) or not self.seatizen_atlas_gpkg.is_file():
             print("Generating base gpkg file.")
@@ -69,7 +78,8 @@ class AtlasManager:
         print("\t\t")
         self.exporter.session_doi_csv()
         self.exporter.metadata_images_csv()
-        self.exporter.metadata_annotation_csv()
+        self.exporter.metadata_multilabel_predictions_csv()
+        self.exporter.metadata_multilabel_annotation_csv()
         self.exporter.darwincore_annotation_csv()
         self.exporter.global_map_gpkg()
 

@@ -159,9 +159,13 @@ class FrameManager(AbstractManagerDTO):
 
 
     def retrieve_frames(self) -> list[Frame]:
-        """ Get all frames and parse output as csv file. """
+        """ Get all frames. """
 
-        query = "SELECT id, version_doi, original_filename, filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime, GPSFix FROM frame ORDER BY filename"
+        query = """
+            SELECT id, version_doi, original_filename, filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime, GPSFix 
+            FROM frame 
+            ORDER BY filename;
+                """
         result = self.sql_connector.execute_query(query)
         
         for id, version_doi, original_filename, filename, relative_path, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime, GPSFix in result:
@@ -188,6 +192,47 @@ class FrameManager(AbstractManagerDTO):
             ))
 
         return self.__frames if self.__frames != None else []
+
+    def retrieve_frames_from_specific_multilabel_model(self, model_id) -> list[Frame]:
+        """ Get all frames with predictions from a specific multilabel_model. """
+
+        query = """
+            SELECT DISTINCT f.id, f.version_doi, f.filename, f.GPSPosition, f.GPSAltitude, f.GPSPitch, f.GPSRoll, f.GPSTrack, f.GPSFix 
+            FROM frame f 
+            JOIN multilabel_prediction mlp ON mlp.frame_id = f.id
+            JOIN multilabel_class mlc ON mlc.id = mlp.ml_class_id
+            WHERE ml_model_id = ?
+            ORDER BY f.filename;
+            """
+        params = (model_id, )
+        result = self.sql_connector.execute_query(query, params)
+        
+        frames = []
+        for id, version_doi, filename, GPSPosition, GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSFix in result:
+            lat, lon = None, None
+            if GPSPosition != None:
+                position = wkb.loads(GPSPosition)
+                lat = position.y
+                lon = position.x
+
+            frames.append(Frame(
+                id=id,
+                version_doi=version_doi,
+                original_filename="",
+                filename=filename,
+                relative_path="",
+                gps_latitude=lat,
+                gps_longitude=lon,
+                gps_altitude=GPSAltitude,
+                gps_pitch=GPSPitch,
+                gps_roll=GPSRoll,
+                gps_track=GPSTrack,
+                gps_datetime="",
+                gps_fix=GPSFix
+            ))
+
+        return frames
+
 
     def get_all_frame_name_for_specific_version(self, frame_doi: str) -> list[str]:
         """ Get all frame name for specific version """

@@ -39,21 +39,16 @@ class AtlasExport:
         df_deposits.to_csv(session_doi_file, index=False)
 
 
-    def metadata_images_csv(self) -> None: # !FIXME Doesn't support multiple model
+    def metadata_images_csv(self) -> None:
         """ Generate a csv file with all information about frames. """
         metadata_images_file = Path(self.seatizen_folder_path, "metadata_images.csv")
         print(f"\n-- Generate {metadata_images_file}")
 
         frameManager = FrameManager()
-        generalMultilabelManager = GeneralMultilabelManager()
-
-        class_name = list(map(lambda x: getattr(x, "name"), generalMultilabelManager.class_ml))
-        df_header = "OriginalFileName,FileName,relative_file_path,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,GPSPitch,GPSTrack,GPSDatetime,GPSFix,prediction_doi".split(",") + class_name
         data = []
-        for frame in tqdm(frameManager.retrieve_frames()):
-            predictions_for_frame, pred_doi = generalMultilabelManager.get_predictions_from_frame_id(frame.id)
-            predictions_to_add = [predictions_for_frame[cls_name] for cls_name in class_name] if len(predictions_for_frame) != 0  else [None for _ in class_name]
+        df_header = "OriginalFileName,FileName,relative_file_path,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,GPSPitch,GPSTrack,GPSDatetime,GPSFix".split(',')
 
+        for frame in tqdm(frameManager.retrieve_frames()):
             data.append([
                 frame.original_filename,
                 frame.filename,
@@ -66,9 +61,8 @@ class AtlasExport:
                 frame.gps_pitch,
                 frame.gps_track,
                 frame.gps_datetime,
-                frame.gps_fix,
-                f"https://doi.org/10.5281/zenodo.{pred_doi}"
-            ]+predictions_to_add)
+                frame.gps_fix
+            ])
         
         if len(data) == 0:
             print("[WARNING] No data to export.")
@@ -78,7 +72,45 @@ class AtlasExport:
         df_data.to_csv(metadata_images_file, index=False)
         
 
-    def metadata_annotation_csv(self) -> None:
+    def metadata_multilabel_predictions_csv(self) -> None:
+        ml_predictions_file = Path(self.seatizen_folder_path, "metadata_multilabel_predictions.csv")
+        print(f"\n-- Generate {ml_predictions_file} with last model add in database.")
+        
+        frameManager = FrameManager()
+        generalMultilabelManager = GeneralMultilabelManager()
+        last_model = generalMultilabelManager.get_last_multilabel_model()
+        model_class = generalMultilabelManager.get_class_for_specific_model(last_model.id)
+
+        class_name = list(map(lambda x: getattr(x, "name"), model_class))
+        df_header = "FileName,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,GPSPitch,GPSTrack,GPSFix,prediction_doi".split(",") + class_name
+        data = []
+
+        for frame in tqdm(frameManager.retrieve_frames_from_specific_multilabel_model(last_model.id)):
+            predictions_for_frame, pred_doi = generalMultilabelManager.get_predictions_from_frame_id(frame.id)
+            predictions_to_add = [predictions_for_frame[cls_name] for cls_name in class_name] if len(predictions_for_frame) != 0  else [None for _ in class_name]
+
+            data.append([
+                frame.filename,
+                f"https://doi.org/10.5281/zenodo.{frame.version_doi}",
+                frame.gps_latitude,
+                frame.gps_longitude,
+                frame.gps_altitude,
+                frame.gps_roll,
+                frame.gps_pitch,
+                frame.gps_track,
+                frame.gps_fix,
+                f"https://doi.org/10.5281/zenodo.{pred_doi}"
+            ]+predictions_to_add)
+        
+        if len(data) == 0:
+            print("[WARNING] No data to export.")
+            return
+        
+        df_data = pd.DataFrame(data, columns=df_header)
+        df_data.to_csv(ml_predictions_file, index=False)
+
+
+    def metadata_multilabel_annotation_csv(self) -> None:
         metadata_annotation_file = Path(self.seatizen_folder_path, "metadata_annotation.csv")
         print(f"\n-- Generate {metadata_annotation_file}")
         
@@ -113,7 +145,7 @@ class AtlasExport:
 
 
     def darwincore_annotation_csv(self) -> None:
-        darwincore_annotation_file = Path(self.seatizen_folder_path, "darwincore_annotation.zip")
+        darwincore_annotation_file = Path(self.seatizen_folder_path, "darwincore_multilabel_annotation.zip")
         print(f"\n-- Generate {darwincore_annotation_file}")
 
         general_ml_manager = GeneralMultilabelManager()
@@ -124,7 +156,7 @@ class AtlasExport:
 
     def global_map_gpkg(self) -> None:
         """ Lighter geopackage to resume all trajectory. """
-        global_map_file = Path(self.seatizen_folder_path, "global_map.gpkg")
+        global_map_file = Path(self.seatizen_folder_path, "global_footprint.gpkg")
         print(f"\n-- Generate {global_map_file}")
 
         depositManager = DepositManager()

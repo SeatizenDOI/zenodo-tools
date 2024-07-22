@@ -62,11 +62,11 @@ CREATE TABLE IF NOT EXISTS deposit (
     session_date DATE GENERATED ALWAYS AS (SUBSTR(session_name, 0, 9)) VIRTUAL,
     alpha3_country_code TEXT GENERATED ALWAYS AS (SUBSTR(session_name, 10, 3)) VIRTUAL,
     location TEXT GENERATED ALWAYS AS (
-        SUBSTR (
+        UPPER(SUBSTR (
             SUBSTR(session_name, INSTR(session_name, '_') + 1),
             INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '-') + 1,
             INSTR(SUBSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1),INSTR(SUBSTR(session_name, INSTR(session_name, '_') + 1), '-') + 1), '_') - 1
-        )
+        ))
     ) VIRTUAL,
     platform_type TEXT GENERATED ALWAYS AS (
         UPPER(SUBSTR (
@@ -110,7 +110,6 @@ CREATE TABLE IF NOT EXISTS frame (
     GPSFix INTEGER,
     CONSTRAINT fk_frame_version FOREIGN KEY (version_doi) REFERENCES version(doi)
 );
-CREATE INDEX idx_filename_version_doi ON frame (filename, version_doi);
 
 INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, description, srs_id, min_x, min_y, max_x, max_y) VALUES 
 ('frame', 'features', 'frame', 'Table with frame points', 4326, -200, -80, 200, 80);
@@ -158,7 +157,6 @@ CREATE TABLE IF NOT EXISTS multilabel_prediction (
     CONSTRAINT fk_ml_prediction_frame FOREIGN KEY (frame_id) REFERENCES frame(id),
     CONSTRAINT fk_ml_prediction_ml_class FOREIGN KEY (ml_class_id) REFERENCES multilabel_class(id)
 );
-CREATE INDEX idx_frame_id ON multilabel_prediction (frame_id);
 
 -- Multilabel annotation session
 CREATE TABLE IF NOT EXISTS multilabel_annotation_session (
@@ -179,6 +177,17 @@ CREATE TABLE IF NOT EXISTS multilabel_annotation (
     CONSTRAINT fk_ml_annotation_ml_label FOREIGN KEY (ml_label_id) REFERENCES multilabel_label(id),
     CONSTRAINT fk_ml_annotation_ml_anno_session FOREIGN KEY (ml_annotation_session_id) REFERENCES multilabel_annotation_session(id)
 );
+
+
+-- Create all index
+CREATE INDEX idx_filename_version_doi ON frame (filename, version_doi);
+
+CREATE INDEX IF NOT EXISTS idx_frame_id ON frame (id);
+CREATE INDEX IF NOT EXISTS idx_multilabel_prediction_frame_id ON multilabel_prediction (frame_id);
+CREATE INDEX IF NOT EXISTS idx_multilabel_prediction_ml_class_id ON multilabel_prediction (ml_class_id);
+CREATE INDEX IF NOT EXISTS idx_multilabel_class_id ON multilabel_class (id);
+CREATE INDEX IF NOT EXISTS idx_multilabel_class_ml_model_id ON multilabel_class (ml_model_id);
+CREATE INDEX IF NOT EXISTS idx_multilabel_model_id ON multilabel_model (id);
 
 
 -- FIXED DATA

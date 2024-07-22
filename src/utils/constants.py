@@ -1,10 +1,11 @@
-TMP_PATH = "/media/bioeos/E/tmp_00_plancha"
+TMP_PATH = "/tmp/00_plancha"
 RESTRICTED_FILES = ["DCIM"]
 IMG_EXTENSION = ('.png', '.jpg', '.jpeg') # Image extension in lower case
 BYTE_TO_GIGA_BYTE = 1000000000
 
 # Zenodo constants for seatizen manager
 SEATIZEN_ATLAS_DOI = "11125847"
+SEATIZEN_ATLAS_URN = "seatizen-atlas"
 SEATIZEN_ATLAS_GPKG = "seatizen_atlas_db.gpkg"
 SQL_FILE = "./src/sql_connector/base_database.sql"
 

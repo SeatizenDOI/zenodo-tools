@@ -127,24 +127,7 @@ class GeneralMultilabelManager(AbstractManagerDTO):
 
     def setup_class(self) -> None:
         """ Get all class link to the model. """
-        query = f"""
-            SELECT mc.id, mc.name, mc.threshold, mc.ml_label_id, mc.ml_model_id 
-            FROM multilabel_class mc
-            INNER JOIN multilabel_model mm ON mm.id = mc.ml_model_id
-            WHERE mm.id = ?;
-        """
-        params = (self.__model.id, )
-        result = self.sql_connector.execute_query(query, params)
-        
-        for id, name, threshold, ml_label_id, ml_model_id in result:
-            ml_class = MultilabelClass(
-                id=id,
-                name=name,
-                threshold=threshold,
-                ml_label_id=ml_label_id,
-                ml_model_id=ml_model_id
-            )
-            self.__class_ml.append(ml_class)
+        self.__class_ml = self.get_class_for_specific_model(self.__model.id)
     
 
     def setup_label(self) -> None:
@@ -309,3 +292,41 @@ class GeneralMultilabelManager(AbstractManagerDTO):
                 JOIN multilabel_label ml on ml.id = ma.ml_label_id;
         """
         return self.sql_connector.execute_query(query)
+    
+    def get_last_multilabel_model(self) -> MultilabelModel:
+
+        query = "SELECT id, name, creation_date, doi, link FROM multilabel_model ORDER BY creation_date DESC LIMIT 1;"
+        result = self.sql_connector.execute_query(query)
+
+        if len(result) == 0:
+            raise NameError("No multilabel_found")
+        
+        ml_model = MultilabelModel(
+            id=result[0][0],
+            name=result[0][1],
+            creation_date=result[0][2],
+            doi=result[0][3],
+            link=result[0][4],
+        )
+        return ml_model
+    
+    def get_class_for_specific_model(self, model_id) -> list[MultilabelClass]:
+        query = f"""
+            SELECT mc.id, mc.name, mc.threshold, mc.ml_label_id, mc.ml_model_id 
+            FROM multilabel_class mc
+            INNER JOIN multilabel_model mm ON mm.id = mc.ml_model_id
+            WHERE mm.id = ?;
+        """
+        params = (model_id, )
+        result = self.sql_connector.execute_query(query, params)
+        class_ml = []
+        for id, name, threshold, ml_label_id, ml_model_id in result:
+            ml_class = MultilabelClass(
+                id=id,
+                name=name,
+                threshold=threshold,
+                ml_label_id=ml_label_id,
+                ml_model_id=ml_model_id
+            )
+            class_ml.append(ml_class)
+        return class_ml
