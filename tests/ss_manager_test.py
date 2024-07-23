@@ -1,8 +1,8 @@
 import unittest
 
-from src.utils.constants import TMP_PATH
 from src.seatizen_session.ss_manager import SessionManager
 
+TMP_PATH = "/tmp/00_plancha"
 
 class TestSessionManager(unittest.TestCase):
 

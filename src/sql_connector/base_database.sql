@@ -45,7 +45,7 @@ CREATE TABLE gpkg_geometry_columns (
 );
 
 INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) VALUES
-('deposit', 'footprint', 'POLYGON', 4326, 0, 0),
+('deposit', 'footprint', 'GEOMETRYCOLLECTION', 4326, 0, 0),
 ('frame', 'GPSPosition', 'POINT', 4326, 0, 0);
 
 ----------------------------------------
@@ -56,7 +56,7 @@ INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, 
 CREATE TABLE IF NOT EXISTS deposit (
     doi TEXT NOT NULL PRIMARY KEY,
     session_name TEXT NOT NULL,
-    footprint POLYGON,
+    footprint GEOMETRYCOLLECTION,
     have_processed_data INTEGER NOT NULL,
     have_raw_data INTEGER NOT NULL,
     session_date DATE GENERATED ALWAYS AS (SUBSTR(session_name, 0, 9)) VIRTUAL,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS deposit (
 );
 
 INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES 
-('deposit', 'features', 'deposit', 'Table with deposit Polygon as footprint', 4326);
+('deposit', 'features', 'deposit', 'Table with deposit Geometry as footprint', 4326);
 
 
 -- Version table

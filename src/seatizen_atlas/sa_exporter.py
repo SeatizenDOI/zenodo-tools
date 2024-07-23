@@ -1,9 +1,10 @@
 import pandas as pd
 from tqdm import tqdm
-from shapely import wkb
+from shapely import wkb, Polygon, LineString
 import geopandas as gpd
 from pathlib import Path
 from datetime import datetime
+import fiona
 
 from ..sql_connector.sc_connector import SQLiteConnector
 from ..sql_connector.sc_base_dto import  DepositManager, FrameManager
@@ -162,20 +163,32 @@ class AtlasExport:
         depositManager = DepositManager()
 
         # Extract geometries and names
-        geometries, names, platform = [], [], []
+        polygons, linestrings, names, platform = [], [], [], []
         for deposit in depositManager.get_deposits():
-            if deposit.platform not in ["ASV", "UAV"]: continue
-            polygon = wkb.loads(deposit.footprint)
-            if polygon.area == 0: continue
-            geometries.append(polygon)
-            names.append(deposit.session_name), 
+            geometryCollection = wkb.loads(deposit.footprint)
+            
+            if geometryCollection == None: continue
+            
             platform.append(deposit.platform)
+            names.append(deposit.session_name)
+
+            for geom in geometryCollection.geoms:
+                if isinstance(geom, Polygon):
+                    polygons.append(geom)
+                if isinstance(geom, LineString):
+                    linestrings.append(geom)
 
         if len(names) == 0:
             print("[WARNING] No session to export in global_map.")
             return
         
         # Create a GeoDataFrame with geometry and name
-        gdf = gpd.GeoDataFrame({'name': names, 'geometry': geometries, 'platform': platform})
-        gdf.set_crs(epsg=4326, inplace=True)
-        gdf.to_file(global_map_file, driver="GPKG")
+        gdf_linestrings = gpd.GeoDataFrame({'name': names, 'geometry': linestrings, 'platform': platform})
+        gdf_linestrings.set_crs(epsg=4326, inplace=True)
+        gdf_linestrings.to_file(global_map_file, layer='footprint_linestrings', driver="GPKG")
+
+        gdf_polygons = gpd.GeoDataFrame({'name': names, 'geometry': polygons, 'platform': platform})
+        gdf_polygons.set_crs(epsg=4326, inplace=True)
+        gdf_polygons.to_file(global_map_file, layer='footprint_polygons', driver="GPKG")
+
+        

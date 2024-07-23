@@ -2,7 +2,7 @@ import abc
 from dataclasses import dataclass, field
 
 from shapely import wkb
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon, Point, GeometryCollection
 
 from .sc_connector import SQLiteConnector
 
@@ -28,7 +28,7 @@ class Deposit(AbstractBaseDTO):
     place: str | None = field(default=None)
     date: str | None = field(default=None)
     platform: str | None = field(default=None)
-    footprint: list[tuple[float, float]] = field(default_factory=list)
+    footprint: GeometryCollection | None = field(default=None)
     table_name = "deposit"
     
     def insert(self):
@@ -39,7 +39,8 @@ class Deposit(AbstractBaseDTO):
     
     @property
     def wkb_footprint(self):
-        return Polygon(self.footprint).wkb
+        if self.footprint != None:
+            return self.footprint.wkb
 
 class DepositManager(AbstractManagerDTO):
 

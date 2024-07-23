@@ -11,7 +11,7 @@ from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
 from scipy.spatial import ConvexHull
-
+from shapely.geometry import Point, LineString, GeometryCollection, Polygon
 from .ss_zipper import SessionZipper
 from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE, JACQUES_MODEL_NAME, MULTILABEL_MODEL_NAME
 
@@ -623,7 +623,7 @@ class SessionManager:
         return filename_with_size
 
 
-    def get_footprint(self) -> list:
+    def get_footprint(self) -> GeometryCollection | None:
         "Return the footprint of the session"
 
         coordinates = self.get_metadata_csv() # With metadata, we get the real footprint of the image acquisition.
@@ -632,7 +632,8 @@ class SessionManager:
             if len(coordinates) == 0: return
 
         if round(coordinates["GPSLatitude"].std(), 10) == 0.0 or round(coordinates["GPSLongitude"].std(), 10) == 0.0: 
-            return [] # All coordinates are the same.
+
+            return # All coordinates are the same.
         
         points = [[lat ,lon] for lat, lon in coordinates[['GPSLongitude', 'GPSLatitude']].values if lat != 0.0 and lon != 0.0] # Remove 0, 0 coordinates
 
@@ -641,5 +642,12 @@ class SessionManager:
         polylist = []
         for idx in hull.vertices: # Indices of points forming the vertices of the convex hull.
             polylist.append(list(points[idx]))
+        
+        polygon = Polygon(polylist)
+        
+        # Compute all the general line.
+        linestring = LineString([[lat ,lon] for i, (lat, lon) in enumerate(coordinates[['GPSLongitude', 'GPSLatitude']].values) if lat != 0.0 and lon != 0.0 and i % 10 != 0])
 
-        return polylist
+        # Return a collection of Polygon, LineString
+        return GeometryCollection([polygon, linestring])
+        
