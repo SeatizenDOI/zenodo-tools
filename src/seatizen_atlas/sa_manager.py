@@ -5,7 +5,7 @@ from .sa_exporter import AtlasExport
 from .sa_metadata import build_metadata
 from .sa_tools import get_annotation_type_from_opt, AnnotationType
 
-from ..utils.constants import SEATIZEN_ATLAS_DOI, SEATIZEN_ATLAS_GPKG, SEATIZEN_ATLAS_URN
+from ..utils.constants import SEATIZEN_ATLAS_GPKG, SEATIZEN_ATLAS_URN
 
 from ..zenodo_api.za_token import ZenodoAPI
 from ..zenodo_api.za_tokenless import download_manager_without_token, get_version_from_session_name

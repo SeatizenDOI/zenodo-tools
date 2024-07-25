@@ -1,15 +1,18 @@
 import pandas as pd
 from tqdm import tqdm
-from shapely import wkb, Polygon, LineString
 import geopandas as gpd
 from pathlib import Path
-from datetime import datetime
-import fiona
+from shapely import Polygon, LineString
 
-from ..sql_connector.sc_connector import SQLiteConnector
-from ..sql_connector.sc_base_dto import  DepositManager, FrameManager
-from ..sql_connector.sc_multilabel_dto import GeneralMultilabelManager
 from ..darwincore.d_manager import DarwinCoreManager
+from ..sql_connector.sc_connector import SQLiteConnector
+
+from ..models.frame_model import FrameDAO
+from ..models.deposit_model import DepositDAO
+from ..models.ml_label import MultilabelLabelDAO
+from ..models.ml_predictions import MultilabelPredictionDAO
+from ..models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO
+from ..models.ml_annotation import MultilabelAnnotationDAO, MultilabelAnnotationSessionDAO
 
 
 class AtlasExport:
@@ -22,19 +25,35 @@ class AtlasExport:
         
         # SQL connector.
         self.sql_connector = SQLiteConnector()
+
+        # Manager.
+        self.deposit_manager = DepositDAO()
+        self.frames_manager = FrameDAO()
+        self.ml_model_manager = MultilabelModelDAO()
+        self.ml_class_manager = MultilabelClassDAO()
+        self.ml_label_manager = MultilabelLabelDAO()
+        self.ml_annotation_manager = MultilabelAnnotationDAO()
+        self.ml_anno_ses_manager = MultilabelAnnotationSessionDAO()
+        self.ml_prediciton_manager = MultilabelPredictionDAO()
     
 
     def session_doi_csv(self) -> None:
         """ Generate a csv file to map doi and session_name. """
         session_doi_file = Path(self.seatizen_folder_path, "session_doi.csv")
         print(f"\n-- Generate {session_doi_file}")
-
-        deposit_manager = DepositManager()
-        
+       
         list_deposit_data = []
-        deposit_header = ["session_name", "place", "date", "have_raw_data", "have_processed_data", "doi"]
-        for d in deposit_manager.get_deposits():
-            list_deposit_data.append([d.session_name, d.place, d.date, d.have_raw_data, d.have_processed_data, f"https://doi.org/10.5281/zenodo.{d.doi}"])
+        deposit_header = ["session_name", "place", "date", "have_raw_data", "have_processed_data",
+                           "doi"]
+        for d in self.deposit_manager.deposits:
+            list_deposit_data.append([
+                d.session_name, 
+                d.location, 
+                d.session_date, 
+                d.have_raw_data, 
+                d.have_processed_data, 
+                f"https://doi.org/10.5281/zenodo.{d.doi}"
+                ])
                 
         df_deposits = pd.DataFrame(list_deposit_data, columns=deposit_header)
         df_deposits.to_csv(session_doi_file, index=False)
@@ -45,16 +64,17 @@ class AtlasExport:
         metadata_images_file = Path(self.seatizen_folder_path, "metadata_images.csv")
         print(f"\n-- Generate {metadata_images_file}")
 
-        frameManager = FrameManager()
         data = []
-        df_header = "OriginalFileName,FileName,relative_file_path,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,GPSPitch,GPSTrack,GPSDatetime,GPSFix".split(',')
+        df_header = "OriginalFileName,FileName,relative_file_path,frames_doi,\
+                     GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,GPSPitch,GPSTrack,\
+                     GPSDatetime,GPSFix".split(',')
 
-        for frame in tqdm(frameManager.retrieve_frames()):
+        for frame in tqdm(self.frames_manager.frames):
             data.append([
                 frame.original_filename,
                 frame.filename,
                 frame.relative_path,
-                f"https://doi.org/10.5281/zenodo.{frame.version_doi}",
+                f"https://doi.org/10.5281/zenodo.{frame.version.doi}",
                 frame.gps_latitude,
                 frame.gps_longitude,
                 frame.gps_altitude,
@@ -77,22 +97,34 @@ class AtlasExport:
         ml_predictions_file = Path(self.seatizen_folder_path, "metadata_multilabel_predictions.csv")
         print(f"\n-- Generate {ml_predictions_file} with last model add in database.")
         
-        frameManager = FrameManager()
-        generalMultilabelManager = GeneralMultilabelManager()
-        last_model = generalMultilabelManager.get_last_multilabel_model()
-        model_class = generalMultilabelManager.get_class_for_specific_model(last_model.id)
+        last_model = self.ml_model_manager.last_model
+        model_class = self.ml_class_manager.get_all_class_for_ml_model(last_model)
 
-        class_name = list(map(lambda x: getattr(x, "name"), model_class))
-        df_header = "FileName,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,GPSPitch,GPSTrack,GPSFix,prediction_doi".split(",") + class_name
+        class_name = [a.name for a in model_class]
+        df_header = "FileName,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,\
+                     GPSPitch,GPSTrack,GPSFix,prediction_doi".split(",") + class_name
+        predictions_map_by_frame = self.ml_prediciton_manager.get_predictions_for_specific_model_map_by_frame_name(last_model)
+        
         data = []
+        for frame in tqdm(predictions_map_by_frame):
+            
+            predictions_for_frame = predictions_map_by_frame.get(frame)
+            if predictions_for_frame == None or len(predictions_for_frame) == 0:
+                print("[WARNING] No predictions found")
+                continue
 
-        for frame in tqdm(frameManager.retrieve_frames_from_specific_multilabel_model(last_model.id)):
-            predictions_for_frame, pred_doi = generalMultilabelManager.get_predictions_from_frame_id(frame.id)
-            predictions_to_add = [predictions_for_frame[cls_name] for cls_name in class_name] if len(predictions_for_frame) != 0  else [None for _ in class_name]
+            pred_doi = predictions_for_frame[0].version.doi
+            
+            # Get predictions for each class in good order.
+            predictions_to_add = {cls_name: None for cls_name in class_name}
+            for pred in predictions_for_frame:
+                if pred.ml_class.name in predictions_to_add:
+                    predictions_to_add[pred.ml_class.name] = pred.score
+
 
             data.append([
                 frame.filename,
-                f"https://doi.org/10.5281/zenodo.{frame.version_doi}",
+                f"https://doi.org/10.5281/zenodo.{frame.version.doi}",
                 frame.gps_latitude,
                 frame.gps_longitude,
                 frame.gps_altitude,
@@ -101,7 +133,7 @@ class AtlasExport:
                 frame.gps_track,
                 frame.gps_fix,
                 f"https://doi.org/10.5281/zenodo.{pred_doi}"
-            ]+predictions_to_add)
+            ]+[s for s in predictions_to_add.values()])
         
         if len(data) == 0:
             print("[WARNING] No data to export.")
@@ -115,24 +147,28 @@ class AtlasExport:
         metadata_annotation_file = Path(self.seatizen_folder_path, "metadata_annotation.csv")
         print(f"\n-- Generate {metadata_annotation_file}")
         
-        generalMultilabelManager = GeneralMultilabelManager()
-        all_labels = ["FileName", "frame_doi", "annotation_date", "relative_file_path"] + list(generalMultilabelManager.labelIdMapByLabelName)
+        all_labels = ["FileName", "frame_doi", "annotation_date", "relative_file_path"] + \
+                     [l.name for l in self.ml_label_manager.labels]
 
         data = {}
-        for value, annotation_date, frame_name, relative_file_path, frame_doi, multilabel_label_name in generalMultilabelManager.get_latest_annotations():
-            if frame_name not in data: data[frame_name] = {} 
-            if "annotation_date" not in data[frame_name]: data[frame_name]["annotation_date"] = annotation_date
-
-            d1, d2 = datetime.strptime(annotation_date, "%Y-%m-%d %H:%M:%S"), datetime.strptime(data[frame_name]["annotation_date"], "%Y-%m-%d %H:%M:%S")
-            if max([d1, d2]) == d1: data[frame_name]["annotation_date"] = annotation_date
+        for annotation in self.ml_annotation_manager.get_latest_annotations():
             
-            data[frame_name][multilabel_label_name] = str(value)
-            data[frame_name]["frame_doi"] = frame_doi
-            data[frame_name]["relative_file_path"] = relative_file_path
+            frame_name = annotation.frame.filename
+            annotation_date = annotation.ml_annotation_session.annotation_date
+            
+            data[frame_name] = {
+                "annotation_date": annotation_date,
+                annotation.ml_label.name: str(annotation.value),
+                "frame_doi": annotation.frame.version.doi,
+                "relative_file_path":  annotation.frame.relative_path
+            } 
 
 
         # Convert the dictionary to a DataFrame
-        df = pd.DataFrame.from_dict(data, orient='index').reset_index().rename(columns={'index': 'FileName'}).fillna("-1")
+        df = pd.DataFrame.from_dict(data, orient='index') \
+                         .reset_index() \
+                         .rename(columns={'index': 'FileName'}) \
+                         .fillna("-1")
 
         # Ensure all target columns are in the DataFrame, fill missing columns with -1
         for col in all_labels:
@@ -142,6 +178,7 @@ class AtlasExport:
         # Reorder the DataFrame to match the target columns
         df = df[all_labels]
 
+
         df.to_csv(metadata_annotation_file, index=False)
 
 
@@ -149,10 +186,8 @@ class AtlasExport:
         darwincore_annotation_file = Path(self.seatizen_folder_path, "darwincore_multilabel_annotation.zip")
         print(f"\n-- Generate {darwincore_annotation_file}")
 
-        general_ml_manager = GeneralMultilabelManager()
         darwincoreManager = DarwinCoreManager(darwincore_annotation_file)
-        
-        darwincoreManager.create_darwincore_package(general_ml_manager.get_all_ml_annotations_session())
+        darwincoreManager.create_darwincore_package(self.ml_anno_ses_manager.ml_annotation_session)
 
 
     def global_map_gpkg(self) -> None:
@@ -160,19 +195,16 @@ class AtlasExport:
         global_map_file = Path(self.seatizen_folder_path, "global_footprint.gpkg")
         print(f"\n-- Generate {global_map_file}")
 
-        depositManager = DepositManager()
-
         # Extract geometries and names
         polygons, linestrings, names, platform = [], [], [], []
-        for deposit in depositManager.get_deposits():
-            geometryCollection = wkb.loads(deposit.footprint)
+        for deposit in self.deposit_manager.deposits:
             
-            if geometryCollection == None: continue
+            if deposit.footprint == None: continue
             
             platform.append(deposit.platform)
             names.append(deposit.session_name)
 
-            for geom in geometryCollection.geoms:
+            for geom in deposit.footprint.geoms:
                 if isinstance(geom, Polygon):
                     polygons.append(geom)
                 if isinstance(geom, LineString):

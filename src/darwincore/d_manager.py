@@ -1,13 +1,15 @@
 import yaml
 import zipfile
 import pandas as pd
+from tqdm import tqdm
 from pathlib import Path
+from datetime import datetime
 from suds.client import Client
 import xml.etree.ElementTree as ET
 
 from ..utils.constants import TMP_PATH
 
-from ..sql_connector.sc_multilabel_dto import MultilabelAnnotationSession, MultilabelAnnotationSessionManager
+from ..models.ml_annotation import MultilabelAnnotationSessionDAO, MultilabelAnnotationDAO, MultilabelAnnotationSessionDTO
 
 class DarwinCoreManager:
     def __init__(self, archive_name: Path) -> None:
@@ -29,10 +31,20 @@ class DarwinCoreManager:
         self.header_path = Path(self.tmp_folder, "dataset.csv")
         self.list_occurence_path: list[Path] = []
 
+        # Manager.
+        self.ml_annotation_manager = MultilabelAnnotationDAO()
+        self.ml_anno_ses_manager = MultilabelAnnotationSessionDAO()
 
-    def create_darwincore_package(self, annotationSessions: list[MultilabelAnnotationSession]) -> None:
+
+    def create_darwincore_package(self, annotationSessions: list[MultilabelAnnotationSessionDTO]) -> None:
+
+        # No annotations sessions.
+        if len(annotationSessions) == 0:
+            print("No annotations to export to darwincore format.")
+            return
 
         # Open all config file for darwin core
+        t_start = datetime.now()
         taxon_mapping = Path(Path.cwd(), "src/darwincore", "taxon_mapping.yaml")
 
         with open(taxon_mapping) as f:
@@ -43,7 +55,8 @@ class DarwinCoreManager:
             scinames.append(classes_taxon_mapping['CLASSES'][label]['taxon_research'])
 
         taxon_information_df = self.match_taxa_in_worms_database(scinames)
-
+        print(f"Retrieve information in {datetime.now() - t_start}")
+ 
         header_data = []
         # Iterate on each session and create an occurence_file for each one.
         for sa in annotationSessions:
@@ -67,19 +80,19 @@ class DarwinCoreManager:
             occurence_path = Path(self.tmp_folder, f"occurence_{sa.id}_{sa.dataset_name}.csv")
             self.list_occurence_path.append(occurence_path)
 
-            sa_manager = MultilabelAnnotationSessionManager(annotation_session=sa)
-
             occurence_data = []
-            for label, GPSLongitude, GPSLatitude, GPSDatetime, GPSFix, filename in sa_manager.get_all_annotations_informations():
+            print(f"-- Launching {occurence_path}")
+            for annotation in tqdm(self.ml_annotation_manager.get_annotations_from_anno_ses(sa)):
+                label = annotation.ml_label.name
                 if label not in classes_taxon_mapping['CLASSES']: continue
 
                 eventDate, eventTime, year, month, day = "", "", "", "", ""
-                if GPSDatetime is not None:
-                    eventDate, eventTime = GPSDatetime.split(" ")
+                if annotation.frame.gps_datetime is not None:
+                    eventDate, eventTime = annotation.frame.gps_datetime.split(" ")
                     year, month, day = eventDate.split("-")
 
-                # Extract species information.
-                scientific_data = {} # TODO mieux nommer
+                 # Extract species information.
+                scientific_data = {} # TODO optimize
                 for our_label_field_key in classes_taxon_mapping['DARWINCORE_WORMS_FIELDS_MAPPING']:
                     label_field_key = classes_taxon_mapping['DARWINCORE_WORMS_FIELDS_MAPPING'][our_label_field_key]
                     label_sciname = classes_taxon_mapping['CLASSES'][label]['taxon_research']
@@ -94,11 +107,11 @@ class DarwinCoreManager:
                     "year": year,
                     "month": month,
                     "day": day,
-                    "occurrenceID": filename,
+                    "occurrenceID": annotation.frame.filename,
                     "vernacularName": classes_taxon_mapping["CLASSES"][label]["vernacularName"],
-                    "decimalLatitude": GPSLatitude,
-                    "decimalLongitude": GPSLongitude,
-                    "coordinatePrecision": GPSFix,
+                    "decimalLatitude": annotation.frame.gps_latitude,
+                    "decimalLongitude": annotation.frame.gps_longitude,
+                    "coordinatePrecision": annotation.frame.gps_fix,
                     "associatedMedia": "",
                     "occurrenceStatus": "present"
                 } | scientific_data)
@@ -183,6 +196,7 @@ class DarwinCoreManager:
             archive.write(self.meta_path, self.meta_path.name)
             archive.write(self.eml_path, self.eml_path.name)
     
+
     def match_taxa_in_worms_database(self, taxa_scientific_names: list) -> pd.DataFrame:
         '''Match taxa information in the WORMS database (https://www.marinespecies.org/)
 

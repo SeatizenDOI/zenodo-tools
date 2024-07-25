@@ -11,7 +11,7 @@ from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
 from scipy.spatial import ConvexHull
-from shapely.geometry import Point, LineString, GeometryCollection, Polygon
+from shapely.geometry import LineString, GeometryCollection, Polygon
 from .ss_zipper import SessionZipper
 from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE, JACQUES_MODEL_NAME, MULTILABEL_MODEL_NAME
 
@@ -127,7 +127,7 @@ class SessionManager:
             return
         
         # Get all useful images.
-        useful_frames = self.get_useful_frames_path()        
+        useful_frames = self.get_useful_frames_name()        
         
         frame_parent_folder = self.get_frame_parent_folder(frames_list)
         frames_zip_path = Path(self.temp_folder, f"{frame_parent_folder.replace('/', '_')}.zip")
@@ -538,7 +538,7 @@ class SessionManager:
         return list_parents[0][1:] if list_parents[0][0] == "/" else list_parents[0]
     
 
-    def get_useful_frames_path(self) -> list:
+    def get_useful_frames_name(self) -> list[str]:
         """ Return a list of frames path predicted useful by jacques. """
         useful_frames = []
         try_ia = False

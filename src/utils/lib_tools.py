@@ -114,12 +114,3 @@ def md5(fname: Path) -> str:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
-
-def map_id_by_name(objects: list, name_attr: str, id_attr: str) -> dict[str, int]:
-    """ Generic function to get a dict of name / id"""
-    map_name_id: dict[str, int] = {}
-    for obj in objects:
-        name = getattr(obj, name_attr)
-        obj_id = getattr(obj, id_attr)
-        map_name_id[name] = obj_id
-    return map_name_id
