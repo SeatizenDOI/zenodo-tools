@@ -9,11 +9,10 @@ from ..sql_connector.sc_connector import SQLiteConnector
 
 from ..models.frame_model import FrameDAO
 from ..models.deposit_model import DepositDAO
-from ..models.ml_label import MultilabelLabelDAO
-from ..models.ml_predictions import MultilabelPredictionDAO
+from ..models.ml_label_model import MultilabelLabelDAO
+from ..models.ml_predictions_model import MultilabelPredictionDAO
 from ..models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO
-from ..models.ml_annotation import MultilabelAnnotationDAO, MultilabelAnnotationSessionDAO
-
+from ..models.ml_annotation_model import MultilabelAnnotationDAO, MultilabelAnnotationSessionDAO
 
 class AtlasExport:
 
@@ -91,7 +90,7 @@ class AtlasExport:
         
         df_data = pd.DataFrame(data, columns=df_header)
         df_data.to_csv(metadata_images_file, index=False)
-        
+
 
     def metadata_multilabel_predictions_csv(self) -> None:
         ml_predictions_file = Path(self.seatizen_folder_path, "metadata_multilabel_predictions.csv")
@@ -103,21 +102,21 @@ class AtlasExport:
         class_name = [a.name for a in model_class]
         df_header = "FileName,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,\
                      GPSPitch,GPSTrack,GPSFix,prediction_doi".split(",") + class_name
-        predictions_map_by_frame = self.ml_prediciton_manager.get_predictions_for_specific_model_map_by_frame_name(last_model)
         
         data = []
-        for frame in tqdm(predictions_map_by_frame):
+        cpt_predictions_not_found = 0
+        for frame in tqdm(self.frames_manager.frames): # Can be very long but normally when we have export metadata_images.csv we allready retrieve all frames.
             
-            predictions_for_frame = predictions_map_by_frame.get(frame)
-            if predictions_for_frame == None or len(predictions_for_frame) == 0:
-                print("[WARNING] No predictions found")
+            predictions = self.ml_prediciton_manager.get_predictions_for_specific_model_and_frame_name(frame, last_model)
+            if predictions == None or len(predictions) == 0:
+                cpt_predictions_not_found += 1
                 continue
 
-            pred_doi = predictions_for_frame[0].version.doi
+            pred_doi = predictions[0].version.doi
             
             # Get predictions for each class in good order.
             predictions_to_add = {cls_name: None for cls_name in class_name}
-            for pred in predictions_for_frame:
+            for pred in predictions:
                 if pred.ml_class.name in predictions_to_add:
                     predictions_to_add[pred.ml_class.name] = pred.score
 
@@ -139,12 +138,14 @@ class AtlasExport:
             print("[WARNING] No data to export.")
             return
         
+        print(f"On {len(self.frames_manager.frames)} images, we don't found predictions for {cpt_predictions_not_found} images.")
+
         df_data = pd.DataFrame(data, columns=df_header)
         df_data.to_csv(ml_predictions_file, index=False)
 
 
     def metadata_multilabel_annotation_csv(self) -> None:
-        metadata_annotation_file = Path(self.seatizen_folder_path, "metadata_annotation.csv")
+        metadata_annotation_file = Path(self.seatizen_folder_path, "metadata_multilabel_annotation.csv")
         print(f"\n-- Generate {metadata_annotation_file}")
         
         all_labels = ["FileName", "frame_doi", "annotation_date", "relative_file_path"] + \

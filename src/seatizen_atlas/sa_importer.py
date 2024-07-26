@@ -4,12 +4,12 @@ from pathlib import Path
 from datetime import datetime
 
 from ..models.base_model import DataStatus
-from ..models.ml_label import MultilabelLabelDAO
 from ..models.frame_model import FrameDAO, FrameDTO
+from ..models.ml_label_model import MultilabelLabelDAO
 from ..models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO
 from ..models.deposit_model import DepositDAO, VersionDAO, DepositDTO, VersionDTO
-from ..models.ml_predictions import MultilabelPredictionDAO, MultilabelPredictionDTO
-from ..models.ml_annotation import MultilabelAnnotationDAO, MultilabelAnnotationSessionDAO, MultilabelAnnotationSessionDTO, MultilabelAnnotationDTO
+from ..models.ml_predictions_model import MultilabelPredictionDAO, MultilabelPredictionDTO
+from ..models.ml_annotation_model import MultilabelAnnotationDAO, MultilabelAnnotationSessionDAO, MultilabelAnnotationSessionDTO, MultilabelAnnotationDTO
 
 from ..sql_connector.sc_connector import SQLiteConnector
 

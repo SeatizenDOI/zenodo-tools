@@ -2,7 +2,7 @@ from datetime import datetime
 from dataclasses import dataclass, field
 
 from .base_model import AbstractBaseDAO
-from .ml_label import MultilabelLabelDAO, MultilabelLabelDTO
+from .ml_label_model import MultilabelLabelDAO, MultilabelLabelDTO
 
 @dataclass
 class MultilabelModelDTO():
@@ -174,9 +174,9 @@ class MultilabelClassDAO(AbstractBaseDAO):
         
         query = f""" SELECT id, name, threshold, ml_label_id 
                      FROM {self.table_name}
-                     WHERE name = ?
+                     WHERE name = ? AND ml_model_id = ?
                  """
-        params = (class_name, )
+        params = (class_name, ml_model.id )
         result = self.sql_connector.execute_query(query, params)
 
         if len(result) == 0:

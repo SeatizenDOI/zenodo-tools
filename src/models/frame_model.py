@@ -2,7 +2,7 @@ from datetime import datetime
 from dataclasses import dataclass, field
 
 from shapely import wkb
-from shapely.geometry import Point
+from shapely.geometry import Point, Polygon
 
 from .base_model import AbstractBaseDAO
 from .deposit_model import VersionDTO, VersionDAO
@@ -30,7 +30,7 @@ class FrameDTO():
 
     @property
     def gps_datetime_convert(self) -> datetime:
-        return datetime.strptime(self._gps_datetime, "%Y-%m-%d %H:%M:%S")
+        return datetime.strptime(self.gps_datetime, "%Y-%m-%d %H:%M:%S")
     
     def __hash__(self) -> int:
         return hash((self.id, self.filename, self.version.doi))
@@ -57,6 +57,13 @@ class FrameDAO(AbstractBaseDAO):
             self.__get_all()
         return self.__frames
 
+    @property
+    def frames_header(self) -> list[str]:
+        frames_header = self.__frame_header.copy()
+        frames_header.remove("id")
+        frames_header.remove("GPSPosition")
+        frames_header.remove("filename")
+        return frames_header + ["GPSLatitude", "GPSLongitude"]
 
     def __parse_frame_results(self, results) -> list[FrameDTO] | FrameDTO:
         """ Method to centralize parse method. """
@@ -203,3 +210,49 @@ class FrameDAO(AbstractBaseDAO):
                            f.gps_fix,
                         ))
         self.sql_connector.execute_query(query, values)
+    
+    def get_frame_by_date_type_position(self, list_poly: list[Polygon], date_range, platform_type) -> list[FrameDTO]:
+        """ Get frames with three filter: Position polygon, Date range and platform type. """
+
+        # Base date filtering.
+        q_with = f""
+        q_select = f"""SELECT {", ".join(self.__frame_header)}"""
+        q_from = f" FROM {self.table_name} f "
+        q_join = f""
+        q_where = f" WHERE strftime('%Y-%m', GPSDatetime) >= ? AND strftime('%Y-%m', GPSDatetime) <= ?"
+
+        params = (date_range[0], date_range[1])
+
+        # Platform type filtering
+        if platform_type:
+            q_join += f"""
+                JOIN version v ON f.version_doi = v.doi
+                JOIN deposit d ON v.deposit_doi = d.doi
+            """
+            q_where += f""" AND d.platform_type IN ({', '.join(['?' for _ in platform_type])})"""
+            params = params + tuple(platform_type)
+        
+        # Geoposition
+        if len(list_poly) != 0:
+            q_with += "WITH polygons AS ("
+            for i, polygon in enumerate(list_poly):
+                q_with += f"""
+                    SELECT ST_PolyFromText(?, 4326) AS geom
+                """
+                params = (polygon.wkt, ) + params        # Parameters will not be add in the same order but it's not useful.
+                
+                if i < len(list_poly) -1: 
+                    q_with += """
+                    UNION ALL
+                """
+            q_with += f"""),
+                        combined_polygon AS (
+                            SELECT ST_Union(geom) AS geom FROM polygons
+                        )
+                        """
+            q_where += " AND ST_GeomFromWKB(f.GPSPosition) NOT NULL AND ST_Contains((SELECT geom FROM combined_polygon), ST_GeomFromWKB(f.GPSPosition)) "
+        
+        query = q_with + q_select + q_from + q_join + q_where
+        results = self.sql_connector.execute_query(query, params)
+        parsed_result = self.__parse_frame_results(results) 
+        return parsed_result

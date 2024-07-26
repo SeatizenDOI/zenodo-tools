@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 
 from ..utils.constants import TMP_PATH
 
-from ..models.ml_annotation import MultilabelAnnotationSessionDAO, MultilabelAnnotationDAO, MultilabelAnnotationSessionDTO
+from ..models.ml_annotation_model import MultilabelAnnotationSessionDAO, MultilabelAnnotationDAO, MultilabelAnnotationSessionDTO
 
 class DarwinCoreManager:
     def __init__(self, archive_name: Path) -> None:

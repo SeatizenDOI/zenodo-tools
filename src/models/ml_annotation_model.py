@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from .base_model import AbstractBaseDAO, DataStatus
 from .frame_model import FrameDTO, FrameDAO
-from .ml_label import MultilabelLabelDTO, MultilabelLabelDAO
+from .ml_label_model import MultilabelLabelDTO, MultilabelLabelDAO
 
 @dataclass
 class MultilabelAnnotationSessionDTO():

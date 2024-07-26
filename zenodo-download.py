@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/download_example.csv", help="Path to the csv file, header can be session_name or doi or both")
 
     # Path of output.
-    parser.add_argument("-pout", "--path_folder_out", default="/tmp/00_test_download", help="Output folder to rebuild sessions")
+    parser.add_argument("-po", "--path_folder_out", default="/tmp/00_test_download", help="Output folder to rebuild sessions")
 
     # Data type to download.
     parser.add_argument("-dr", "--download_rawdata", action="store_true", help="Download raw data from a session")

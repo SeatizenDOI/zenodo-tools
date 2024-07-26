@@ -180,14 +180,10 @@ CREATE TABLE IF NOT EXISTS multilabel_annotation (
 
 
 -- Create all index
-CREATE INDEX idx_filename_version_doi ON frame (filename, version_doi);
-
 CREATE INDEX IF NOT EXISTS idx_frame_id ON frame (id);
-CREATE INDEX IF NOT EXISTS idx_multilabel_prediction_frame_id ON multilabel_prediction (frame_id);
-CREATE INDEX IF NOT EXISTS idx_multilabel_prediction_ml_class_id ON multilabel_prediction (ml_class_id);
-CREATE INDEX IF NOT EXISTS idx_multilabel_class_id ON multilabel_class (id);
-CREATE INDEX IF NOT EXISTS idx_multilabel_class_ml_model_id ON multilabel_class (ml_model_id);
-CREATE INDEX IF NOT EXISTS idx_multilabel_model_id ON multilabel_model (id);
+CREATE INDEX IF NOT EXISTS idx_filename_version_doi ON frame (filename, version_doi);
+
+CREATE INDEX IF NOT EXISTS idx_multilabel_prediction_frame_id_version ON multilabel_prediction (frame_id, version_doi);
 
 
 -- FIXED DATA
