@@ -13,7 +13,7 @@ from src.seatizen_atlas.sa_manager import AtlasManager
 from src.models.deposit_model import DepositDAO
 from src.models.statistic_model import StatisticSQLDAO
 from src.models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO
-from src.models.frame_model import FrameDAO
+from src.models.frame_model import FrameDAO, FrameDTO
 from src.models.ml_predictions_model import MultilabelPredictionDAO
 
 class EnumPred(enum.Enum):
@@ -133,16 +133,31 @@ class MonitoringData:
         max_user_month = max_user % 12 + 1 
 
         return [f"{min_user_year}-{str(min_user_month).rjust(2,'0')}", f"{max_user_year}-{str(max_user_month).rjust(2,'0')}"]
+    
+    def match_metadata_frame_key(self, fs, frame: FrameDTO):
+        if fs == "version_doi": return frame.version.doi
+        elif fs == "original_filename": return frame.original_filename
+        elif fs == "relative_path": return frame.relative_path
+        elif fs == "GPSLongitude": return frame.gps_longitude
+        elif fs == "GPSLatitude": return frame.gps_latitude
+        elif fs == "GPSAltitude": return frame.gps_altitude
+        elif fs == "GPSRoll": return frame.gps_roll
+        elif fs == "GPSPitch": return frame.gps_pitch
+        elif fs == "GPSTrack": return frame.gps_track
+        elif fs == "GPSFix": return frame.gps_fix
+        elif fs == "GPSDatetime": return frame.gps_datetime
+        
+        return None
 
-    def build_dataframe_for_csv(self, geo_json, model_id, class_ids, date_range, frame_select, platform_type, type_pred_select) -> pd.DataFrame:
+    def build_dataframe_for_csv(self, geo_json, model_id, class_ids, date_range, frame_metadata_header, platform_type, type_pred_select) -> pd.DataFrame:
         
         # Deal with list.
         if isinstance(class_ids, int):
             class_ids = [class_ids]
 
         # Get all metadata if not selected.
-        if not frame_select: 
-            frame_select = self.frame_manager.frames_header
+        if not frame_metadata_header: 
+            frame_metadata_header = self.frame_manager.frames_header
         
         # Set prediction type.
         pred_select = EnumPred.SCORE.value if len(type_pred_select) != 1 else type_pred_select[0]
@@ -158,10 +173,15 @@ class MonitoringData:
         frames = self.frame_manager.get_frame_by_date_type_position(list_poly, date_range, platform_type)
         
         # Init dataframe value.
-        df_header = ["FileName"] + class_name  # TODO add frmae metadata.
+        df_header = ["FileName"] + frame_metadata_header + class_name
         data = []
 
         for frame in frames:
+
+            frame_meta = []
+            for fs in frame_metadata_header:
+                frame_meta.append(self.match_metadata_frame_key(fs, frame))
+
             predictions = []
             if -1 not in class_ids:
                 predictions = self.prediction_manager.get_predictions_frame_and_class(frame, class_ids)
@@ -175,9 +195,7 @@ class MonitoringData:
                 if pred.ml_class.name in predictions_to_add:
                     predictions_to_add[pred.ml_class.name] = pred.score if pred_select == EnumPred.SCORE.value else int(pred.score >= pred.ml_class.threshold)
             
-            data.append([
-                frame.filename,
-            ]+[s if s != None else -1 for s in predictions_to_add.values()])
+            data.append([frame.filename] + frame_meta + [s if s != None else -1 for s in predictions_to_add.values()])
         
 
         df_data = pd.DataFrame(data, columns=df_header)
@@ -334,7 +352,7 @@ def setup(opt):
         if len(df_data) == 0:
             print("No data to download")
             return None
-        
+
         return dcc.send_data_frame(df_data.to_csv, index=False, filename="test.csv")
     return app
 
