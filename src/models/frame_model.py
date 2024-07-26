@@ -218,17 +218,16 @@ class FrameDAO(AbstractBaseDAO):
         q_with = f""
         q_select = f"""SELECT {", ".join(self.__frame_header)}"""
         q_from = f" FROM {self.table_name} f "
-        q_join = f""
-        q_where = f" WHERE strftime('%Y-%m', GPSDatetime) >= ? AND strftime('%Y-%m', GPSDatetime) <= ?"
+        q_join = f"""
+                JOIN version v ON f.version_doi = v.doi
+                JOIN deposit d ON v.deposit_doi = d.doi
+            """
+        q_where = f" WHERE strftime('%Y-%m', d.session_date) >= ? AND strftime('%Y-%m', d.session_date) <= ?"
 
         params = (date_range[0], date_range[1])
 
         # Platform type filtering
         if platform_type:
-            q_join += f"""
-                JOIN version v ON f.version_doi = v.doi
-                JOIN deposit d ON v.deposit_doi = d.doi
-            """
             q_where += f""" AND d.platform_type IN ({', '.join(['?' for _ in platform_type])})"""
             params = params + tuple(platform_type)
         

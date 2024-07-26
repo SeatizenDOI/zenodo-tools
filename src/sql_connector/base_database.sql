@@ -59,7 +59,11 @@ CREATE TABLE IF NOT EXISTS deposit (
     footprint GEOMETRYCOLLECTION,
     have_processed_data INTEGER NOT NULL,
     have_raw_data INTEGER NOT NULL,
-    session_date DATE GENERATED ALWAYS AS (SUBSTR(session_name, 0, 9)) VIRTUAL,
+    session_date TEXT GENERATED ALWAYS AS (
+        SUBSTR(session_name, 1, 4) || '-' ||
+        SUBSTR(session_name, 5, 2) || '-' ||
+        SUBSTR(session_name, 7, 2)
+    ) VIRTUAL,
     alpha3_country_code TEXT GENERATED ALWAYS AS (SUBSTR(session_name, 10, 3)) VIRTUAL,
     location TEXT GENERATED ALWAYS AS (
         UPPER(SUBSTR (
