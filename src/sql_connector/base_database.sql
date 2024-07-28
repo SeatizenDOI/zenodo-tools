@@ -102,9 +102,9 @@ CREATE TABLE IF NOT EXISTS version (
 CREATE TABLE IF NOT EXISTS frame (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     version_doi TEXT NOT NULL,
-    original_filename TEXT NOT NULL,
+    OriginalFileName TEXT NOT NULL,
     filename TEXT NOT NULL,
-    relative_path TEXT,
+    relative_file_path TEXT,
     GPSPosition POINT, -- Latitude, Longitude
     GPSAltitude REAL,
     GPSPitch REAL,

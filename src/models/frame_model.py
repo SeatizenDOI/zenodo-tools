@@ -45,7 +45,7 @@ class FrameDAO(AbstractBaseDAO):
 
     __versionDAO = VersionDAO()
     __frame_header = [
-        "id","version_doi","original_filename","filename","relative_path",
+        "id","version_doi","OriginalFileName","filename","relative_file_path",
         "GPSPosition","GPSAltitude","GPSPitch","GPSRoll","GPSTrack","GPSDatetime",
         "GPSFix"
     ]
@@ -64,6 +64,22 @@ class FrameDAO(AbstractBaseDAO):
         frames_header.remove("GPSPosition")
         frames_header.remove("filename")
         return frames_header + ["GPSLatitude", "GPSLongitude"]
+    
+    def match_frame_header_and_attribut(self, fs: str, frame: FrameDTO):
+        if fs == "version_doi": return frame.version.doi
+        elif fs == "OriginalFileName": return frame.original_filename
+        elif fs == "relative_file_path": return frame.relative_path
+        elif fs == "GPSLongitude": return frame.gps_longitude
+        elif fs == "GPSLatitude": return frame.gps_latitude
+        elif fs == "GPSAltitude": return frame.gps_altitude
+        elif fs == "GPSRoll": return frame.gps_roll
+        elif fs == "GPSPitch": return frame.gps_pitch
+        elif fs == "GPSTrack": return frame.gps_track
+        elif fs == "GPSFix": return frame.gps_fix
+        elif fs == "GPSDatetime": return frame.gps_datetime
+        
+        return None
+
 
     def __parse_frame_results(self, results) -> list[FrameDTO] | FrameDTO:
         """ Method to centralize parse method. """
@@ -191,7 +207,7 @@ class FrameDAO(AbstractBaseDAO):
             return
         
         query = f""" INSERT INTO {self.table_name}
-                     (version_doi, filename, original_filename, relative_path, GPSPosition,
+                     (version_doi, filename, OriginalFileName, relative_file_path, GPSPosition,
                       GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime, GPSFix) 
                      VALUES (?,?,?,?,?,?,?,?,?,?,?)
                  """

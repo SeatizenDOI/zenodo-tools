@@ -44,7 +44,7 @@ class Benchmark:
     
     def show(self, word="") -> None:
         if self.t_start == None or self.t_stop == None: return
-        print(f"{word} - Elapsed time: {self.t_stop - self.t_start} sec")
+        print(f"\n{word} - Elapsed time: {self.t_stop - self.t_start} sec")
         print(f"Memory usage: {round(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 3, 2)} GiB\n")
     
     def stop_and_show(self, word=""):
