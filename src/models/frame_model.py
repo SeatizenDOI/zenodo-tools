@@ -271,3 +271,20 @@ class FrameDAO(AbstractBaseDAO):
         results = self.sql_connector.execute_query(query, params)
         parsed_result = self.__parse_frame_results(results) 
         return parsed_result
+    
+    def get_number_images_by_platform(self) -> dict[str, int]:
+        query = f"""
+            SELECT COUNT(f.filename) AS "frame_count", d.platform_type
+            FROM frame f
+            JOIN version v on v.doi = f.version_doi
+            JOIN deposit d on d.doi = v.deposit_doi
+            GROUP BY d.platform_type;
+        """
+
+        result = self.sql_connector.execute_query(query)
+
+        data = {}
+        for frame_count, platform_type in result:
+            data[platform_type] = frame_count
+        
+        return data

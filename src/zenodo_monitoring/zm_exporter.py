@@ -48,7 +48,7 @@ class ZenodoMonitoringExporter:
                 ], width=3),
                 # Model class picker.
                 dbc.Col([
-                    html.H4(children="Select class you want to export"),
+                    html.H4(children="Select classes you want to export."),
                     dcc.Dropdown(
                         self.monitoring_data.classes_map_by_model_id[self.monitoring_data.model_dash_format[0]["value"]],
                         value=-1,

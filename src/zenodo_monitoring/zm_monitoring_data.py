@@ -1,7 +1,6 @@
 import enum
 import pandas as pd
 from dash import dcc
-import plotly.express as px
 
 import shapely
 from shapely import Polygon, Point
@@ -63,22 +62,6 @@ class MonitoringData:
                 "transform": "markToDate",
             },
             value = [0, (self.max_date-self.min_date+1) * 12 - 1])
-
-
-    def get_platform_pie_chart(self):   # TODO Move in another class.
-        """ Extract a platform  pie chart. """
-        # Extract platform value.
-        deposits = self.deposit_manager.deposits
-        platforms = [] if len(deposits) == 0 else [deposit.platform for deposit in deposits]
-        self.platform_type = list(set(platforms))
-        platform_counts = {b: platforms.count(b) for b in set(platforms)}
-        
-        df = pd.DataFrame(list(platform_counts.items()), columns=['Plaftorm', 'Count'])
-        
-        # Create the pie chart
-        fig = px.pie(df, names='Plaftorm', values='Count', title='Plaftorm Distribution')
-
-        return fig
     
 
     def get_footprint_geojson(self) -> dict:
