@@ -6,11 +6,11 @@ from pathlib import Path
 from ..utils.lib_tools import md5
 from ..utils.constants import ZENODO_LINK_WITHOUT_TOKEN
 
-from .base_function import file_downloader
+from .za_base_function import file_downloader
 
 
 
-def download_manager_without_token(files, output_folder, session_name, doi):
+def download_manager_without_token(files: list, output_folder: Path, session_name: str, doi: str) -> None:
     """ Manage to download files without token. """
     path_zip_session = Path(output_folder, session_name, "ZIP")
     path_zip_session.mkdir(exist_ok=True, parents=True)
@@ -54,7 +54,7 @@ def download_manager_without_token(files, output_folder, session_name, doi):
     path_zip_session.rmdir()
 
 
-def get_version_from_doi(doi):
+def get_version_from_doi(doi: str) -> dict:
     """ Retrieve all information about a session with a doi. """
     r = requests.get(f"{ZENODO_LINK_WITHOUT_TOKEN}/{doi}")
 
@@ -66,6 +66,58 @@ def get_version_from_doi(doi):
     
     return version_json
 
-# TODO Add get_version_from_session_name => last version.
 
-# TODO Add get all version from session_name => all version
+def get_version_from_session_name(session_name: str) -> dict:
+    """ Retrieve last version about a session with a session_name. """
+
+    query = f'q=metadata.identifiers.identifier:"urn:{session_name}" metadata.related_identifiers.identifier:"urn:{session_name}"'
+    r = requests.get(f"{ZENODO_LINK_WITHOUT_TOKEN}?{query}")
+
+    version_json = {}
+    if r.status_code == 404:
+        print(f"Cannot access to {session_name}. Error 404")
+        return version_json
+    
+    # Try to acces version. If all is good we have just one version, but if we have more or less than one version, we have an error.
+    try:
+        list_version = r.json()["hits"]["hits"]
+        if len(list_version) > 1:
+            print("Retrieve more than one version, abort.")
+        elif len(list_version) == 0:
+            print(f"No version found for {session_name}.")
+        else:
+            version_json = list_version[0]
+    except:
+        print(f"Cannot get version for {session_name}.")
+    
+    return version_json
+
+def get_all_versions_from_session_name(session_name: str) -> list:
+    """ Retrieve all versions about a session with a session_name. """
+
+    query = f'q=metadata.identifiers.identifier:"urn:{session_name}" metadata.related_identifiers.identifier:"urn:{session_name}"&allversions=true'
+    r = requests.get(f"{ZENODO_LINK_WITHOUT_TOKEN}?{query}")
+
+    version_json = []
+    if r.status_code == 404:
+        print(f"Cannot access to {session_name}. Error 404")
+        return version_json
+    
+    # Try to access version. If all is good we have just one conceptrecid, else we have a problem.
+    try:
+        list_version = r.json()["hits"]["hits"]
+
+        if len(list_version) == 0:
+            print(f"No version found for {session_name}.")
+            return version_json
+
+        conceptrecids = set(map(lambda version: version['conceptrecid'], list_version))
+        if len(conceptrecids) > 1:
+            print("Retrieve more than one deposit, abort.")
+        else:
+            version_json = list_version
+
+    except:
+        print(f"Cannot get version for {session_name}.")
+    
+    return version_json

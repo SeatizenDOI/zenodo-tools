@@ -2,13 +2,14 @@ import os
 import time
 import requests
 import traceback
+from pathlib import Path
 
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 
 from ..utils.constants import MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE
 
-def file_downloader(url, output_file, params = {}):
+def file_downloader(url: str, output_file: Path, params: dict = {}) -> None:
     """ Download file at output_file path. """
     isDownload, max_try = False, 0
     while not isDownload:
@@ -31,7 +32,7 @@ def file_downloader(url, output_file, params = {}):
             time.sleep(0.5)
 
 
-def file_uploader(url, file, params):
+def file_uploader(url: str, file: Path, params: dict) -> None:
     """ Upload file to url"""
     isSend, max_try = False, 0
     while not isSend:

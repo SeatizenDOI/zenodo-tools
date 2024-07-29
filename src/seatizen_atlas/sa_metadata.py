@@ -1,22 +1,29 @@
 import json
 from pathlib import Path
 
-from ..utils.constants import SEATIZEN_ATLAS_DOI
-from ..zenodo_api.token import ZenodoAPI
+from ..zenodo_api.za_token import ZenodoAPI
 
-def seatizen_atlas_metadata(config_json, metadata_json_path):
+def seatizen_atlas_metadata(config_json: dict, metadata_json_path: str) -> None:
     """ Seatizen Atlas metadata """
+    print("Updating metadata last version of seatizen atlas.")
+    
+    metadata = build_metadata(metadata_json_path)
+
+    zenodoAPI = ZenodoAPI("seatizen-atlas", config_json)
+
+    zenodoAPI.edit_metadata(metadata)
+    
+
+def build_metadata(metadata_json_path: str) -> dict:
+
     metadata_json_path = Path(metadata_json_path)
     if not Path.exists(metadata_json_path) or not metadata_json_path.is_file():
         print("Metadata file not found.")
-        return
-    print("Updating metadata last version of seatizen atlas.")
+        return {}
+    
     with open(metadata_json_path) as json_file:
         metadata_json = json.load(json_file)
 
-    zenodoAPI = ZenodoAPI("", config_json)
-    zenodoAPI.deposit_id = SEATIZEN_ATLAS_DOI
-    
     data = {
         'metadata': {
             'title': "Seatizen Atlas",
@@ -31,9 +38,10 @@ def seatizen_atlas_metadata(config_json, metadata_json_path):
             'license': metadata_json["license"]
         }
     }
-    zenodoAPI.edit_metadata(data)
+    return data
 
-def get_description():
+
+def get_description() -> str:
     return f"""
         The deposit is currently a work in progress, but it will soon serve as a comprehensive repository. Once completed, it will include: <br>
         <ul>

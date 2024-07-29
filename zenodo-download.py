@@ -3,8 +3,8 @@ import argparse
 import traceback
 from pathlib import Path
 
-from src.zenodo_api.token import ZenodoAPI
-from src.zenodo_api.tokenless import get_version_from_doi, download_manager_without_token
+from src.zenodo_api.za_token import ZenodoAPI
+from src.zenodo_api.za_tokenless import get_version_from_doi, download_manager_without_token
 
 from src.utils.lib_tools import get_session_name_doi_from_opt
 
@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument("-pcsv", "--path_csv_file", default="./csv_inputs/download_example.csv", help="Path to the csv file, header can be session_name or doi or both")
 
     # Path of output.
-    parser.add_argument("-pout", "--path_folder_out", default="/tmp/00_test_download", help="Output folder to rebuild sessions")
+    parser.add_argument("-po", "--path_folder_out", default="/tmp/00_test_download", help="Output folder to rebuild sessions")
 
     # Data type to download.
     parser.add_argument("-dr", "--download_rawdata", action="store_true", help="Download raw data from a session")
@@ -33,7 +33,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def download_with_token(opt, config_json):
+def download_with_token(opt, config_json: dict) -> None:
     print("Using downloader with token")
 
     # Create output_folder
@@ -92,7 +92,7 @@ def download_with_token(opt, config_json):
 
 
 
-def download_without_token(opt):
+def download_without_token(opt) -> None:
     print("Using downloader without token")
     
     # Create output_folder

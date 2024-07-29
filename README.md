@@ -49,107 +49,11 @@ To ensure a consistent environment for all users, this project uses a Conda envi
         "ZENODO_LINK": "https://zenodo.org/api/deposit/depositions"
     }
     ```
-
-## Usage of zenodo-upload Script Parameters
-
-The zenodo-upload script is designed to facilitate the workflow of uploading raw and processed data with metadata. You can use various options to specify inputs and the types of data to upload. Here is a description of the main parameters:
-
-To run the zenodo-upload.py, navigate to the project root and execute:
-
+5. **Other lib:** Install mod-spatialite. Here for ubuntu 22.04
 ```bash
-python zenodo-upload.py [OPTIONS]
+sudo apt-get install libsqlite3-mod-spatialite
 ```
 
-Where `[OPTIONS]` can include:
-
-### Input Parameters
-
-The script allows you to select an input method from several mutually exclusive options:
-
-* `-efol`, `--enable_folder`: Use data from a session folder.
-* `-eses`, `--enable_session`: Use data from a single session.
-* `-ecsv`, `--enable_csv`: Use data from a CSV file.
-* `-eno`, `--enable_nothing`: Do not use a session; use with the clean parameter.
-
-### Input Paths
-
-You can specify the paths to the files or folders to be used as input:
-
-* `-pfol`, `--path_folder`: Path to the session folder. Default: /home/bioeos/Documents/Bioeos/plancha-session.
-* `-pses`, `--path_session`: Path to a specific session. Default: /media/bioeos/E/202309_plancha_session/20230926_REU-HERMITAGE_ASV-2_01/.
-* `-pcsv`, `--path_csv_file`: Path to the CSV file containing the inputs. Default: ./csv_inputs/retry.csv.
-
-### Data Types to Upload
-
-The script allows you to choose the type of data to upload:
-
-* `-ur`, `--upload-rawdata`: Upload raw data from a session.
-* `-up`, `--upload-processeddata`: Specify the folder to upload. Use f for FRAMES, m for METADATA, b for BATHY, g for GPS, i for IA. For example, -up fi to upload frames and IA.
-* `-um`, `--update-metadata`: Update metadata from a session.
-* `-uc`, `--upload-custom`: Upload a custom data from a session.
-
-
-### Optional Arguments
-
-The script also includes optional arguments to fine-tune its behavior:
-
-* `-is`, `--index_start`: Choose the index from which to start. Default: 0.
-* `-cd`, `--clean_draft`: Clean all drafts with no published version.
-* `-pmj`, `--path_metadata_json`: Path to metadata json file.
-
-
-## Usage of zenodo-download Script Parameters
-
-The zenodo-download script is designed to facilitate the workflow of downloading raw and processed data with metadata. 
-
-This script is intended for two types of users.
-
-The first type of user is the one who has a Zenodo token for their account. This will allow them to download restricted data. They just need to provide a DOI that belongs to the deposit and choose what they want to download (raw data and/or processed data). All versions named as RAW_DATA are complete, so they will all be downloaded. However, for PROCESSED_DATA, the script will either download the latest version or the version that the DOI points to.
-
-The second type of user is the one who does not have a token. They cannot download restricted data. For the script to work, they must provide the DOI they want. This does not work with a session_name.
-
-
-You can use various options to specify inputs and the types of data to upload. Here is a description of the main parameters:
-
-To run the zenodo-download.py, navigate to the project root and execute:
-
-```bash
-python zenodo-download.py [OPTIONS]
-```
-
-Where `[OPTIONS]` can include:
-### Input Parameters
-
-The script allows you to select an input method from several mutually exclusive options:
-
-* `-edoi`, `--enable_doi`: Use a DOI (Digital Object Identifier).
-* `-ename`, `--enable_name`: Use a session name.
-* `-ecsv`, `--enable_csv`: Use data from a CSV file.
-
-### Input Path
-
-You can specify the path to the CSV file to be used as input:
-
-* `-pcsv`, `--path_csv_file`: Path to the CSV file containing the inputs. The header can be session_name or doi or both. Default: ./csv_inputs/download_example.csv.
-
-### Output Path
-
-You can specify the path to the folder where the downloaded sessions will be saved:
-
-* `-pout`, `--path_folder_out`: Output folder to rebuild sessions. Default: /tmp/test_download.
-
-### Data Types to Download
-
-The script allows you to choose the type of data to download:
-
-* `-dr`, `--download_rawdata`: Download raw data from a session.
-* `-dp`, `--download_processed_data`: Download processed data from a session.
-
-### Optional Arguments
-
-The script also includes optional arguments to fine-tune its behavior:
-
-* `-is`, `--index_start`: Choose the index from which to start. Default: 0.
 
 ## Contributing
 
