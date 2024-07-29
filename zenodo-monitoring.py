@@ -1,6 +1,6 @@
 import argparse
 
-from src.zenodo_monitoring.zm_app import ZenodoMonitoringApp
+from src.zenodo_monitoring.zm_app_page import ZenodoMonitoringApp
 
 
 def parse_args():

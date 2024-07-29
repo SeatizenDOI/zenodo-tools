@@ -3,8 +3,10 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
 
 from src.seatizen_atlas.sa_manager import AtlasManager
-from .zm_exporter import ZenodoMonitoringExporter
-from .zm_statistic import ZenodoMonitoringStatistic
+from .zm_exporter_page import ZenodoMonitoringExporter
+from .zm_statistic_page import ZenodoMonitoringStatistic
+from .zm_home_page import ZenodoMonitoringHome
+
 
 SIDEBAR_STYLE = {
     "position": "fixed",
@@ -40,6 +42,7 @@ class ZenodoMonitoringApp:
         # Other pages.
         self.exporter = ZenodoMonitoringExporter(self.app)
         self.statistic = ZenodoMonitoringStatistic(self.app)
+        self.home = ZenodoMonitoringHome(self.app)
 
         self.app.layout = self.create_layout()
         self.register_callbacks()
@@ -71,13 +74,14 @@ class ZenodoMonitoringApp:
         """ Register all callbacks """
 
         # Other pages callback.
+        self.home.register_callbacks()
         self.exporter.register_callbacks()
         self.statistic.register_callbacks()
 
         @self.app.callback(Output("page-content", "children"), [Input("url", "pathname")])
         def render_page_content(pathname):
             if pathname == "/":
-                return html.P("This is the content of the home page!")
+                return self.home.create_layout()
             elif pathname == "/exporter":
                 return self.exporter.create_layout()
             elif pathname == "/statistic":

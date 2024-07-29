@@ -148,4 +148,4 @@ class ZenodoMonitoringExporter:
                 # Close spinner and show a Toast.
                 return True, None, False
 
-            return False, dcc.send_data_frame(df_data.to_csv, index=False, filename="test.csv"), False
+            return False, dcc.send_data_frame(df_data.to_csv, index=False, filename="zenodo_monitoring_data.csv"), False

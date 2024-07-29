@@ -22,7 +22,7 @@ class StatisticData:
         df = pd.DataFrame(list(platform_counts.items()), columns=['Plaftorm', 'Count'])
         
         # Create the pie chart
-        fig = px.pie(df, names='Plaftorm', values='Count', title='Plaftorm Distribution')
+        fig = px.pie(df, names='Plaftorm', values='Count', title='Plaftorm distribution')
 
         return fig
     

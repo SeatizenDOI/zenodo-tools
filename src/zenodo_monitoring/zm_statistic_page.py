@@ -4,14 +4,6 @@ import dash_bootstrap_components as dbc
 from .zm_statistic_data import StatisticData
 from ..models.statistic_model import StatisticSQLDAO
 
-"""
-    Pie chart : Platform by session, Platform by image number,  
-    General statistic number
-    Number of images by platform
-
-
-"""
-
 class ZenodoMonitoringStatistic:
     def __init__(self, app):
         self.app = app        
