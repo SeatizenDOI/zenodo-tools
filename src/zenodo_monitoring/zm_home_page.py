@@ -1,4 +1,4 @@
-from dash import html, dcc
+from dash import html
 import dash_bootstrap_components as dbc
 
 class ZenodoMonitoringHome:
@@ -49,7 +49,7 @@ class ZenodoMonitoringHome:
                             "The entire workflow to create and group the data is open-source.",
                             className="card-text",
                         ),
-                        dbc.Button("Explore our codes", color="primary", external_link="https://github.com/SeatizenDOI"),
+                        dbc.Button("Explore our codes", color="primary", href="https://github.com/SeatizenDOI"),
                     ]),
                 ], style={"width": "25rem"}),
 
@@ -63,7 +63,7 @@ class ZenodoMonitoringHome:
                             "Thanks to them for this adventure.",
                             className="card-text",
                         ),
-                        dbc.Button("Visit our website", color="primary", external_link="https://ocean-indien.ifremer.fr/"),
+                        dbc.Button("Visit our website", color="primary", href="https://ocean-indien.ifremer.fr/"),
                     ]),
                 ], style={"width": "25rem"})
             ], justify="around", class_name="mt-5 pt-5"),

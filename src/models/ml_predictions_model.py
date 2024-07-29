@@ -4,7 +4,6 @@ from .base_model import AbstractBaseDAO
 from .deposit_model import VersionDTO, VersionDAO
 from .frame_model import FrameDAO, FrameDTO
 from .ml_model_model import MultilabelClassDAO, MultilabelClassDTO, MultilabelModelDTO
-from .statistic_model import Benchmark
 
 @dataclass
 class MultilabelPredictionDTO():
