@@ -22,17 +22,33 @@ class ZenodoMonitoringExporter:
                     # Map. Geography selector.
                     html.H2(children="Select the zone to export."),
                     dl.Map(style={'width': '100%', 'height': '50vh'}, center=[-21.085198, 55.222047], zoom=14, maxZoom=18, minZoom=4 ,children=[
-                        dl.TileLayer(url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution='Tiles © Esri'),
+                        dl.TileLayer(
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                            attribution='Tiles © Esri'
+                        ),
+                        dl.TileLayer(
+                            url="https://{s}.basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}{r}.png'",
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        ),
                         dl.GeoJSON(data=self.geolocation_footprint_json, id="polygons"),
                         dl.FeatureGroup(id="feature_group", children=[
                             dl.EditControl(
                                 id="edit_control", 
-                                position="topleft", 
+                                position="bottomleft", 
                                 draw={'polygon': False, 'rectangle': True, 'polyline': False, 'circle': False, 'marker': False, 'circlemarker': False}, 
                                 edit={'edit': False}
-                            )
+                            ),
+                            dl.FullScreenControl(position="topleft"),
+                            dl.MeasureControl(
+                                position="topleft", 
+                                primaryLengthUnit="kilometers", 
+                                primaryAreaUnit="hectares",
+                                activeColor="#214097", 
+                                completedColor="#972158"
+                            ),
+                            dl.ScaleControl(position="bottomright", imperial=False)
                         ])
-                    ])
+                    ]),
                 ])
             ),
 
@@ -115,6 +131,12 @@ class ZenodoMonitoringExporter:
     
     
     def register_callbacks(self):
+        @self.app.callback(Output('output', 'children'), Input('zoom-level', 'data'))
+        def update_output(zoom):
+            if zoom is not None:
+                return f"Current zoom level: {zoom}"
+            return "Zoom level not set yet."
+
         @self.app.callback(
             Output('class_select', 'options'),
             Input('model_select', 'value')
