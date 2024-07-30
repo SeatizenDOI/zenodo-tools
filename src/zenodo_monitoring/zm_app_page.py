@@ -34,7 +34,7 @@ class ZenodoMonitoringApp:
             assets_folder="../../assets/", 
             suppress_callback_exceptions=True
         )
-        self.app.title = "Zenodo monitoring"
+        self.app.title = "Seatizen monitoring"
         
         # Init database connection.
         atlasManager = AtlasManager({}, opt.path_seatizen_atlas_folder, from_local=opt.use_from_local, force_regenerate=False)
@@ -50,7 +50,7 @@ class ZenodoMonitoringApp:
     def create_layout(self):
         """ Creater app layout. """
         sidebar = html.Div([
-            html.H2("Zenodo Monitoring", className="display-5"),
+            html.H2("Seatizen Monitoring", className="display-5"),
             html.Hr(),
             html.P(
                 "Simple tool to visualize or export data.", className="lead"
@@ -96,6 +96,6 @@ class ZenodoMonitoringApp:
                 className="p-3 bg-light rounded-3",
             )
 
-    def run(self):
+    def run(self, debug=False):
         """ Launch app."""
-        self.app.run(debug=True)
+        self.app.run(debug=debug)

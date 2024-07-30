@@ -143,9 +143,6 @@ class MonitoringData:
         # Get all metadata if not selected.
         if not frame_metadata_header: 
             frame_metadata_header = self.frame_manager.frames_header
-        
-        # Set prediction type.
-        pred_select = EnumPred.SCORE.value if len(type_pred_select) != 1 else type_pred_select[0]
 
         # Parse and fetch all basics information.
         list_poly = self.extract_polygons(geo_json)
@@ -157,15 +154,18 @@ class MonitoringData:
         # Get frames base on filter.
         frames = self.frame_manager.get_frame_by_date_type_position(list_poly, date_range, platform_type)
         
-        # Init dataframe value.
-        df_header = ["FileName"] + frame_metadata_header + class_name
+        # Init dataframe header.
+        df_header = ["FileName"] + frame_metadata_header
+        if len(class_name) > 0:
+            df_header += ["pred_doi"] + class_name
+        
         data = []
-
         for frame in frames:
+            data_to_add = [frame.filename]
 
-            frame_meta = []
+            # Add frame metadata
             for fs in frame_metadata_header:
-                frame_meta.append(self.frame_manager.match_frame_header_and_attribut(fs, frame))
+                data_to_add.append(self.frame_manager.match_frame_header_and_attribut(fs, frame))
 
             predictions = []
             if -1 not in class_ids:
@@ -175,12 +175,16 @@ class MonitoringData:
 
             # Get predictions for each class in good order.
             predictions_to_add = {cls_name: None for cls_name in class_name}
-            
+            pred_doi = ""
             for pred in predictions:
+                pred_doi = pred.version.doi
                 if pred.ml_class.name in predictions_to_add:
-                    predictions_to_add[pred.ml_class.name] = pred.score if pred_select == EnumPred.SCORE.value else int(pred.score >= pred.ml_class.threshold)
+                    predictions_to_add[pred.ml_class.name] = pred.score if type_pred_select == EnumPred.SCORE.value else int(pred.score >= pred.ml_class.threshold)
             
-            data.append([frame.filename] + frame_meta + [s if s != None else -1 for s in predictions_to_add.values()])
+            if len(class_name) != 0: 
+                data_to_add.append(pred_doi)
+             
+            data.append(data_to_add + [s if s != None else -1 for s in predictions_to_add.values()])
         
 
         df_data = pd.DataFrame(data, columns=df_header)
