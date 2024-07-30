@@ -2,6 +2,7 @@ import dash_leaflet as dl
 from dash import html, dcc
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
+from dash_extensions.javascript import Namespace
 
 from .zm_monitoring_data import MonitoringData, EnumPred
 
@@ -15,8 +16,8 @@ class ZenodoMonitoringExporter:
 
     
     def create_layout(self):
+        ns = Namespace("PlatformSpace", "PlatformSpaceColor")
         return dbc.Spinner(html.Div([
-
             dbc.Row(
                 dbc.Col([
                     # Map. Geography selector.
@@ -30,7 +31,11 @@ class ZenodoMonitoringExporter:
                             url="https://{s}.basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}{r}.png'",
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                         ),
-                        dl.GeoJSON(data=self.geolocation_footprint_json, id="polygons"),
+                        dl.GeoJSON(
+                            data=self.geolocation_footprint_json,
+                            id="session_footprint",
+                            style=ns("platformToColorMap")
+                        ),
                         dl.FeatureGroup(id="feature_group", children=[
                             dl.EditControl(
                                 id="edit_control", 
@@ -131,11 +136,14 @@ class ZenodoMonitoringExporter:
     
     
     def register_callbacks(self):
-        @self.app.callback(Output('output', 'children'), Input('zoom-level', 'data'))
-        def update_output(zoom):
-            if zoom is not None:
-                return f"Current zoom level: {zoom}"
-            return "Zoom level not set yet."
+        @self.app.callback(
+            Output('session_footprint', 'data'), 
+            Input('platform_select', 'value'),
+            prevent_initial_call=True,
+        )
+        def update_platform(platform_to_include):
+            self.geolocation_footprint_json = self.monitoring_data.get_footprint_geojson(platform_to_include)
+            return self.geolocation_footprint_json
 
         @self.app.callback(
             Output('class_select', 'options'),

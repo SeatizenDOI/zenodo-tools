@@ -15,6 +15,12 @@ class EnumPred(enum.Enum):
     SCORE = "Score"
     PRED = "Prediction"
 
+class PlatformColor(enum.Enum):
+    ASV = "#AFA4CE"
+    UAV = "#F0A1BF"
+    SCUBA = "#F5DF4D"
+    PADDLE = "#8CACD3"
+
 class MonitoringData:
     
     def __init__(self) -> None:
@@ -64,10 +70,12 @@ class MonitoringData:
             value = [0, (self.max_date-self.min_date+1) * 12 - 1])
     
 
-    def get_footprint_geojson(self) -> dict:
+    def get_footprint_geojson(self, platform_to_include = []) -> dict:
         """ Get the footprint for each session. """
         features = []
         for deposit in self.deposit_manager.deposits:
+
+            if platform_to_include != [] and deposit.platform not in platform_to_include: continue
             if deposit.footprint == None: continue
             
             for geom in deposit.footprint.geoms:
@@ -77,7 +85,8 @@ class MonitoringData:
                 geojson_polygon = shapely.geometry.mapping(geom)
                 features.append({
                     "type": "Feature",
-                    "geometry": geojson_polygon,           
+                    "geometry": geojson_polygon,
+                    "platform": deposit.platform      
                 })
 
         geojson_feature_collection = {
