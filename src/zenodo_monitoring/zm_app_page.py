@@ -6,6 +6,7 @@ from src.seatizen_atlas.sa_manager import AtlasManager
 from .zm_exporter_page import ZenodoMonitoringExporter
 from .zm_statistic_page import ZenodoMonitoringStatistic
 from .zm_home_page import ZenodoMonitoringHome
+from .zm_settings_page import ZenodoMonitoringSettings
 
 
 SIDEBAR_STYLE = {
@@ -40,7 +41,8 @@ class ZenodoMonitoringApp:
         atlasManager = AtlasManager({}, opt.path_seatizen_atlas_folder, from_local=opt.use_from_local, force_regenerate=False)
         
         # Other pages.
-        self.exporter = ZenodoMonitoringExporter(self.app)
+        self.settings = ZenodoMonitoringSettings(self.app)
+        self.exporter = ZenodoMonitoringExporter(self.app, self.settings.settings_data)
         self.statistic = ZenodoMonitoringStatistic(self.app)
         self.home = ZenodoMonitoringHome(self.app)
 
@@ -60,6 +62,7 @@ class ZenodoMonitoringApp:
                     dbc.NavLink("Home", href="/", active="exact"),
                     dbc.NavLink("Exporter", href="/exporter", active="exact"),
                     dbc.NavLink("Statistic", href="/statistic", active="exact"),
+                    dbc.NavLink("Settings", href="/settings", active="exact"),
                 ],
                 vertical=True,
                 pills=True,
@@ -75,6 +78,7 @@ class ZenodoMonitoringApp:
 
         # Other pages callback.
         self.home.register_callbacks()
+        self.settings.register_callbacks()
         self.exporter.register_callbacks()
         self.statistic.register_callbacks()
 
@@ -86,14 +90,16 @@ class ZenodoMonitoringApp:
                 return self.exporter.create_layout()
             elif pathname == "/statistic":
                 return self.statistic.create_layout()
+            elif pathname == "/settings":
+                return self.settings.create_layout()
             # If the user tries to reach a different page, return a 404 message
             return html.Div(
                 [
-                    html.H1("404: Not found", className="text-danger"),
+                    html.H1("404: Not found", class_name="text-danger"),
                     html.Hr(),
                     html.P(f"The pathname {pathname} was not recognised..."),
                 ],
-                className="p-3 bg-light rounded-3",
+                class_name="p-3 bg-light rounded-3",
             )
 
     def run(self, debug=False):

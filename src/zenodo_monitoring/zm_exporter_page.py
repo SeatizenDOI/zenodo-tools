@@ -1,23 +1,27 @@
+from pathlib import Path
+from datetime import datetime
+
 import dash_leaflet as dl
-from dash import html, dcc
-from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from dash_extensions.javascript import Namespace
+from dash import html, dcc, Input, Output, State, ctx
 
 from .zm_monitoring_data import MonitoringData, EnumPred
-
+from .zm_settings_data import SettingsData
 
 class ZenodoMonitoringExporter:
-    def __init__(self, app):
+    def __init__(self, app, settings_data: SettingsData):
         self.app = app        
-
-        self.monitoring_data = MonitoringData()
+        self.settings_data = settings_data
+        self.monitoring_data = MonitoringData(settings_data)
         self.geolocation_footprint_json = self.monitoring_data.get_footprint_geojson() 
 
     
     def create_layout(self):
         ns = Namespace("PlatformSpace", "PlatformSpaceColor")
         return dbc.Spinner(html.Div([
+            dcc.Store(id='local-settings-data', storage_type='local'),
+            dcc.Store(id='temp-to-remove-file', storage_type='session'), # Use to remove csv file.
             dbc.Row(
                 dbc.Col([
                     # Map. Geography selector.
@@ -32,7 +36,7 @@ class ZenodoMonitoringExporter:
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                         ),
                         dl.GeoJSON(
-                            data=self.geolocation_footprint_json,
+                            data=self.monitoring_data.get_footprint_geojson() ,
                             id="session_footprint",
                             style=ns("platformToColorMap")
                         ),
@@ -71,7 +75,7 @@ class ZenodoMonitoringExporter:
                 dbc.Col([
                     html.H4(children="Select classes you want to export."),
                     dcc.Dropdown(
-                        self.monitoring_data.classes_map_by_model_id[self.monitoring_data.model_dash_format[0]["value"]],
+                        self.monitoring_data.get_class_by_model(self.monitoring_data.model_dash_format[0]["value"]),
                         value=-1,
                         id='class_select',
                         multi=True,
@@ -89,35 +93,38 @@ class ZenodoMonitoringExporter:
 
                     ),
                 ], width=3)
-            ], className="p-3"),
+            ], class_name="p-3"),
             
             dbc.Row([
+                # Platform selector.
                 dbc.Col([
                     html.H4(children="Select the platforms that interest you."),
                     dcc.Dropdown(
                         self.monitoring_data.platform_type, 
                         id='platform_select',
+                        value=[], # Avoid None value
                         multi=True, 
                         placeholder="If not filled, all platform are selected."
                     ),
                 ], width=4),
                 dbc.Col([
-                    # Frame matadata.
+                    # Frame matadata selector.
                     html.H4(children="Select frame metadata."),
                     dcc.Dropdown(
-                        self.monitoring_data.frame_manager.frames_header, 
+                        self.monitoring_data.frame_manager.frames_header,
+                        value=["GPSLatitude", "GPSLongitude"], # TODO use enum ?
                         multi=True, 
                         placeholder="If not filled, all metadata are selected.", 
                         id='frame_select'
                     ),
                 ])
-            ], className="p-3"),
+            ], class_name="p-3"),
             
             dbc.Row([
                 # Date picker.
                 html.H4(children="Select the time period."),
                 self.monitoring_data.generate_date_slider(),
-            ], className="p-3"),
+            ], class_name="p-3"),
             
             dbc.Button(html.Span(["Download your data  ", html.I(className="fa-solid fa-download")]), id="btn-dl", ),
             dcc.Download(id="download-dataframe-csv"),
@@ -136,28 +143,46 @@ class ZenodoMonitoringExporter:
     
     
     def register_callbacks(self):
+
+        # Update map when we select a specific platform.
         @self.app.callback(
             Output('session_footprint', 'data'), 
             Input('platform_select', 'value'),
+            Input('date-picker', 'value'),
             prevent_initial_call=True,
         )
-        def update_platform(platform_to_include):
-            self.geolocation_footprint_json = self.monitoring_data.get_footprint_geojson(platform_to_include)
+        def update_platform(platform_to_include, date_interval):
+            self.geolocation_footprint_json = self.monitoring_data.get_footprint_geojson(platform_to_include, date_interval)
             return self.geolocation_footprint_json
 
+
+        # Change class options with model and custom classes.
         @self.app.callback(
             Output('class_select', 'options'),
-            Input('model_select', 'value')
+            [
+                Input('model_select', 'value'),
+                Input("local-settings-data", "modified_timestamp")
+            ],
+            State("local-settings-data", 'data')
         )
-        def update_classes_on_model_change(model_value):
-            return self.monitoring_data.classes_map_by_model_id[model_value]
-        
+        def update_classes_on_model_change(model_id, ts, local_data):
+            
+            # Trigger on page load.
+            if (ctx.triggered_id == "local-settings-data"):
+                local_data = local_data or {}
+                self.settings_data.set_serialized_data(local_data)
 
+            # Return on page load or model change.
+            return self.monitoring_data.get_class_by_model(int(model_id))
+        
+        
+        # On download, retrieve all data into a dataframe and export to csv.
         @self.app.callback(
             [
                 Output("warning-toast", "is_open"),
                 Output("download-dataframe-csv", "data"),
                 Output("loading-output", "fullscreen"),
+                Output("temp-to-remove-file", "data"),
             ],
             Input("btn-dl", "n_clicks"), 
             [
@@ -172,10 +197,26 @@ class ZenodoMonitoringExporter:
             prevent_initial_call=True,
         )
         def generate_csv(n_clicks, geo_json, model_id, class_ids, date_range, frame_select, platform_type, type_pred_select):
-            
             df_data = self.monitoring_data.build_dataframe_for_csv(geo_json, model_id, class_ids, date_range, frame_select, platform_type, type_pred_select)
+            
             if len(df_data) == 0:
                 # Close spinner and show a Toast.
-                return True, None, False
-
-            return False, dcc.send_data_frame(df_data.to_csv, index=False, filename="zenodo_monitoring_data.csv"), False
+                return True, None, False, None
+            
+            path_to_csv = Path(f'{datetime.now().strftime("%y%m%d_%H%M%S")}_zenodo_monitoring_data.csv')
+            
+            df_data.write_csv(separator=",", file=path_to_csv)
+            return False, dcc.send_file(path_to_csv), False, str(path_to_csv)
+        
+        # Remove csv file save localy.
+        @self.app.callback(
+            Input("temp-to-remove-file", "modified_timestamp"),
+            State("temp-to-remove-file", "data"),
+            prevent_initial_call=True,
+        )
+        def remove_temp_file(ts, tmp_file):
+            if tmp_file == None: return
+  
+            file = Path(tmp_file)
+            if Path.exists(file) and file.is_file():
+                file.unlink()
