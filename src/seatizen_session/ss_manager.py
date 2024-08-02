@@ -54,7 +54,7 @@ class SessionManager:
         return self.move_into_subfolder_if_needed()
         
     
-    def prepare_processed_data(self, processed_folder: list, needFrames=False) -> None:
+    def prepare_processed_data(self, processed_folder: list, needFrames=False, with_file_at_root_folder=False) -> None:
         """ Zip all processed data in tmp folder. """
         self.cleanup()
         print("-- Prepare processed data... ")
@@ -65,10 +65,26 @@ class SessionManager:
         if needFrames:
             self.__zip_processed_frames()
 
-        for file in self.session_path.iterdir():
-            if file.is_file():
-                shutil.copy(file, Path(self.temp_folder, file.name))
+        # Copy all file in root session like pdf or other file.
+        if with_file_at_root_folder:
+            for file in self.session_path.iterdir(): # TODO better filter ? may be on pdf
+                if file.is_file():
+                    shutil.copy(file, Path(self.temp_folder, file.name))
         
+        # Check if tmp folder is > MAX_SIZE_FILE_DEPOSIT to avoid error
+        size_gb = round(sum([os.stat(file).st_size for file in self.temp_folder.iterdir()]) / BYTE_TO_GIGA_BYTE, 6)
+        if size_gb > MAXIMAL_DEPOSIT_FILE_SIZE:
+            raise NameError("The sum total of processed data file sizes is greater than the Zenodo limit.")
+
+
+    def prepare_custom_data(self, folder_to_zip: list) -> None:
+        """ Zip all processed data in tmp folder. """
+        self.cleanup()
+        print("-- Prepare custom data... ")
+
+        for folder in folder_to_zip:
+            self.__zip_raw(folder)
+
         # Check if tmp folder is > MAX_SIZE_FILE_DEPOSIT to avoid error
         size_gb = round(sum([os.stat(file).st_size for file in self.temp_folder.iterdir()]) / BYTE_TO_GIGA_BYTE, 6)
         if size_gb > MAXIMAL_DEPOSIT_FILE_SIZE:

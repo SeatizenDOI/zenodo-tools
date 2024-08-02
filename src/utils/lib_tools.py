@@ -71,6 +71,20 @@ def get_processed_folders_to_upload(opt) -> tuple[list, bool]:
     
     return folder_to_upload, needFrames
 
+def get_custom_folders_to_upload(opt) -> list:
+    """ Parse input for custom folder """
+    if opt.upload_custom == "": return []
+
+    folder_to_upload = []
+    for letter in opt.upload_custom:
+        if letter == "f": folder_to_upload.append("PROCESSED_DATA/FRAMES")
+        if letter == "d": folder_to_upload.append("DCIM")
+        elif letter == "m": folder_to_upload.append("METADATA")
+        elif letter == "g": folder_to_upload.append("GPS")
+        elif letter == "b": folder_to_upload.append("PROCESSED_DATA/BATHY")
+        elif letter == "i": folder_to_upload.append("PROCESSED_DATA/IA")
+        elif letter == "s": folder_to_upload.append("SENSORS")
+
 def get_session_name_doi_from_opt(opt) -> list[tuple[str | None, int | None]]:
     """ Return a list who contains tuple (name, doi)"""
 

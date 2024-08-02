@@ -69,7 +69,7 @@ class SessionMetadata:
 
     def build_for_custom(self) -> dict:
         """ Build for custom deposit. self.metadata_json["description"] value refer to the enum. """
-        if DESCRIPTION_KEY not in self.metadata_json:
+        if DESCRIPTION_KEY not in self.metadata_json or VERSION_KEY not in self.metadata_json:
             raise KeyError("Description is a mandatory for custom upload.")
         
         data = {
@@ -81,8 +81,8 @@ class SessionMetadata:
                 'related_identifiers': [{'identifier': 'urn:'+self.plancha_session.session_name, 'relation': 'isAlternateIdentifier'}] + self.metadata_json[IDENTIFIER_KEY],
                 'language': "eng",
                 'description': self.__get_description_custom(self.metadata_json[DESCRIPTION_KEY]),
-                'access_right': 'open',
-                'version': "RAW_DATA",
+                'access_right': self.metadata_json[ACCESS_RIGHT_KEY],
+                'version': self.metadata_json[VERSION_KEY],
                 'license': self.metadata_json[LICENSE_KEY],
                 'contributors': self.contributors,
                 'notes': self.__get_fundings(),
@@ -264,11 +264,16 @@ class SessionMetadata:
             <br> {self.__get_software()}
         """
     
+    def __get_description_deprecated(self) -> str:
+        return """
+            This version is considered deprecated, please refer to the latest version of this deposit.
+        """
     def __get_description_custom(self, description_value) -> str:
         
         if description_value == 2015:
             return self.__get_description_2015()
-        
+        elif description_value == -1:
+            return self.__get_description_deprecated()
         return ""
 
     def __get_all_contributors(self) -> tuple[list, list]:
