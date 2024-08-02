@@ -229,8 +229,10 @@ class MonitoringData:
             group_predictions = {gp: None for gp in group_class_by_name}
             for group_name in group_class_by_name:
                 predictions = self.prediction_manager.get_predictions_frame_and_class(frame, [cls.id for cls in group_class_by_name.get(group_name, [])])
-                
-                group_predictions[group_name] = int(bool(sum([p.score >= p.ml_class.threshold for p in predictions]))) # TODO Find a method to add score instead of bool
+                if len(predictions) == 0:
+                    group_predictions[group_name] = -1.0
+                elif True or type_pred_select == EnumPred.SCORE.value: # TODO Find a method to add score instead of bool
+                    group_predictions[group_name] = int(bool(sum([p.score >= p.ml_class.threshold for p in predictions]))) 
 
             if len(class_name) != 0 or len(group_class) != 0:
                 data_to_add.append(f"{'https://doi.org/10.5281/zenodo.' if pred_doi != '' else ''}{pred_doi}")

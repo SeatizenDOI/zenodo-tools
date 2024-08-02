@@ -1,3 +1,5 @@
+import math
+import polars as pl
 from pathlib import Path
 from datetime import datetime
 
@@ -8,6 +10,8 @@ from dash import html, dcc, Input, Output, State, ctx
 
 from .zm_monitoring_data import MonitoringData, EnumPred
 from .zm_settings_data import SettingsData
+
+from ..utils.constants import MAX_CSV_FILE_TO_DOWNLOAD
 
 class ZenodoMonitoringExporter:
     def __init__(self, app, settings_data: SettingsData):
@@ -180,7 +184,6 @@ class ZenodoMonitoringExporter:
         @self.app.callback(
             [
                 Output("warning-toast", "is_open"),
-                Output("download-dataframe-csv", "data"),
                 Output("loading-output", "fullscreen"),
                 Output("temp-to-remove-file", "data"),
             ],
@@ -201,22 +204,57 @@ class ZenodoMonitoringExporter:
             
             if len(df_data) == 0:
                 # Close spinner and show a Toast.
-                return True, None, False, None
+                return True, False, None
             
-            path_to_csv = Path(f'{datetime.now().strftime("%y%m%d_%H%M%S")}_zenodo_monitoring_data.csv')
+            list_csv = self.build_list_split_csv(df_data)
             
-            df_data.write_csv(separator=",", file=path_to_csv)
-            return False, dcc.send_file(path_to_csv), False, str(path_to_csv)
+            return False, False, {'files': list_csv, 'index': -1}
         
         # Remove csv file save localy.
         @self.app.callback(
+            Output("download-dataframe-csv", "data"),
+            Output("temp-to-remove-file", "data", allow_duplicate=True),
             Input("temp-to-remove-file", "modified_timestamp"),
             State("temp-to-remove-file", "data"),
             prevent_initial_call=True,
         )
-        def remove_temp_file(ts, tmp_file):
-            if tmp_file == None: return
-  
-            file = Path(tmp_file)
-            if Path.exists(file) and file.is_file():
-                file.unlink()
+        def download_and_remove(ts, list_files_with_index):
+            if list_files_with_index == None: return None, None
+
+            current_index = list_files_with_index['index'] + 1
+            list_files = list_files_with_index['files']
+
+            if current_index != 0:
+                try:
+                    file_to_del = Path(list_files[current_index-1])
+                    file_to_del.unlink()
+                except Exception as e:
+                    print(e)
+            
+            if current_index == len(list_files):
+                return None, None
+            
+            list_files_with_index['index'] = current_index
+            return dcc.send_file(list_files[current_index]), list_files_with_index
+    
+    def build_list_split_csv(self, df_data: pl.DataFrame) -> list[str]:
+
+        # Step 2: Split the DataFrame into chunks
+        def split_dataframe(df, rows_per_file):
+            for i in range(0, len(df), rows_per_file):
+                yield df.slice(i, rows_per_file)
+
+        # Step 1: Calculate approximate number of rows per MAX_CSV_FILE_TO_DOWNLOAD MB file
+        df_size_bytes = df_data.write_csv().encode('utf-8')
+        df_size_mb = len(df_size_bytes) / (1024 * 1024)
+        nb_file = int(math.ceil(df_size_mb / MAX_CSV_FILE_TO_DOWNLOAD))
+        rows_per_file = len(df_data) // nb_file
+        
+        basename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_zenodo_monitoring_data'
+        list_csv = []
+        for i, chunk in enumerate(split_dataframe(df_data, rows_per_file)):
+            csv_name = f"{basename}_{i + 1}.csv"
+            list_csv.append(csv_name)
+            chunk.write_csv(csv_name)
+        
+        return list_csv

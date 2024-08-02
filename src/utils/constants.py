@@ -23,3 +23,6 @@ JACQUES_MODEL_NAME = "jacques-v0.1.0_model-20240513_v20.0"
 # Assuming model will come from huggingface, the next gen platform.
 MULTILABEL_AUTHOR = "lombardata"
 MULTILABEL_MODEL_NAME = "DinoVdeau-large-2024_04_03-with_data_aug_batch-size32_epochs150_freeze" 
+
+# Zenodo monitoring Max csv file size to download.
+MAX_CSV_FILE_TO_DOWNLOAD = 700 # MB
