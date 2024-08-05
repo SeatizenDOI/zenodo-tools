@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument("-up", "--upload-processeddata", default="", help="Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA | Ex: '-up fi' for upload frames and ia ")
     parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session") # ! Caution could be dangerous when we get multiple processed version
     
-    parser.add_argument("-uc", "--upload-custom", action="store_true", help="Upload custom data. Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA, d: DCIM, s: SENSORS")
+    parser.add_argument("-uc", "--upload-custom", default="", help="Upload custom data. Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA, d: DCIM, s: SENSORS")
     parser.add_argument("-umc", "--update-metadata-custom", action="store_true", help="Update custom metadata from a session")
 
     # Optional arguments.

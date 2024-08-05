@@ -21,3 +21,4 @@ dependencies:
     - psutil==6.0.0
     - gunicorn==22.0.0
     - dash_extensions==1.0.18
+    - polars==1.3.0

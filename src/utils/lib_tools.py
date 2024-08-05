@@ -84,6 +84,8 @@ def get_custom_folders_to_upload(opt) -> list:
         elif letter == "b": folder_to_upload.append("PROCESSED_DATA/BATHY")
         elif letter == "i": folder_to_upload.append("PROCESSED_DATA/IA")
         elif letter == "s": folder_to_upload.append("SENSORS")
+    
+    return folder_to_upload
 
 def get_session_name_doi_from_opt(opt) -> list[tuple[str | None, int | None]]:
     """ Return a list who contains tuple (name, doi)"""
