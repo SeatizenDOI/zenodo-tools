@@ -45,7 +45,7 @@ def download_with_token(opt, config_json: dict) -> None:
             
             print(f"Conceptid: {conceptrecid}")
 
-            raw_data_ids, processed_data_ids = zenodoAPI.get_all_version_ids_for_deposit(conceptrecid)
+            raw_data_ids, processed_data_ids, _ = zenodoAPI.get_all_version_ids_for_deposit(conceptrecid)
             
             for id in raw_data_ids if opt.download_rawdata else []:
                 print(f"Working for RAW DATA Version {id}")

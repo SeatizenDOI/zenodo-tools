@@ -1,0 +1,45 @@
+{
+    "_NB": "Underwater / Aerial",
+    "image_type": "",
+    "_NB": "Platform and human readable platform compute from the session name. Add your options, key always in capital",
+    "platform": {
+        "ASV": "Autonomous Surface Vehicle",
+        "UAV": "Unmanned Aerial Vehicle",
+        "SCUBA": "Scuba diving",
+        "MASK": "Mask",
+        "KITE": "Kite surf",
+        "PADDLE": "Paddle"
+    },
+    "project_name": "",
+    "csv_session_name_name_abbr_path": "./metadata/contributors/suivi_session.csv",
+    "csv_contributors_path": "./metadata/contributors/contributors.csv",
+    "related_identifiers": [
+        {
+            "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",
+            "relation": "isMetadataFor",
+            "resource_type": "dataset"
+        }
+    ],
+    "access_right": "restricted",
+    "license": "cc-by-4.0",
+    "keywords": [
+        "Coral Reef",
+        "Coral Reef Habitat",
+        "Citizen Sciences",
+        "Ecology",
+        "Mapping",
+        "Indian Ocean",
+        "Global Coral Reef Monitoring Network",
+        "Artificial Intelligence",
+        "Reef Ecosystem"
+    ],
+    "description": "./metadata/descriptions/description_dataset.txt",
+    "workflow-link": "https://github.com/SeatizenDOI/plancha-workflow/releases/tag/v1.0.3",
+    "inference-link": "https://github.com/SeatizenDOI/plancha-inference/releases/tag/v1.0.0",
+    "zenodo-link": "https://github.com/SeatizenDOI/zenodo-tools",
+    "software-link": "https://github.com/SeatizenDOI",
+    "fundings": [],
+    "communities": [],
+    "version": "1.0.0",
+    "title": "Seatizen Atlas image dataset"
+}

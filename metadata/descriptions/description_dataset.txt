@@ -1,0 +1,178 @@
+<h1>Seatizen Atlas Dataset</h1>
+
+<p>This repository contains the resources and tools for accessing and utilizing the annotated images within the Seatizen Atlas dataset, as described in the paper <em>"Seatizen Atlas: a collaborative dataset of underwater and aerial marine imagery"</em>.</p>
+
+<h2>Download the Dataset</h2>
+
+<p>To access the annotated images from the Seatizen Atlas dataset, please visit the <a href="https://zenodo.org/record/11125848">Zenodo repository</a> and follow the download instructions provided.</p>
+
+<h2>Scientific Publication</h2>
+
+<p>For detailed information about the dataset and experimental results, please refer to the <a href="https://github.com/SeatizenDOI">Data paper</a>. If you use this dataset in your research, kindly cite the paper:</p>
+
+<pre>
+@article{seatizen-atlas,
+author = {Matteo Contini and Victor Illien and Mohan Julien and Mervyn Ravitchandirane and Victor Russias and others},
+title = {Seatizen Atlas: a collaborative dataset of underwater and aerial marine imagery},
+journal = {Scientific Data},
+year = {2024},
+}
+</pre>
+
+<h2>Overview</h2>
+
+<p>The Seatizen Atlas dataset includes 14,492 multilabel and 1,200 instance segmentation annotated images. These images are useful for training and evaluating AI models for marine biodiversity research. The annotations follow standards from the Global Coral Reef Monitoring Network (GCRMN).</p>
+
+<h3>Annotation Details</h3>
+
+<ul>
+    <li><strong>Annotation Types</strong>:</li>
+    <li><strong>Multilabel Convention</strong>: Identifies all observed classes in an image.</li>
+    <li><strong>Instance Segmentation</strong>: Highlights contours of each instance for each class.</li>
+</ul>
+
+<h2>List of Classes</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Algae</th>
+            <th>Coral</th>
+            <th>Other Categories</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Algae Assembly</td>
+            <td>Acropore Branched</td>
+            <td>Syringodium Isoetifolium</td>
+        </tr>
+        <tr>
+            <td>Algae Drawn Up</td>
+            <td>Acropore Digitised</td>
+            <td>Thalassodendron Ciliatum</td>
+        </tr>
+        <tr>
+            <td>Algae Limestone</td>
+            <td>Acropore Submassive</td>
+            <td><strong>Habitat</strong></td>
+        </tr>
+        <tr>
+            <td>Algae Sodding</td>
+            <td>Acropore Tabular</td>
+            <td>Rock</td>
+        </tr>
+        <tr>
+            <td><strong>Seagrass</strong></td>
+            <td>Bleached Coral</td>
+            <td>Rubble</td>
+        </tr>
+        <tr>
+            <td>Syringodium Isoetifolium</td>
+            <td>Dead Coral</td>
+            <td>Sand</td>
+        </tr>
+        <tr>
+            <td>Thalassodendron Ciliatum</td>
+            <td>Gorgon</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><strong>Habitat</strong></td>
+            <td>Living Coral</td>
+            <td><strong>Other Organisms</strong></td>
+        </tr>
+        <tr>
+            <td>Rock</td>
+            <td>Millepore</td>
+            <td>Acanthasters</td>
+        </tr>
+        <tr>
+            <td>Rubble</td>
+            <td>No Acropore Encrusting</td>
+            <td>Anemone</td>
+        </tr>
+        <tr>
+            <td>Sand</td>
+            <td>No Acropore Foliaceous</td>
+            <td>Ascidia</td>
+        </tr>
+        <tr>
+            <td><strong>Other Organisms</strong></td>
+            <td>No Acropore Massive</td>
+            <td>Clam</td>
+        </tr>
+        <tr>
+            <td>Acanthasters</td>
+            <td>No Acropore Solitary</td>
+            <td>Fish</td>
+        </tr>
+        <tr>
+            <td>Anemone</td>
+            <td>No Acropore Submassive</td>
+            <td>Other Starfish</td>
+        </tr>
+        <tr>
+            <td>Ascidia</td>
+            <td></td>
+            <td>Sea Cucumber</td>
+        </tr>
+        <tr>
+            <td>Clam</td>
+            <td><strong>Custom Classes</strong></td>
+            <td>Sea Urchins</td>
+        </tr>
+        <tr>
+            <td>Fish</td>
+            <td>Blurred</td>
+            <td>Sponge</td>
+        </tr>
+        <tr>
+            <td>Other Starfish</td>
+            <td>Homo Sapiens</td>
+            <td>Turtle</td>
+        </tr>
+        <tr>
+            <td>Sea Cucumber</td>
+            <td>Human Object</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Sea Urchins</td>
+            <td>Trample</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Sponge</td>
+            <td>Useless</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Turtle</td>
+            <td>Waste</td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+
+<p>These classes reflect the biodiversity and variety of habitats captured in the Seatizen Atlas dataset, providing valuable resources for training AI models in marine biodiversity research.</p>
+
+<h2>Usage Notes</h2>
+
+<p>The annotated images are available for non-commercial use. Users are requested to cite the related publication in any resulting works. A GitHub repository has been set up to facilitate data reuse and sharing: <a href="https://github.com/SeatizenDOI">GitHub Repository</a>.</p>
+
+<h2>Code Availability</h2>
+
+<p>All related codes for data processing, downloading, and AI model training can be found in the following GitHub repositories:</p>
+
+<ul>
+    <li><a href="https://github.com/SeatizenDOI/plancha-workflow">Plancha Workflow</a></li>
+    <li><a href="https://github.com/SeatizenDOI/zenodo-tools">Zenodo Tools</a></li>
+    <li><a href="https://github.com/SeatizenDOI/DinoVdeau">DinoVdeau Model</a></li>
+</ul>
+
+<h2>Acknowledgements</h2>
+
+<p>This dataset and associated research have been supported by several organizations, including the Seychelles Islands Foundation, Réserve Naturelle Marine de la Réunion, and Monaco Explorations, among others.</p>
+
+<p>For any questions or collaboration inquiries, please contact <a href="mailto:seatizen.ifremer@gmail.com">seatizen.ifremer@gmail.com</a>.</p>

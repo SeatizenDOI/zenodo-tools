@@ -74,7 +74,7 @@ class SessionMetadata:
         
         data = {
             'metadata': {
-                'title': self.__build_title(),
+                'title': self.__build_title() if TITLE_KEY not in self.metadata_json else self.metadata_json[TITLE_KEY],
                 'upload_type': 'dataset',
                 'keywords': self.__build_keywords(),
                 'creators': self.creators,
@@ -112,12 +112,14 @@ class SessionMetadata:
 
 
     def __build_keywords(self) -> list:
-        hp = [self.metadata_json[PLATFORM_KEY][self.plancha_session.platform]] if self.plancha_session.platform in self.metadata_json[PLATFORM_KEY] else []
-        keywords = self.metadata_json[KEYWORDS_KEY] + [
-            self.plancha_session.country, 
-            self.metadata_json[PROJECT_KEY],
-            self.plancha_session.platform
-        ] + hp
+        keywords = self.metadata_json[KEYWORDS_KEY]
+        if self.plancha_session.country != None: # Don't add calculate keyword if country is None. Something bad occurs.
+            hp = [self.metadata_json[PLATFORM_KEY][self.plancha_session.platform]] if self.plancha_session.platform in self.metadata_json[PLATFORM_KEY] else []
+            keywords +=  [
+                self.plancha_session.country, 
+                self.metadata_json[PROJECT_KEY],
+                self.plancha_session.platform
+            ] + hp
         return sorted(keywords)
 
 
@@ -269,7 +271,16 @@ class SessionMetadata:
             This version is considered deprecated, please refer to the latest version of this deposit.
         """
     def __get_description_custom(self, description_value) -> str:
-        
+        if isinstance(description_value, str):
+            path_description = Path(description_value)
+            if not Path.exists(path_description) or not path_description.is_file():
+                return ""
+            
+            data = ""
+            with open(path_description, "r") as f:
+                data = "".join(f.readlines()).replace("\n", "")
+            return data
+
         if description_value == 2015:
             return self.__get_description_2015()
         elif description_value == -1:

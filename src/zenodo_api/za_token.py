@@ -293,13 +293,13 @@ class ZenodoAPI:
             self.deposit_id = deposits[0]["id"]
 
 
-    def get_all_version_ids_for_deposit(self, conceptrecid: int) -> tuple[list, list]:
+    def get_all_version_ids_for_deposit(self, conceptrecid: int, otherVersion: bool=False) -> tuple[list, list, list]:
         """ Return a list of ids for raw data version and a list of id for processed data version for a specific session"""
         r = requests.get(self.ZENODO_LINK, params={'access_token': self.ACCESS_TOKEN, 'size': NB_VERSION_TO_FETCH, "all_versions": True, 'q': f"conceptrecid:{conceptrecid}"})
         if len(r.json()) == 0:
             raise NameError("No concept id found")
 
-        raw_data_ids, processed_data_ids = [], []
+        raw_data_ids, processed_data_ids, other_version_ids = [], [], []
         for deposit in r.json():
             version = deposit["metadata"]["version"].replace(" ", "_")
             if "RAW_DATA" in version:
@@ -307,8 +307,9 @@ class ZenodoAPI:
             elif "PROCESSED_DATA" in version:
                 processed_data_ids.append(deposit["id"])
             else:
+                other_version_ids.append(deposit["id"])
                 print(f"No match for version {version}")
-        return raw_data_ids, processed_data_ids
+        return raw_data_ids, processed_data_ids, other_version_ids
 
 
     def get_conceptrecid_from_idOrConceptrecid(self, idOrConceptrecid: int) -> int | None:
