@@ -1,15 +1,18 @@
 import enum
-import pandas as pd
+import calendar
+import polars as pl
 from dash import dcc
+from datetime import datetime
 
 import shapely
 from shapely import Polygon, Point
 
 from src.models.deposit_model import DepositDAO
-from src.models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO
+from src.models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO, MultilabelClassDTO
 from src.models.frame_model import FrameDAO
 from src.models.ml_predictions_model import MultilabelPredictionDAO
 from src.models.statistic_model import Benchmark
+from .zm_settings_data import SettingsData
 
 class EnumPred(enum.Enum):
     SCORE = "Score"
@@ -17,13 +20,13 @@ class EnumPred(enum.Enum):
 
 class MonitoringData:
     
-    def __init__(self) -> None:
+    def __init__(self, settings_data: SettingsData) -> None:
         self.min_date, self.max_date = 100000, 0
         self.classes_map_by_model_id = {}
         self.model_dash_format = []
         self.platform_type = []
 
-
+        self.settings_data = settings_data
         self.deposit_manager = DepositDAO()
         self.ml_model_manager = MultilabelModelDAO()
         self.ml_classes_manager = MultilabelClassDAO()
@@ -53,7 +56,7 @@ class MonitoringData:
 
         return dcc.RangeSlider(
             id = "date-picker", 
-            min = 0, max = len(years_month), 
+            min = 0, max = len(years_month) - 1, 
             step = None, 
             marks = years_month, 
             allowCross = False,
@@ -64,12 +67,29 @@ class MonitoringData:
             value = [0, (self.max_date-self.min_date+1) * 12 - 1])
     
 
-    def get_footprint_geojson(self) -> dict:
+    def get_footprint_geojson(self, platform_to_include = [], date_interval = []) -> dict:
         """ Get the footprint for each session. """
+        # Extract date before continue
+        d_start, d_end = None, None
+        if len(date_interval):
+            parsed_date = self.parse_date_interval(date_interval)
+            d_start = datetime.strptime(parsed_date[0], "%Y-%m-%d")
+            d_end = datetime.strptime(parsed_date[1], "%Y-%m-%d")
+
+
         features = []
         for deposit in self.deposit_manager.deposits:
+            
             if deposit.footprint == None: continue
             
+            # Filter by platform.
+            if len(platform_to_include) > 0 and deposit.platform not in platform_to_include: continue
+            
+            # Filter by date
+            if d_start != None and d_end != None:
+                d_compare = datetime.strptime(deposit.session_date, "%Y-%m-%d")
+                if d_compare < d_start or d_compare > d_end: continue
+
             for geom in deposit.footprint.geoms:
                 # Keep only polygon.
                 if not isinstance(geom, Polygon): continue
@@ -77,7 +97,8 @@ class MonitoringData:
                 geojson_polygon = shapely.geometry.mapping(geom)
                 features.append({
                     "type": "Feature",
-                    "geometry": geojson_polygon,           
+                    "geometry": geojson_polygon,
+                    "platform": deposit.platform      
                 })
 
         geojson_feature_collection = {
@@ -115,10 +136,21 @@ class MonitoringData:
 
         # Platform type.
         self.platform_type = list(set([deposit.platform for deposit in self.deposit_manager.deposits]))
+    
+    def get_class_by_model(self, model_id: int):
+        # Classic class from db.
+        classes_with_model = self.classes_map_by_model_id[model_id] if model_id in self.classes_map_by_model_id else []
+        
+        # Custom group.
+        for group_name, model_group_id in self.settings_data.get_group():
+            if model_group_id != model_id: continue
+            classes_with_model = [{'label': group_name, 'value': group_name}] + classes_with_model
+
+        return classes_with_model
 
 
     def parse_date_interval(self, date_range):
-        """ Parse date interval from user input. Retrieve a list of ["2023-12", "2024-11"]"""
+        """ Parse date interval from user input. Retrieve a list of ["2023-12-01", "2024-11-30"]"""
         min_user, max_user = date_range
 
         min_user_year = min_user // 12 + self.min_date
@@ -126,26 +158,35 @@ class MonitoringData:
 
         max_user_year = max_user // 12 + self.min_date
         max_user_month = max_user % 12 + 1 
+        max_user_day = calendar.monthrange(max_user_year, max_user_month)[1]
 
-        return [f"{min_user_year}-{str(min_user_month).rjust(2,'0')}", f"{max_user_year}-{str(max_user_month).rjust(2,'0')}"]
+        return [
+            f"{min_user_year}-{str(min_user_month).rjust(2,'0')}-01", 
+            f"{max_user_year}-{str(max_user_month).rjust(2,'0')}-{max_user_day}"
+        ]
 
 
-    def build_dataframe_for_csv(self, geo_json, model_id, class_ids, date_range, frame_metadata_header, platform_type, type_pred_select) -> pd.DataFrame:
+    def build_dataframe_for_csv(self, geo_json, model_id, class_to_retrieve, date_range, frame_metadata_header, platform_type, type_pred_select) -> pl.DataFrame:
         """ Parse all data and request database to build dataframe. """
         # Internal statistic.
         benchmarck = Benchmark()
         benchmarck.start()
 
-        # Deal with list.
-        if isinstance(class_ids, int):
-            class_ids = [class_ids]
+        # Deal with list. We can have class id or Group name.
+        if isinstance(class_to_retrieve, int) or isinstance(class_to_retrieve, str):
+            class_to_retrieve = [class_to_retrieve]
+
+        class_ids = [id for id in class_to_retrieve if isinstance(id, int)]
+        group_class = [name for name in class_to_retrieve if isinstance(name, str)]
+
+        # For each group_class, we need to get ml_class object
+        group_class_by_name: dict[str, list[MultilabelClassDTO]] = {}
+        for group_name in group_class:
+            group_class_by_name[group_name] = [self.ml_classes_manager.get_class_by_id(id) for id in self.settings_data.group_name_and_ids[(group_name, model_id)]]
 
         # Get all metadata if not selected.
         if not frame_metadata_header: 
             frame_metadata_header = self.frame_manager.frames_header
-        
-        # Set prediction type.
-        pred_select = EnumPred.SCORE.value if len(type_pred_select) != 1 else type_pred_select[0]
 
         # Parse and fetch all basics information.
         list_poly = self.extract_polygons(geo_json)
@@ -157,15 +198,18 @@ class MonitoringData:
         # Get frames base on filter.
         frames = self.frame_manager.get_frame_by_date_type_position(list_poly, date_range, platform_type)
         
-        # Init dataframe value.
-        df_header = ["FileName"] + frame_metadata_header + class_name
+        # Init dataframe header. Force header type due to polars library.
+        df_header = ["FileName"] + frame_metadata_header
+        if len(class_name) > 0 or len(group_class) > 0:
+            df_header += ["pred_doi"] + group_class + class_name
+        
         data = []
-
         for frame in frames:
+            data_to_add = [frame.filename]
 
-            frame_meta = []
+            # Add frame metadata
             for fs in frame_metadata_header:
-                frame_meta.append(self.frame_manager.match_frame_header_and_attribut(fs, frame))
+                data_to_add.append(self.frame_manager.match_frame_header_and_attribut(fs, frame))
 
             predictions = []
             if -1 not in class_ids:
@@ -175,15 +219,31 @@ class MonitoringData:
 
             # Get predictions for each class in good order.
             predictions_to_add = {cls_name: None for cls_name in class_name}
-            
+            pred_doi = ""
             for pred in predictions:
+                pred_doi = pred.version.doi
                 if pred.ml_class.name in predictions_to_add:
-                    predictions_to_add[pred.ml_class.name] = pred.score if pred_select == EnumPred.SCORE.value else int(pred.score >= pred.ml_class.threshold)
+                    predictions_to_add[pred.ml_class.name] = pred.score if type_pred_select == EnumPred.SCORE.value else int(pred.score >= pred.ml_class.threshold)
             
-            data.append([frame.filename] + frame_meta + [s if s != None else -1 for s in predictions_to_add.values()])
-        
+            # For each group class, we try to get predictions 
+            group_predictions = {gp: None for gp in group_class_by_name}
+            for group_name in group_class_by_name:
+                predictions = self.prediction_manager.get_predictions_frame_and_class(frame, [cls.id for cls in group_class_by_name.get(group_name, [])])
+                if len(predictions) == 0:
+                    group_predictions[group_name] = -1.0
+                elif True or type_pred_select == EnumPred.SCORE.value: # TODO Find a method to add score instead of bool
+                    group_predictions[group_name] = int(bool(sum([p.score >= p.ml_class.threshold for p in predictions]))) 
 
-        df_data = pd.DataFrame(data, columns=df_header)
+            if len(class_name) != 0 or len(group_class) != 0:
+                data_to_add.append(f"{'https://doi.org/10.5281/zenodo.' if pred_doi != '' else ''}{pred_doi}")
+             
+            data.append(
+                data_to_add + 
+                [s if s != None else -1.0 for s in group_predictions.values()] + 
+                [s if s != None else -1.0 for s in predictions_to_add.values()]
+            )
+        
+        df_data = pl.DataFrame(data, schema=df_header, schema_overrides=self.frame_manager.typed_frames_header, orient="row")
 
         benchmarck.stop_and_show("Time to prepare, request and build dataframe")
         return df_data

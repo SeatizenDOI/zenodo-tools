@@ -11,6 +11,10 @@ class ZenodoMonitoringStatistic:
         self.statistic_data = StatisticData()
 
         self.statistic_manager = StatisticSQLDAO()
+
+        self.fig_plafform_by_session_chart = self.statistic_data.get_platform_by_session_chart()
+        self.fig_plafform_by_frames_chart = self.statistic_data.get_platform_by_frames_chart()
+
     
     def create_layout(self):
         return dbc.Spinner(html.Div([
@@ -20,18 +24,19 @@ class ZenodoMonitoringStatistic:
                         # Platform by session name.
                         dcc.Graph(
                             id="platform-session-name-type",
-                            figure=self.statistic_data.get_platform_by_session_chart()
+                            figure=self.fig_plafform_by_session_chart
                         ),
                     ]),
                     dbc.Col([
                         # Platform by frames.
                         dcc.Graph(
                             id="platform-frame-count-type",
-                            figure=self.statistic_data.get_platform_by_frames_chart()
+                            figure=self.fig_plafform_by_frames_chart
                         ),
                     ])
                 ]),
                 dbc.Row([
+                    # Table of statistic data.
                     dbc.Col([
                         html.H4("Global statistics about all variables"),
                         self.__get_basic_stat(),
@@ -43,6 +48,7 @@ class ZenodoMonitoringStatistic:
         pass
 
     def __get_basic_stat(self):
+        """ Build a table from a list[StatisticSQLDTO] """
         table_header = [
             html.Thead(html.Tr([html.Th("Variable"), html.Th("Count")]))
         ]

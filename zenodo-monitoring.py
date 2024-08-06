@@ -17,4 +17,4 @@ if __name__ == '__main__':
     opt = parse_args()
     my_app = ZenodoMonitoringApp(opt)
 
-    my_app.run()
+    my_app.run(debug=True)

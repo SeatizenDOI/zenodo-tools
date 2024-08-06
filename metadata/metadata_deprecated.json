@@ -1,0 +1,29 @@
+{
+    "_NB": "Underwater / Aerial",
+    "image_type": "Underwater",
+    "_NB": "Platform and human readable platform compute from the session name. Add your options, key always in capital",
+    "platform": {
+        "ASV": "Autonomous Surface Vehicle",
+        "UAV": "Unmanned Aerial Vehicle",
+        "SCUBA": "Scuba diving",
+        "MASK": "Mask",
+        "KITE": "Kite surf",
+        "PADDLE": "Paddle"
+    },
+    "project_name": "Hyscores",
+    "csv_session_name_name_abbr_path": "./metadata/contributors/suivi_session.csv",
+    "csv_contributors_path": "./metadata/contributors/contributors_2015.csv",
+    "related_identifiers": [],
+    "_NB": "open, restricted",
+    "access_right": "restricted",
+    "license": "cc-by-4.0",
+    "keywords": [],
+    "description": -1,
+    "workflow-link": "",
+    "inference-link": "",
+    "zenodo-link": "",
+    "software-link": "",
+    "fundings": [],
+    "communities": [],
+    "version": "DEPRECATED"
+}

@@ -53,7 +53,7 @@ class AtlasImport:
         # Get zip size for frames and predictions.
         folders_to_compare = ["PROCESSED_DATA/IA", "METADATA"]
         session = SessionManager(session_path, TMP_PATH)
-        session.prepare_processed_data(folders_to_compare, needFrames=False)
+        session.prepare_processed_data(folders_to_compare, needFrames=False, with_file_at_root_folder=False)
         filename_with_zipsize = session.get_bit_size_zip_folder()
         session.cleanup()
 

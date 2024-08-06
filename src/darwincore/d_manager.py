@@ -56,7 +56,7 @@ class DarwinCoreManager:
 
         taxon_information_df = self.match_taxa_in_worms_database(scinames)
         print(f"Retrieve information in {datetime.now() - t_start}")
- 
+
         header_data = []
         # Iterate on each session and create an occurence_file for each one.
         for sa in annotationSessions:
@@ -91,13 +91,11 @@ class DarwinCoreManager:
                     eventDate, eventTime = annotation.frame.gps_datetime.split(" ")
                     year, month, day = eventDate.split("-")
 
-                 # Extract species information.
-                scientific_data = {} # TODO optimize
-                for our_label_field_key in classes_taxon_mapping['DARWINCORE_WORMS_FIELDS_MAPPING']:
-                    label_field_key = classes_taxon_mapping['DARWINCORE_WORMS_FIELDS_MAPPING'][our_label_field_key]
-                    label_sciname = classes_taxon_mapping['CLASSES'][label]['taxon_research']
-                    label_field_value = list(taxon_information_df[taxon_information_df['scientificname'] == label_sciname][label_field_key])
-                    scientific_data[our_label_field_key] = label_field_value[0] if label_field_value else ""
+                scientific_data = {}
+                label_sciname = classes_taxon_mapping['CLASSES'][label]['taxon_research']
+                label_data = taxon_information_df[label_sciname] if label_sciname in taxon_information_df else None
+                for our_label_field_key, label_field_key in classes_taxon_mapping['DARWINCORE_WORMS_FIELDS_MAPPING'].items():
+                    scientific_data[our_label_field_key] = label_data[label_field_key] if label_data else ""
                 
                 occurence_data.append({
                     "type": "DCIM",
@@ -197,7 +195,7 @@ class DarwinCoreManager:
             archive.write(self.eml_path, self.eml_path.name)
     
 
-    def match_taxa_in_worms_database(self, taxa_scientific_names: list) -> pd.DataFrame:
+    def match_taxa_in_worms_database(self, taxa_scientific_names: list) -> dict:
         '''Match taxa information in the WORMS database (https://www.marinespecies.org/)
 
         Input:
@@ -215,19 +213,12 @@ class DarwinCoreManager:
 
         array_of_results_array = cl.service.matchAphiaRecordsByNames(scinames, like="true", fuzzy="false", marine_only="false")
 
-        taxa_information = []
-
+        taxa_information = {}
         for results_array in array_of_results_array:
             for aphia_object in results_array:
-                items_value = Client.items(aphia_object)
-                taxa_information.append([value for (key, value) in items_value])
+                items_value = dict(Client.items(aphia_object))
+                if items_value["status"] != "accepted": continue
+                # !FIXME Actually take last occurence of scientific name. Sometimes it's not the best case. (Ex: Vertebrata (algea and fish))
+                taxa_information[items_value["scientificname"]] = items_value
 
-        items_key = Client.items(aphia_object)
-        col_names = [key for (key, value) in items_key]
-
-        taxa_information_df = pd.DataFrame(
-            data = taxa_information,
-            columns = col_names
-        ).drop_duplicates()
-
-        return taxa_information_df
+        return taxa_information

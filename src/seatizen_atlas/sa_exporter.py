@@ -1,4 +1,4 @@
-import pandas as pd
+import polars as pl
 from tqdm import tqdm
 import geopandas as gpd
 from pathlib import Path
@@ -42,8 +42,12 @@ class AtlasExport:
         print(f"\n-- Generate {session_doi_file}")
        
         list_deposit_data = []
-        deposit_header = ["session_name", "place", "date", "have_raw_data", "have_processed_data",
-                           "doi"]
+        deposit_header = {
+            "session_name": pl.String, "place": pl.String, "date": pl.String, 
+            "have_raw_data": pl.UInt8, "have_processed_data": pl.UInt8,
+            "doi": pl.String
+        }
+
         for d in self.deposit_manager.deposits:
             list_deposit_data.append([
                 d.session_name, 
@@ -54,8 +58,8 @@ class AtlasExport:
                 f"https://doi.org/10.5281/zenodo.{d.doi}"
                 ])
                 
-        df_deposits = pd.DataFrame(list_deposit_data, columns=deposit_header)
-        df_deposits.to_csv(session_doi_file, index=False)
+        df_deposits = pl.DataFrame(list_deposit_data, schema=deposit_header, orient="row")
+        df_deposits.write_csv(session_doi_file)
 
 
     def metadata_images_csv(self) -> None:
@@ -64,9 +68,20 @@ class AtlasExport:
         print(f"\n-- Generate {metadata_images_file}")
 
         data = []
-        df_header = "OriginalFileName,FileName,relative_file_path,frames_doi,\
-                     GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,GPSPitch,GPSTrack,\
-                     GPSDatetime,GPSFix".split(',')
+        df_header = {
+            "OriginalFileName": pl.String,
+            "FileName": pl.String,
+            "relative_file_path": pl.String,
+            "frames_doi": pl.String,
+            "GPSLatitude": pl.Float64,
+            "GPSLongitude": pl.Float64,
+            "GPSAltitude": pl.Float64,
+            "GPSRoll": pl.Float64,
+            "GPSPitch": pl.Float64,
+            "GPSTrack": pl.Float64, 
+            "GPSDatetime": pl.String,
+            "GPSFix": pl.Float64
+        }
 
         for frame in tqdm(self.frames_manager.frames):
             data.append([
@@ -88,8 +103,8 @@ class AtlasExport:
             print("[WARNING] No data to export.")
             return
         
-        df_data = pd.DataFrame(data, columns=df_header)
-        df_data.to_csv(metadata_images_file, index=False)
+        df_data = pl.DataFrame(data, schema=df_header, orient="row")
+        df_data.write_csv(metadata_images_file)
 
 
     def metadata_multilabel_predictions_csv(self) -> None:
@@ -99,9 +114,19 @@ class AtlasExport:
         last_model = self.ml_model_manager.last_model
         model_class = self.ml_class_manager.get_all_class_for_ml_model(last_model)
 
-        class_name = [a.name for a in model_class]
-        df_header = "FileName,frames_doi,GPSLatitude,GPSLongitude,GPSAltitude,GPSRoll,\
-                     GPSPitch,GPSTrack,GPSFix,prediction_doi".split(",") + class_name
+        class_name = {a.name: pl.Float64 for a in model_class}
+        df_header = {
+            "FileName": pl.String,
+            "frames_doi": pl.String,
+            "GPSLatitude": pl.Float64,
+            "GPSLongitude": pl.Float64,
+            "GPSAltitude": pl.Float64,
+            "GPSRoll": pl.Float64,
+            "GPSPitch": pl.Float64,
+            "GPSTrack": pl.Float64,
+            "GPSFix": pl.UInt8,
+            "prediction_doi": pl.String
+        } | class_name
         
         data = []
         cpt_predictions_not_found = 0
@@ -140,47 +165,37 @@ class AtlasExport:
         
         print(f"On {len(self.frames_manager.frames)} images, we don't found predictions for {cpt_predictions_not_found} images.")
 
-        df_data = pd.DataFrame(data, columns=df_header)
-        df_data.to_csv(ml_predictions_file, index=False)
+        df_data = pl.DataFrame(data, schema=df_header, orient="row")
+        df_data.write_csv(ml_predictions_file)
 
 
     def metadata_multilabel_annotation_csv(self) -> None:
         metadata_annotation_file = Path(self.seatizen_folder_path, "metadata_multilabel_annotation.csv")
         print(f"\n-- Generate {metadata_annotation_file}")
-        
-        all_labels = ["FileName", "frame_doi", "annotation_date", "relative_file_path"] + \
-                     [l.name for l in self.ml_label_manager.labels]
+
+        all_labels_schema = {"FileName": pl.String, "frame_doi": pl.String, "annotation_date": pl.String, "relative_file_path": pl.String} | \
+                {l.name: pl.Int8 for l in self.ml_label_manager.labels}
 
         data = {}
         for annotation in self.ml_annotation_manager.get_latest_annotations():
-            
             frame_name = annotation.frame.filename
             annotation_date = annotation.ml_annotation_session.annotation_date
+
+            if frame_name not in data:
+                data[frame_name] = {
+                    "FileName": frame_name,
+                    "annotation_date": annotation_date,
+                    "frame_doi": annotation.frame.version.doi,
+                    "relative_file_path": annotation.frame.relative_path
+                } | {l.name: -1.0 for l in self.ml_label_manager.labels}
             
-            data[frame_name] = {
-                "annotation_date": annotation_date,
-                annotation.ml_label.name: str(annotation.value),
-                "frame_doi": annotation.frame.version.doi,
-                "relative_file_path":  annotation.frame.relative_path
-            } 
+            data[frame_name][annotation.ml_label.name] = int(annotation.value)
 
+        # Convert the list of dictionaries to a Polars DataFrame
+        df = pl.DataFrame(list(data.values()), schema=all_labels_schema)
 
-        # Convert the dictionary to a DataFrame
-        df = pd.DataFrame.from_dict(data, orient='index') \
-                         .reset_index() \
-                         .rename(columns={'index': 'FileName'}) \
-                         .fillna("-1")
-
-        # Ensure all target columns are in the DataFrame, fill missing columns with -1
-        for col in all_labels:
-            if col not in df.columns:
-                df[col] = "-1"
-
-        # Reorder the DataFrame to match the target columns
-        df = df[all_labels]
-
-
-        df.to_csv(metadata_annotation_file, index=False)
+        # Write the DataFrame to a CSV file
+        df.write_csv(metadata_annotation_file)
 
 
     def darwincore_annotation_csv(self) -> None:

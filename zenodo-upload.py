@@ -7,7 +7,7 @@ from src.zenodo_api.za_token import ZenodoAPI
 from src.seatizen_session.ss_manager import SessionManager
 from src.seatizen_session.ss_metadata import SessionMetadata
 from src.utils.constants import TMP_PATH, RESTRICTED_FILES
-from src.utils.lib_tools import get_list_sessions, get_processed_folders_to_upload
+from src.utils.lib_tools import get_list_sessions, get_processed_folders_to_upload, get_custom_folders_to_upload
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-upload", description="Workflow to upload raw data and processed data with metadata")
@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument("-up", "--upload-processeddata", default="", help="Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA | Ex: '-up fi' for upload frames and ia ")
     parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session") # ! Caution could be dangerous when we get multiple processed version
     
-    parser.add_argument("-uc", "--upload-custom", action="store_true", help="Upload a custom data from a session") # TODO Explain
+    parser.add_argument("-uc", "--upload-custom", default="", help="Upload custom data. Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA, d: DCIM, s: SENSORS")
     parser.add_argument("-umc", "--update-metadata-custom", action="store_true", help="Update custom metadata from a session")
 
     # Optional arguments.
@@ -100,7 +100,7 @@ def main(opt):
             
             if opt.upload_processeddata:
                 folders, needFrames = get_processed_folders_to_upload(opt)
-                plancha_session.prepare_processed_data(folders, needFrames)
+                plancha_session.prepare_processed_data(folders, needFrames, with_file_at_root_folder=True)
                 processed_metadata = plancha_metadata.build_for_processed_data()
                 zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, RESTRICTED_FILES, dontUploadWhenLastVersionIsProcessedData=True)
                 plancha_session.cleanup()
@@ -129,7 +129,8 @@ def main(opt):
                     zenodoAPI.edit_metadata(processed_metadata)
         
             if opt.upload_custom:
-                plancha_session.prepare_raw_data() # TODO Actually i just need to upload dcim folder. Later, let user choose
+                folders_to_zip = get_custom_folders_to_upload(opt)
+                plancha_session.prepare_custom_data(folders_to_zip)
                 custom_metadata = plancha_metadata.build_for_custom() 
 
                 if zenodoAPI.deposit_id == None:

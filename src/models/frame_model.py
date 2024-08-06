@@ -1,3 +1,4 @@
+import polars as pl
 from datetime import datetime
 from dataclasses import dataclass, field
 
@@ -50,23 +51,36 @@ class FrameDAO(AbstractBaseDAO):
         "GPSFix"
     ]
 
-
     @property
-    def frames(self):
+    def frames(self) -> list[FrameDTO]:
         if len(self.__frames) == 0:
             self.__get_all()
         return self.__frames
 
     @property
+    def typed_frames_header(self) -> dict:
+        return {
+            "GPSLatitude": pl.Float64,
+            "GPSLongitude": pl.Float64,
+            "version_doi": pl.String,
+            "OriginalFileName": pl.String,
+            "relative_file_path": pl.String,
+            "GPSAltitude": pl.Float64,
+            "GPSPitch": pl.Float64,
+            "GPSRoll": pl.Float64,
+            "GPSTrack": pl.Float64,
+            "GPSDatetime": pl.String,
+            "GPSFix": pl.UInt8
+        }
+        
+
+    @property
     def frames_header(self) -> list[str]:
-        frames_header = self.__frame_header.copy()
-        frames_header.remove("id")
-        frames_header.remove("GPSPosition")
-        frames_header.remove("filename")
-        return frames_header + ["GPSLatitude", "GPSLongitude"]
+        return [header for header in self.typed_frames_header]
+    
     
     def match_frame_header_and_attribut(self, fs: str, frame: FrameDTO):
-        if fs == "version_doi": return frame.version.doi
+        if fs == "version_doi": return f"https://doi.org/10.5281/zenodo.{frame.version.doi}"
         elif fs == "OriginalFileName": return frame.original_filename
         elif fs == "relative_file_path": return frame.relative_path
         elif fs == "GPSLongitude": return frame.gps_longitude
@@ -238,7 +252,7 @@ class FrameDAO(AbstractBaseDAO):
                 JOIN version v ON f.version_doi = v.doi
                 JOIN deposit d ON v.deposit_doi = d.doi
             """
-        q_where = f" WHERE strftime('%Y-%m', d.session_date) >= ? AND strftime('%Y-%m', d.session_date) <= ?"
+        q_where = f" WHERE strftime('%Y-%m-%d', d.session_date) >= ? AND strftime('%Y-%m-%d', d.session_date) <= ?"
 
         params = (date_range[0], date_range[1])
 
