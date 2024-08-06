@@ -27,7 +27,7 @@ For detailed information about the dataset and experimental results, please refe
 <h3>Annotation Details</h3>
 
 <ul>
-    <li><strong>Annotation Types</strong>:</li>
+    <li>Annotation Types:</li>
     <li><strong>Multilabel Convention</strong>: Identifies all observed classes in an image.</li>
     <li><strong>Instance Segmentation</strong>: Highlights contours of each instance for each class.</li>
 </ul>
