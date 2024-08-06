@@ -87,18 +87,18 @@ def get_custom_folders_to_upload(opt) -> list:
     
     return folder_to_upload
 
+def clean_doi(doi) -> int | None:
+    # check for doi is not float nan
+    if doi != doi or doi in ["", None, np.nan]: return None
+
+    # In case user take the whole url 
+    if "zenodo." in doi:
+        doi = doi.split("zenodo.")[1]
+    return int(doi)
+
 def get_session_name_doi_from_opt(opt) -> list[tuple[str | None, int | None]]:
     """ Return a list who contains tuple (name, doi)"""
 
-    def clean_doi(doi) -> int | None:
-        # check for doi is not float nan
-        if doi != doi or doi in ["", None, np.nan]: return None
-
-        # In case user take the whole url 
-        if "zenodo." in doi:
-            doi = doi.split("zenodo.")[1]
-        return int(doi)
-    
     def clean_name(name):
         if name in ["", None, np.nan]: return None
         return name.replace("urn:", "")
@@ -122,6 +122,28 @@ def get_session_name_doi_from_opt(opt) -> list[tuple[str | None, int | None]]:
                 list_name_doi.append((name, doi))
 
     return list_name_doi
+
+
+def get_doi_from_custom_frames_csv(opt) -> dict[str, list[str]]:
+    """ Extract doi from custom_frames_csv """
+
+    csv_path = Path(opt.path_custom_frames_csv)
+    if not Path.exists(csv_path) or not csv_path.is_file(): return []
+    
+    df = pd.read_csv(csv_path)
+    if "version_doi" not in df or "relative_file_path" not in df:
+        print("If you want to download specific frames, you will need to have version_doi column and relative_file_path column.")
+        return []
+
+    data = {}
+    for doi_unformatted in  list(set(df["version_doi"].to_list())):
+        doi = clean_doi(doi_unformatted)
+        if doi == None: continue
+
+        frames = df[df["version_doi"] == doi_unformatted]["relative_file_path"].to_list()
+        data[doi] = frames
+    return data
+
 
 def md5(fname: Path) -> str:
     """ Return md5 checksum of a file. """

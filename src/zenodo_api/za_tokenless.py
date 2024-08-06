@@ -79,6 +79,7 @@ def get_version_from_session_name(session_name: str) -> dict:
         return version_json
     
     # Try to acces version. If all is good we have just one version, but if we have more or less than one version, we have an error.
+    # We can have more than one version in deposit but here multiple version is traduct by multiple deposit.
     try:
         list_version = r.json()["hits"]["hits"]
         if len(list_version) > 1:

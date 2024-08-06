@@ -116,7 +116,7 @@ class ZenodoMonitoringExporter:
                     html.H4(children="Select frame metadata."),
                     dcc.Dropdown(
                         self.monitoring_data.frame_manager.frames_header,
-                        value=["GPSLatitude", "GPSLongitude"], # TODO use enum ?
+                        value=["GPSLatitude", "GPSLongitude", "version_doi", "relative_file_path"], # TODO use enum ?
                         multi=True, 
                         placeholder="If not filled, all metadata are selected.", 
                         id='frame_select'
