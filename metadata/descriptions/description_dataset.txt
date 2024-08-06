@@ -4,7 +4,7 @@
 
 <h2>Download the Dataset</h2>
 
-<p>To access the annotated images from the Seatizen Atlas dataset, please visit the <a href="https://zenodo.org/record/11125848">Zenodo repository</a> and follow the download instructions provided.</p>
+<p>This annotated dataset is part of a bigger dataset composed of lebeled and unlabeled images. To access informations about the whole dataset, please visit the <a href="https://zenodo.org/record/11125848">Zenodo repository</a> and follow the download instructions provided.</p>
 
 <h2>Scientific Publication</h2>
 
