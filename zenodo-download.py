@@ -27,6 +27,7 @@ def parse_args():
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
+    parser.add_argument("-ip", "--index_position", default="-1", help="if != -1, take only session at selected index")
 
     return parser.parse_args()
 

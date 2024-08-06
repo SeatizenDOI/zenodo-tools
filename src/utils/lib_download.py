@@ -20,8 +20,12 @@ def download_with_token(opt, config_json: dict) -> None:
     sessions_fail = []
     list_name_doi = get_session_name_doi_from_opt(opt)
     index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_name_doi) else 0
-
-    for i, (session_name, doi) in enumerate(list_name_doi[index_start:]):
+    index_position = int(opt.index_position) if opt.index_position.isnumeric() and \
+                                            int(opt.index_position) > 0 and \
+                                            int(opt.index_position) < len(list_name_doi) else -1
+    selected_name_doi = list_name_doi[index_start:] if index_position == -1 else [list_name_doi[index_position]]
+    
+    for i, (session_name, doi) in enumerate(selected_name_doi):
         try:
             print(f"\n\nWorking with input: session name {session_name} and doi {doi}")
             zenodoAPI, conceptrecid = None, None
@@ -79,8 +83,12 @@ def download_without_token(opt) -> None:
     sessions_fail = []
     list_name_doi = get_session_name_doi_from_opt(opt)
     index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_name_doi) else 0
+    index_position = int(opt.index_position) if opt.index_position.isnumeric() and \
+                                            int(opt.index_position) > 0 and \
+                                            int(opt.index_position) < len(list_name_doi) else -1
+    selected_name_doi = list_name_doi[index_start:] if index_position == -1 else [list_name_doi[index_position]]
 
-    for i, (session_name, doi) in enumerate(list_name_doi[index_start:]):
+    for i, (session_name, doi) in enumerate(selected_name_doi):
         try:
             if doi == None and session_name == None:
                 print("No doi or session_name provide to find session.")
