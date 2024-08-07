@@ -4,11 +4,11 @@
 
 <h2>Download the Dataset</h2>
 
-<p>To access the annotated images from the Seatizen Atlas dataset, please visit the <a href="https://zenodo.org/record/11125848">Zenodo repository</a> and follow the download instructions provided.</p>
+<p>This annotated dataset is part of a bigger dataset composed of lebeled and unlabeled images. To access informations about the whole dataset, please visit the <a href="https://zenodo.org/record/11125848">Zenodo repository</a> and follow the download instructions provided.</p>
 
 <h2>Scientific Publication</h2>
 
-<p>For detailed information about the dataset and experimental results, please refer to the <a href="https://github.com/SeatizenDOI">Data paper</a>. If you use this dataset in your research, kindly cite the paper:</p>
+<p>If you use this dataset in your research, kindly cite the paper:</p>
 
 <pre>
 @article{seatizen-atlas,
@@ -18,6 +18,7 @@ journal = {Scientific Data},
 year = {2024},
 }
 </pre>
+For detailed information about the dataset and experimental results, please refer to the previous paper.
 
 <h2>Overview</h2>
 
@@ -26,7 +27,7 @@ year = {2024},
 <h3>Annotation Details</h3>
 
 <ul>
-    <li><strong>Annotation Types</strong>:</li>
+    <li>Annotation Types:</li>
     <li><strong>Multilabel Convention</strong>: Identifies all observed classes in an image.</li>
     <li><strong>Instance Segmentation</strong>: Highlights contours of each instance for each class.</li>
 </ul>
