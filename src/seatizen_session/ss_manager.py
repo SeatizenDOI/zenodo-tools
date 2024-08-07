@@ -11,7 +11,7 @@ from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
 from scipy.spatial import ConvexHull
-from shapely.geometry import LineString, GeometryCollection, Polygon
+from shapely.geometry import LineString, Polygon
 from .ss_zipper import SessionZipper
 from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE, JACQUES_MODEL_NAME, MULTILABEL_MODEL_NAME
 
@@ -639,17 +639,17 @@ class SessionManager:
         return filename_with_size
 
 
-    def get_footprint(self) -> GeometryCollection | None:
+    def get_footprint(self) -> tuple[Polygon | None, LineString | None]:
         "Return the footprint of the session"
 
         coordinates = self.get_metadata_csv() # With metadata, we get the real footprint of the image acquisition.
         if len(coordinates) == 0 or "GPSLatitude" not in coordinates or "GPSLongitude" not in coordinates: 
             coordinates = self.get_waypoints_file()
-            if len(coordinates) == 0: return
+            if len(coordinates) == 0: return None, None
 
         if round(coordinates["GPSLatitude"].std(), 10) == 0.0 or round(coordinates["GPSLongitude"].std(), 10) == 0.0: 
 
-            return # All coordinates are the same.
+            return None, None # All coordinates are the same.
         
         points = [[lat ,lon] for lat, lon in coordinates[['GPSLongitude', 'GPSLatitude']].values if lat != 0.0 and lon != 0.0] # Remove 0, 0 coordinates
 
@@ -665,5 +665,5 @@ class SessionManager:
         linestring = LineString([[lat ,lon] for i, (lat, lon) in enumerate(coordinates[['GPSLongitude', 'GPSLatitude']].values) if lat != 0.0 and lon != 0.0 and i % 10 != 0])
 
         # Return a collection of Polygon, LineString
-        return GeometryCollection([polygon, linestring])
+        return polygon, linestring
         

@@ -18,8 +18,6 @@ class SQLiteConnector:
         """ Establishes connection with database """
         try:
             self._connection = sqlite3.connect(sqlite_filepath, check_same_thread=False)
-            self._connection.execute('PRAGMA application_id = 0x47504B47;')  # GP = GeoPackage in hex
-            self._connection.execute('PRAGMA user_version = 10300;')  # GeoPackage version 1.3
             self._connection.enable_load_extension(True)
             self._connection.execute('SELECT load_extension("mod_spatialite")')
         except sqlite3.Error:
@@ -88,6 +86,8 @@ class SQLiteConnector:
             sql_script = file.read()
 
         # Exécuter le script SQL
+        self._connection.execute('PRAGMA application_id = 0x47504B47;')  # GP = GeoPackage in hex
+        self._connection.execute('PRAGMA user_version = 10300;')  # GeoPackage version 1.3
         self._connection.executescript(sql_script)
     
     def close(self):

@@ -75,3 +75,4 @@ Zenodo monitoring :
 - Static group class for each user
 - Qgis project for geopackage
 - Statistic after each export
+- Information about split file if to big

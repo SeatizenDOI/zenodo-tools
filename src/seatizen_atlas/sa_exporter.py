@@ -2,13 +2,12 @@ import polars as pl
 from tqdm import tqdm
 import geopandas as gpd
 from pathlib import Path
-from shapely import Polygon, LineString
 
 from ..darwincore.d_manager import DarwinCoreManager
 from ..sql_connector.sc_connector import SQLiteConnector
 
 from ..models.frame_model import FrameDAO
-from ..models.deposit_model import DepositDAO
+from ..models.deposit_model import DepositLinestringDAO, DepositDAO
 from ..models.ml_label_model import MultilabelLabelDAO
 from ..models.ml_predictions_model import MultilabelPredictionDAO
 from ..models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO
@@ -27,6 +26,7 @@ class AtlasExport:
 
         # Manager.
         self.deposit_manager = DepositDAO()
+        self.deposit_linestring_manager = DepositLinestringDAO()
         self.frames_manager = FrameDAO()
         self.ml_model_manager = MultilabelModelDAO()
         self.ml_class_manager = MultilabelClassDAO()
@@ -213,18 +213,17 @@ class AtlasExport:
 
         # Extract geometries and names
         polygons, linestrings, names, platform = [], [], [], []
-        for deposit in self.deposit_manager.deposits:
+        for dl in self.deposit_linestring_manager.deposits_linestring:
             
-            if deposit.footprint == None: continue
+            if dl.footprint_linestring == None or \
+                dl.deposit.footprint == None:
+                continue
             
-            platform.append(deposit.platform)
-            names.append(deposit.session_name)
+            platform.append(dl.deposit.platform)
+            names.append(dl.deposit.session_name)
 
-            for geom in deposit.footprint.geoms:
-                if isinstance(geom, Polygon):
-                    polygons.append(geom)
-                if isinstance(geom, LineString):
-                    linestrings.append(geom)
+            polygons.append(dl.deposit.footprint)
+            linestrings.append(dl.footprint_linestring)
 
         if len(names) == 0:
             print("[WARNING] No session to export in global_map.")

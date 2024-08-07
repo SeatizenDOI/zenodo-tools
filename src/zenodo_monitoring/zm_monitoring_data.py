@@ -90,16 +90,12 @@ class MonitoringData:
                 d_compare = datetime.strptime(deposit.session_date, "%Y-%m-%d")
                 if d_compare < d_start or d_compare > d_end: continue
 
-            for geom in deposit.footprint.geoms:
-                # Keep only polygon.
-                if not isinstance(geom, Polygon): continue
-
-                geojson_polygon = shapely.geometry.mapping(geom)
-                features.append({
-                    "type": "Feature",
-                    "geometry": geojson_polygon,
-                    "platform": deposit.platform      
-                })
+            geojson_polygon = shapely.geometry.mapping(deposit.footprint)
+            features.append({
+                "type": "Feature",
+                "geometry": geojson_polygon,
+                "platform": deposit.platform      
+            })
 
         geojson_feature_collection = {
             "type": "FeatureCollection",

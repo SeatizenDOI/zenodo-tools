@@ -7,7 +7,7 @@ from ..models.base_model import DataStatus
 from ..models.frame_model import FrameDAO, FrameDTO
 from ..models.ml_label_model import MultilabelLabelDAO
 from ..models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO
-from ..models.deposit_model import DepositDAO, VersionDAO, DepositDTO, VersionDTO
+from ..models.deposit_model import DepositDAO, VersionDAO, DepositDTO, VersionDTO, DepositLinestringDAO, DepositLinestringDTO
 from ..models.ml_predictions_model import MultilabelPredictionDAO, MultilabelPredictionDTO
 from ..models.ml_annotation_model import MultilabelAnnotationDAO, MultilabelAnnotationSessionDAO, MultilabelAnnotationSessionDTO, MultilabelAnnotationDTO
 
@@ -31,6 +31,7 @@ class AtlasImport:
 
         # Manager.
         self.deposit_manager = DepositDAO()
+        self.deposit_linestring_manager = DepositLinestringDAO()
         self.version_manager = VersionDAO()
         self.frame_manager = FrameDAO()
         self.prediction_manager = MultilabelPredictionDAO()
@@ -73,14 +74,18 @@ class AtlasImport:
                     filename_with_doi[file["key"]] = version["id"]
         
         # Create or update deposit
+        footprint_polygon, footprint_linestring = session.get_footprint()
         deposit = DepositDTO(doi=versions[0]["conceptrecid"], 
                           session_name=session_path.name, 
-                          footprint=session.get_footprint(), 
+                          footprint=footprint_polygon,
                           have_raw_data=have_raw_data, 
                           have_processed_data=have_processed_data
                         )
         
         self.deposit_manager.insert(deposit)
+
+        deposit_linestring = DepositLinestringDTO(deposit=deposit, footprint_linestring=footprint_linestring)
+        self.deposit_linestring_manager.insert(deposit_linestring)
 
         # Insert versions
         for v in versions:

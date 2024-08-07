@@ -2,7 +2,7 @@ import polars as pl
 from datetime import datetime
 from dataclasses import dataclass, field
 
-from shapely import wkb
+from shapely import wkt
 from shapely.geometry import Point, Polygon
 
 from .base_model import AbstractBaseDAO
@@ -27,7 +27,7 @@ class FrameDTO():
     @property
     def position(self) -> any:
         if self.gps_longitude == None and self.gps_latitude == None: return None
-        return Point(self.gps_longitude, self.gps_latitude).wkb
+        return Point(self.gps_longitude, self.gps_latitude).wkt
 
     @property
     def gps_datetime_convert(self) -> datetime:
@@ -47,7 +47,7 @@ class FrameDAO(AbstractBaseDAO):
     __versionDAO = VersionDAO()
     __frame_header = [
         "id","version_doi","OriginalFileName","filename","relative_file_path",
-        "GPSPosition","GPSAltitude","GPSPitch","GPSRoll","GPSTrack","GPSDatetime",
+        "ST_AsText(GPSPosition)","GPSAltitude","GPSPitch","GPSRoll","GPSTrack","GPSDatetime",
         "GPSFix"
     ]
 
@@ -104,7 +104,7 @@ class FrameDAO(AbstractBaseDAO):
             # Get lat, lon from GPSPosition.
             lat, lon = None, None
             if GPSPosition != None:
-                position = wkb.loads(GPSPosition)
+                position = wkt.loads(GPSPosition)
                 lat = position.y
                 lon = position.x
             
@@ -223,7 +223,7 @@ class FrameDAO(AbstractBaseDAO):
         query = f""" INSERT INTO {self.table_name}
                      (version_doi, filename, OriginalFileName, relative_file_path, GPSPosition,
                       GPSAltitude, GPSPitch, GPSRoll, GPSTrack, GPSDatetime, GPSFix) 
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                     VALUES (?,?,?,?,ST_GeomFromText(?),?,?,?,?,?,?)
                  """
         values = []
         for f in frames:

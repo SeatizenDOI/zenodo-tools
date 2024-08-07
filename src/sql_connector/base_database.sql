@@ -1,7 +1,8 @@
 ------------------------------------
 -- Mandatory table for Geopackage --
 ------------------------------------
--- gpkg_spatial_ref_sys table
+
+-- gpkg_spatial_ref_sys table: Contains all referential
 CREATE TABLE IF NOT EXISTS gpkg_spatial_ref_sys (
     srs_name TEXT NOT NULL,
     srs_id INTEGER NOT NULL PRIMARY KEY,
@@ -30,6 +31,11 @@ CREATE TABLE gpkg_contents (
     srs_id INTEGER,
     CONSTRAINT fk_gc_r_srs_id FOREIGN KEY (srs_id) REFERENCES gpkg_spatial_ref_sys(srs_id)
 );
+INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, description, srs_id, min_x, min_y, max_x, max_y) VALUES 
+('deposit', 'features', 'deposit', 'Table with deposit Polygon as footprint', 4326, 200, 80, -200, -80),
+('deposit_linestring', 'features', 'deposit_linestring', 'Table with deposit linestring as footprint', 4326, 200, 80, -200, -80),
+('frame', 'features', 'frame', 'Table with frame points', 4326, 200, 80, -200, -80);
+
 
 -- gpkg_geometry_columns table
 CREATE TABLE gpkg_geometry_columns (
@@ -45,8 +51,23 @@ CREATE TABLE gpkg_geometry_columns (
 );
 
 INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) VALUES
-('deposit', 'footprint', 'GEOMETRYCOLLECTION', 4326, 0, 0),
+('deposit', 'footprint', 'POLYGON', 4326, 0, 0),
+('deposit_linestring', 'footprint_linestring', 'LINESTRING', 4326, 0, 0),
 ('frame', 'GPSPosition', 'POINT', 4326, 0, 0);
+
+-- gpkg_extensions. Mandatory to use with rtree
+CREATE TABLE gpkg_extensions (
+    table_name TEXT,
+    column_name TEXT,
+    extension_name TEXT NOT NULL,
+    definition TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    CONSTRAINT ge_tce UNIQUE (table_name, column_name, extension_name)
+);
+INSERT INTO gpkg_extensions (table_name, column_name, extension_name, definition, scope) VALUES
+('deposit', 'footprint', 'gpkg_rtree_index', "https://www.geopackage.org/spec140/#extension_rtree", "write-only"),
+('deposit_linestring', 'footprint_linestring', 'gpkg_rtree_index', "https://www.geopackage.org/spec140/#extension_rtree", "write-only"),
+('frame', 'GPSPosition', 'gpkg_rtree_index', "https://www.geopackage.org/spec140/#extension_rtree", "write-only");
 
 ----------------------------------------
 -- Base table for zenodo architecture --
@@ -56,7 +77,7 @@ INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, 
 CREATE TABLE IF NOT EXISTS deposit (
     doi TEXT NOT NULL PRIMARY KEY,
     session_name TEXT NOT NULL,
-    footprint GEOMETRYCOLLECTION,
+    footprint POLYGON,
     have_processed_data INTEGER NOT NULL,
     have_raw_data INTEGER NOT NULL,
     session_date TEXT GENERATED ALWAYS AS (
@@ -86,9 +107,17 @@ CREATE TABLE IF NOT EXISTS deposit (
         ))
     ) VIRTUAL
 );
+CREATE VIRTUAL TABLE rtree_deposit_footprint USING rtree(id, minx, maxx, miny, maxy);
 
-INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES 
-('deposit', 'features', 'deposit', 'Table with deposit Geometry as footprint', 4326);
+
+-- Deposit linestring
+CREATE TABLE IF NOT EXISTS deposit_linestring (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    deposit_doi TEXT NOT NULL,
+    footprint_linestring LINESTRING,
+    CONSTRAINT fk_deposit_deposit_linestring FOREIGN KEY (deposit_doi) REFERENCES deposit(doi)
+);
+CREATE VIRTUAL TABLE rtree_deposit_linestring_footprint_linestring USING rtree(id, minx, maxx, miny, maxy);
 
 
 -- Version table
@@ -114,9 +143,7 @@ CREATE TABLE IF NOT EXISTS frame (
     GPSFix INTEGER,
     CONSTRAINT fk_frame_version FOREIGN KEY (version_doi) REFERENCES version(doi)
 );
-
-INSERT OR IGNORE INTO gpkg_contents (table_name, data_type, identifier, description, srs_id, min_x, min_y, max_x, max_y) VALUES 
-('frame', 'features', 'frame', 'Table with frame points', 4326, -200, -80, 200, 80);
+CREATE VIRTUAL TABLE rtree_frame_GPSPosition USING rtree(id, minx, maxx, miny, maxy);
 
 ------------------------------------
 -- All table for multilabel stuff --
@@ -189,8 +216,341 @@ CREATE INDEX IF NOT EXISTS idx_filename_version_doi ON frame (filename, version_
 
 CREATE INDEX IF NOT EXISTS idx_multilabel_prediction_frame_id_version ON multilabel_prediction (frame_id, version_doi);
 
+----------------------------------------------------------
+-- Trigger to update all footprint size in gpkg_contents --
+----------------------------------------------------------
 
--- FIXED DATA
+/* Trigger to update max footprint of geopackage */
+CREATE TRIGGER gpkg_contents_deposit_footprint_update AFTER INSERT ON deposit
+  WHEN (new.footprint NOT NULL AND NOT ST_IsEmpty(NEW.footprint))
+BEGIN
+  UPDATE gpkg_contents SET
+    min_x = MIN(ST_MinX(NEW.footprint), min_x),
+    max_x = MAX(ST_MaxX(NEW.footprint), max_x),
+    min_y = MIN(ST_MinY(NEW.footprint), min_y),
+    max_y = MAX(ST_MaxY(NEW.footprint), max_y)
+  WHERE table_name = "deposit";
+END;
+
+/* Trigger to update max footprint of geopackage */
+CREATE TRIGGER gpkg_contents_deposit_footprint_linestring_update AFTER INSERT ON deposit_linestring
+  WHEN (new.footprint_linestring NOT NULL AND NOT ST_IsEmpty(NEW.footprint_linestring))
+BEGIN
+  UPDATE gpkg_contents SET
+    min_x = MIN(ST_MinX(NEW.footprint_linestring), min_x),
+    max_x = MAX(ST_MaxX(NEW.footprint_linestring), max_x),
+    min_y = MIN(ST_MinY(NEW.footprint_linestring), min_y),
+    max_y = MAX(ST_MaxY(NEW.footprint_linestring), max_y)
+  WHERE table_name = "deposit_linestring";
+END;
+
+CREATE TRIGGER gpkg_contents_frame_GPSPosition_update AFTER INSERT ON frame
+  WHEN (new.GPSPosition NOT NULL AND NOT ST_IsEmpty(NEW.GPSPosition))
+BEGIN
+  UPDATE gpkg_contents SET
+    min_x = MIN(ST_MinX(NEW.GPSPosition), min_x),
+    max_x = MAX(ST_MaxX(NEW.GPSPosition), max_x),
+    min_y = MIN(ST_MinY(NEW.GPSPosition), min_y),
+    max_y = MAX(ST_MaxY(NEW.GPSPosition), max_y)
+  WHERE table_name = "frame";
+END;
+
+
+-----------------------------------------------------------------
+-- Trigger to update rtree value when manipulating frame table. --
+-----------------------------------------------------------------
+
+/* Conditions: Insertion of non-empty geometry
+   Actions   : Insert record into R-tree */
+CREATE TRIGGER rtree_frame_GPSPosition_insert AFTER INSERT ON frame
+  WHEN (new.GPSPosition NOT NULL AND NOT ST_IsEmpty(NEW.GPSPosition))
+BEGIN
+  INSERT OR REPLACE INTO rtree_frame_GPSPosition VALUES (
+    NEW.id,
+    ST_MinX(NEW.GPSPosition), ST_MaxX(NEW.GPSPosition),
+    ST_MinY(NEW.GPSPosition), ST_MaxY(NEW.GPSPosition)
+  );
+END;
+
+/* rtree_frame_GPSPosition_update1 is deprecated and is replaced by
+    rtree_frame_GPSPosition_update6 and rtree_frame_GPSPosition_update7 */
+
+/* Conditions: Update of geometry column to empty geometry
+               No row ID change
+   Actions   : Remove record from R-tree */
+CREATE TRIGGER rtree_frame_GPSPosition_update2 AFTER UPDATE OF GPSPosition ON frame
+  WHEN OLD.id = NEW.id AND
+       (NEW.GPSPosition ISNULL OR ST_IsEmpty(NEW.GPSPosition))
+BEGIN
+  DELETE FROM rtree_frame_GPSPosition WHERE id = OLD.id;
+END;
+
+/* rtree_frame_GPSPosition_update3 is deprecated and is replaced by
+    rtree_frame_GPSPosition_update5 */
+
+/* Conditions: Update of any column
+               Row ID change
+               Empty geometry
+   Actions   : Remove record from R-tree for old and new id */
+CREATE TRIGGER rtree_frame_GPSPosition_update4 AFTER UPDATE ON frame
+  WHEN OLD.id != NEW.id AND
+       (NEW.GPSPosition ISNULL OR ST_IsEmpty(NEW.GPSPosition))
+BEGIN
+  DELETE FROM rtree_frame_GPSPosition WHERE id IN (OLD.id, NEW.id);
+END;
+
+/* Conditions: Update of any column
+               Row ID change
+               Non-empty geometry
+   Actions   : Remove record from R-tree for old id
+               Insert record into R-tree for new id */
+CREATE TRIGGER rtree_frame_GPSPosition_update5 AFTER UPDATE ON frame
+  WHEN OLD.id != NEW.id AND
+       (NEW.GPSPosition NOTNULL AND NOT ST_IsEmpty(NEW.GPSPosition))
+BEGIN
+  DELETE FROM rtree_frame_GPSPosition WHERE id = OLD.id;
+  INSERT OR REPLACE INTO rtree_frame_GPSPosition VALUES (
+    NEW.id,
+    ST_MinX(NEW.GPSPosition), ST_MaxX(NEW.GPSPosition),
+    ST_MinY(NEW.GPSPosition), ST_MaxY(NEW.GPSPosition)
+  );
+END;
+
+/* Conditions: Update a non-empty geometry with another non-empty geometry
+   Actions   : Replace record from R-tree for id */
+CREATE TRIGGER rtree_frame_GPSPosition_update6 AFTER UPDATE OF GPSPosition ON frame
+  WHEN OLD.id = NEW.id AND
+       (NEW.GPSPosition NOTNULL AND NOT ST_IsEmpty(NEW.GPSPosition)) AND
+       (OLD.GPSPosition NOTNULL AND NOT ST_IsEmpty(OLD.GPSPosition))
+BEGIN
+  UPDATE rtree_frame_GPSPosition SET
+    minx = ST_MinX(NEW.GPSPosition),
+    maxx = ST_MaxX(NEW.GPSPosition),
+    miny = ST_MinY(NEW.GPSPosition),
+    maxy = ST_MaxY(NEW.GPSPosition)
+  WHERE id = NEW.id;
+END;
+
+/* Conditions: Update a null/empty geometry with a non-empty geometry
+   Actions   : Insert record into R-tree for new id */
+CREATE TRIGGER rtree_frame_GPSPosition_update7 AFTER UPDATE OF GPSPosition ON frame
+  WHEN OLD.id = NEW.id AND
+       (NEW.GPSPosition NOTNULL AND NOT ST_IsEmpty(NEW.GPSPosition)) AND
+       (OLD.GPSPosition ISNULL OR ST_IsEmpty(OLD.GPSPosition))
+BEGIN
+  INSERT INTO rtree_frame_GPSPosition VALUES (
+    NEW.id,
+    ST_MinX(NEW.GPSPosition), ST_MaxX(NEW.GPSPosition),
+    ST_MinY(NEW.GPSPosition), ST_MaxY(NEW.GPSPosition)
+  );
+END;
+
+/* Conditions: Row deleted
+   Actions   : Remove record from R-tree for old id */
+CREATE TRIGGER rtree_frame_GPSPosition_delete AFTER DELETE ON frame
+  WHEN old.GPSPosition NOT NULL
+BEGIN
+  DELETE FROM rtree_frame_GPSPosition WHERE id = OLD.id;
+END;
+
+--------------------------------------------------------------------
+-- Trigger to update rtree value when manipulating deposit table. --
+--------------------------------------------------------------------
+
+
+/* Conditions: Insertion of non-empty geometry
+   Actions   : Insert record into R-tree */
+CREATE TRIGGER rtree_deposit_footprint_insert AFTER INSERT ON deposit
+  WHEN (new.footprint NOT NULL AND NOT ST_IsEmpty(NEW.footprint))
+BEGIN
+  INSERT OR REPLACE INTO rtree_deposit_footprint VALUES (
+    NEW.doi,
+    ST_MinX(NEW.footprint), ST_MaxX(NEW.footprint),
+    ST_MinY(NEW.footprint), ST_MaxY(NEW.footprint)
+  );
+END;
+
+/* rtree_deposit_footprint_update1 is deprecated and is replaced by
+    rtree_deposit_footprint_update6 and rtree_deposit_footprint_update7 */
+
+/* Conditions: Update of geometry column to empty geometry
+               No row ID change
+   Actions   : Remove record from R-tree */
+CREATE TRIGGER rtree_deposit_footprint_update2 AFTER UPDATE OF footprint ON deposit
+  WHEN OLD.doi = NEW.doi AND
+       (NEW.footprint ISNULL OR ST_IsEmpty(NEW.footprint))
+BEGIN
+  DELETE FROM rtree_deposit_footprint WHERE id = OLD.doi;
+END;
+
+/* rtree_deposit_footprint_update3 is deprecated and is replaced by
+    rtree_deposit_footprint_update5 */
+
+/* Conditions: Update of any column
+               Row ID change
+               Empty geometry
+   Actions   : Remove record from R-tree for old and new doi */
+CREATE TRIGGER rtree_deposit_footprint_update4 AFTER UPDATE ON deposit
+  WHEN OLD.doi != NEW.doi AND
+       (NEW.footprint ISNULL OR ST_IsEmpty(NEW.footprint))
+BEGIN
+  DELETE FROM rtree_deposit_footprint WHERE id IN (OLD.doi, NEW.doi);
+END;
+
+/* Conditions: Update of any column
+               Row ID change
+               Non-empty geometry
+   Actions   : Remove record from R-tree for old doi
+               Insert record into R-tree for new doi */
+CREATE TRIGGER rtree_deposit_footprint_update5 AFTER UPDATE ON deposit
+  WHEN OLD.doi != NEW.doi AND
+       (NEW.footprint NOTNULL AND NOT ST_IsEmpty(NEW.footprint))
+BEGIN
+  DELETE FROM rtree_deposit_footprint WHERE id = OLD.doi;
+  INSERT OR REPLACE INTO rtree_deposit_footprint VALUES (
+    NEW.doi,
+    ST_MinX(NEW.footprint), ST_MaxX(NEW.footprint),
+    ST_MinY(NEW.footprint), ST_MaxY(NEW.footprint)
+  );
+END;
+
+/* Conditions: Update a non-empty geometry with another non-empty geometry
+   Actions   : Replace record from R-tree for doi */
+CREATE TRIGGER rtree_deposit_footprint_update6 AFTER UPDATE OF footprint ON deposit
+  WHEN OLD.doi = NEW.doi AND
+       (NEW.footprint NOTNULL AND NOT ST_IsEmpty(NEW.footprint)) AND
+       (OLD.footprint NOTNULL AND NOT ST_IsEmpty(OLD.footprint))
+BEGIN
+  UPDATE rtree_deposit_footprint SET
+    minx = ST_MinX(NEW.footprint),
+    maxx = ST_MaxX(NEW.footprint),
+    miny = ST_MinY(NEW.footprint),
+    maxy = ST_MaxY(NEW.footprint)
+  WHERE id = NEW.doi;
+END;
+
+/* Conditions: Update a null/empty geometry with a non-empty geometry
+   Actions   : Insert record into R-tree for new doi */
+CREATE TRIGGER rtree_deposit_footprint_update7 AFTER UPDATE OF footprint ON deposit
+  WHEN OLD.doi = NEW.doi AND
+       (NEW.footprint NOTNULL AND NOT ST_IsEmpty(NEW.footprint)) AND
+       (OLD.footprint ISNULL OR ST_IsEmpty(OLD.footprint))
+BEGIN
+  INSERT INTO rtree_deposit_footprint VALUES (
+    NEW.doi,
+    ST_MinX(NEW.footprint), ST_MaxX(NEW.footprint),
+    ST_MinY(NEW.footprint), ST_MaxY(NEW.footprint)
+  );
+END;
+
+/* Conditions: Row deleted
+   Actions   : Remove record from R-tree for old doi */
+CREATE TRIGGER rtree_deposit_footprint_delete AFTER DELETE ON deposit
+  WHEN old.footprint NOT NULL
+BEGIN
+  DELETE FROM rtree_deposit_footprint WHERE id = OLD.doi;
+END;
+
+-------------------------------------------------------------------------------
+-- Trigger to update rtree value when manipulating deposit_linestring table. --
+-------------------------------------------------------------------------------
+
+/* Conditions: Insertion of non-empty geometry
+   Actions   : Insert record into R-tree */
+CREATE TRIGGER rtree_deposit_linestring_footprint_linestring_insert AFTER INSERT ON deposit_linestring
+  WHEN (new.footprint_linestring NOT NULL AND NOT ST_IsEmpty(NEW.footprint_linestring))
+BEGIN
+  INSERT OR REPLACE INTO rtree_deposit_linestring_footprint_linestring VALUES (
+    NEW.id,
+    ST_MinX(NEW.footprint_linestring), ST_MaxX(NEW.footprint_linestring),
+    ST_MinY(NEW.footprint_linestring), ST_MaxY(NEW.footprint_linestring)
+  );
+END;
+
+/* rtree_deposit_linestring_footprint_linestring_update1 is deprecated and is replaced by
+    rtree_deposit_linestring_footprint_linestring_update6 and rtree_deposit_linestring_footprint_linestring_update7 */
+
+/* Conditions: Update of geometry column to empty geometry
+               No row ID change
+   Actions   : Remove record from R-tree */
+CREATE TRIGGER rtree_deposit_linestring_footprint_linestring_update2 AFTER UPDATE OF footprint_linestring ON deposit_linestring
+  WHEN OLD.id = NEW.id AND
+       (NEW.footprint_linestring ISNULL OR ST_IsEmpty(NEW.footprint_linestring))
+BEGIN
+  DELETE FROM rtree_deposit_linestring_footprint_linestring WHERE id = OLD.id;
+END;
+
+/* rtree_deposit_linestring_footprint_linestring_update3 is deprecated and is replaced by
+    rtree_deposit_linestring_footprint_linestring_update5 */
+
+/* Conditions: Update of any column
+               Row ID change
+               Empty geometry
+   Actions   : Remove record from R-tree for old and new id */
+CREATE TRIGGER rtree_deposit_linestring_footprint_linestring_update4 AFTER UPDATE ON deposit_linestring
+  WHEN OLD.id != NEW.id AND
+       (NEW.footprint_linestring ISNULL OR ST_IsEmpty(NEW.footprint_linestring))
+BEGIN
+  DELETE FROM rtree_deposit_linestring_footprint_linestring WHERE id IN (OLD.id, NEW.id);
+END;
+
+/* Conditions: Update of any column
+               Row ID change
+               Non-empty geometry
+   Actions   : Remove record from R-tree for old id
+               Insert record into R-tree for new id */
+CREATE TRIGGER rtree_deposit_linestring_footprint_linestring_update5 AFTER UPDATE ON deposit_linestring
+  WHEN OLD.id != NEW.id AND
+       (NEW.footprint_linestring NOTNULL AND NOT ST_IsEmpty(NEW.footprint_linestring))
+BEGIN
+  DELETE FROM rtree_deposit_linestring_footprint_linestring WHERE id = OLD.id;
+  INSERT OR REPLACE INTO rtree_deposit_linestring_footprint_linestring VALUES (
+    NEW.id,
+    ST_MinX(NEW.footprint_linestring), ST_MaxX(NEW.footprint_linestring),
+    ST_MinY(NEW.footprint_linestring), ST_MaxY(NEW.footprint_linestring)
+  );
+END;
+
+/* Conditions: Update a non-empty geometry with another non-empty geometry
+   Actions   : Replace record from R-tree for id */
+CREATE TRIGGER rtree_deposit_linestring_footprint_linestring_update6 AFTER UPDATE OF footprint_linestring ON deposit_linestring
+  WHEN OLD.id = NEW.id AND
+       (NEW.footprint_linestring NOTNULL AND NOT ST_IsEmpty(NEW.footprint_linestring)) AND
+       (OLD.footprint_linestring NOTNULL AND NOT ST_IsEmpty(OLD.footprint_linestring))
+BEGIN
+  UPDATE rtree_deposit_linestring_footprint_linestring SET
+    minx = ST_MinX(NEW.footprint_linestring),
+    maxx = ST_MaxX(NEW.footprint_linestring),
+    miny = ST_MinY(NEW.footprint_linestring),
+    maxy = ST_MaxY(NEW.footprint_linestring)
+  WHERE id = NEW.id;
+END;
+
+/* Conditions: Update a null/empty geometry with a non-empty geometry
+   Actions   : Insert record into R-tree for new id */
+CREATE TRIGGER rtree_deposit_linestring_footprint_linestring_update7 AFTER UPDATE OF footprint_linestring ON deposit_linestring
+  WHEN OLD.id = NEW.id AND
+       (NEW.footprint_linestring NOTNULL AND NOT ST_IsEmpty(NEW.footprint_linestring)) AND
+       (OLD.footprint_linestring ISNULL OR ST_IsEmpty(OLD.footprint_linestring))
+BEGIN
+  INSERT INTO rtree_deposit_linestring_footprint_linestring VALUES (
+    NEW.id,
+    ST_MinX(NEW.footprint_linestring), ST_MaxX(NEW.footprint_linestring),
+    ST_MinY(NEW.footprint_linestring), ST_MaxY(NEW.footprint_linestring)
+  );
+END;
+
+/* Conditions: Row deleted
+   Actions   : Remove record from R-tree for old id */
+CREATE TRIGGER rtree_deposit_linestring_footprint_linestring_delete AFTER DELETE ON deposit_linestring
+  WHEN old.footprint_linestring NOT NULL
+BEGIN
+  DELETE FROM rtree_deposit_linestring_footprint_linestring WHERE id = OLD.id;
+END;
+
+--------------------
+-- All fixed data --
+--------------------
 INSERT INTO multilabel_label (name, creation_date, description) VALUES 
 ("Acanthasters", DATE("now"), "Coral-eating starfish (e.g. Acanthaster planci)."),
 ("Acropore_branched", DATE("now"), "With secondary branches (e.g. A. formosa, A. palmata)."),
