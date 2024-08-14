@@ -266,7 +266,7 @@ class FrameDAO(AbstractBaseDAO):
             q_with += "WITH polygons AS ("
             for i, polygon in enumerate(list_poly):
                 q_with += f"""
-                    SELECT ST_PolyFromText(?, 4326) AS geom
+                    SELECT ST_GeomFromText(?, 4326) AS geom
                 """
                 params = (polygon.wkt, ) + params        # Parameters will not be add in the same order but it's not useful.
                 
@@ -279,7 +279,7 @@ class FrameDAO(AbstractBaseDAO):
                             SELECT ST_Union(geom) AS geom FROM polygons
                         )
                         """
-            q_where += " AND ST_GeomFromWKB(f.GPSPosition) NOT NULL AND ST_Contains((SELECT geom FROM combined_polygon), ST_GeomFromWKB(f.GPSPosition)) "
+            q_where += " AND f.GPSPosition NOT NULL AND ST_Contains((SELECT geom FROM combined_polygon), f.GPSPosition) "
         
         query = q_with + q_select + q_from + q_join + q_where
         results = self.sql_connector.execute_query(query, params)

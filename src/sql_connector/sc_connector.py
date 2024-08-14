@@ -20,6 +20,8 @@ class SQLiteConnector:
             self._connection = sqlite3.connect(sqlite_filepath, check_same_thread=False)
             self._connection.enable_load_extension(True)
             self._connection.execute('SELECT load_extension("mod_spatialite")')
+            self._connection.execute('PRAGMA threading_mode = "MULTI-THREAD"')
+
         except sqlite3.Error:
             print(traceback.format_exc())
             print(f"Cannot connect to {sqlite_filepath}")
