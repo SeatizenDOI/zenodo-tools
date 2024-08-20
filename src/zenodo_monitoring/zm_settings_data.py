@@ -29,36 +29,47 @@ class SettingsData:
         return self.classes_map_by_model_id[model_id] if model_id in self.classes_map_by_model_id else []
 
 
-    def add_group(self, group_name, model_id, class_ids) -> None:
-        self.group_name_and_ids[(group_name, model_id)] = class_ids
+    def add_group(self, session_id: str, group_name: str, model_id: int, class_ids: list) -> None:
+        # Ensure session_id in group_name_and_ids
+        if session_id not in self.group_name_and_ids:
+            self.group_name_and_ids[session_id] = {}
+        self.group_name_and_ids[session_id][(group_name, model_id)] = class_ids
 
 
-    def get_group(self) -> dict:
-        return self.group_name_and_ids
+    def get_group(self, session_id: str) -> dict:
+        return self.group_name_and_ids[session_id]
     
     
-    def delete_group(self, group_name, model_id) -> None:
+    def delete_group(self, session_id: str, group_name: str, model_id: int) -> None:
         """ Remove a group_name in group_name_and_ids. """
-        del self.group_name_and_ids[(group_name, model_id)]
+        del self.group_name_and_ids[session_id][(group_name, model_id)]
     
 
-    def serialize_data(self):
+    def serialize_data(self, session_id: str):
         """ Convert key(name, model_id) into name_/\_id. """
         serialize_data = {}
 
-        for name, id in self.group_name_and_ids:
-            serialize_data[f"{name}_/\_{id}"] = self.group_name_and_ids[(name, id)]
+        for name, id in self.group_name_and_ids[session_id]:
+            serialize_data[f"{name}_/\_{id}"] = self.group_name_and_ids[session_id][(name, id)]
         
         return serialize_data
     
-    def set_serialized_data(self, data):
+    def set_serialized_data(self, session_id: str, data: dict):
         """ Unconvert name_/\_id into key(name, model_id) and save it. """
+        # Ensure session_id in group_name_and_ids
+        if session_id not in self.group_name_and_ids:
+            self.group_name_and_ids[session_id] = {}
+
         for serialized_key in data:
             name, id = serialized_key.split("_/\_")
-            self.group_name_and_ids[(name, int(id))] = data[serialized_key]
+            self.group_name_and_ids[session_id][(name, int(id))] = data[serialized_key]
     
-    def set_and_verify_serialize_data(self, data):
+    def set_and_verify_serialize_data(self, session_id: str, data: dict):
         """ Try to unserialize and verify it data is good before to keep it. """
+        
+        # Ensure session_id in group_name_and_ids
+        if session_id not in self.group_name_and_ids:
+            self.group_name_and_ids[session_id] = {}
 
         for serialized_key in data:
             try:
@@ -73,7 +84,7 @@ class SettingsData:
                 continue
             
             # Verify if not exists
-            if (group_name, model_id) in self.group_name_and_ids:
+            if (group_name, model_id) in self.group_name_and_ids[session_id]:
                 print(f"Group name already exists. : {group_name}")
                 continue
             
@@ -90,4 +101,4 @@ class SettingsData:
                 print(e)
                 continue
 
-            self.group_name_and_ids[(group_name, model_id)] = class_ids_to_keep 
+            self.group_name_and_ids[session_id][(group_name, model_id)] = class_ids_to_keep 

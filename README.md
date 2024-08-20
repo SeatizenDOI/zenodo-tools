@@ -67,12 +67,3 @@ Contributions are welcome! To contribute, please follow these steps:
 ## License
 
 This framework is distributed under the wtfpl license. See `LICENSE` for more information.
-
-## TODO
-
-Zenodo monitoring :
-
-- Static group class for each user
-- Qgis project for geopackage
-- Statistic after each export
-- Information about split file if to big

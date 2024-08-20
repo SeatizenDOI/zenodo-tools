@@ -79,7 +79,6 @@ class ZenodoMonitoringExporter:
                 dbc.Col([
                     html.H4(children="Select classes you want to export."),
                     dcc.Dropdown(
-                        self.monitoring_data.get_class_by_model(self.monitoring_data.model_dash_format[0]["value"]),
                         value=-1,
                         id='class_select',
                         multi=True,
@@ -130,8 +129,23 @@ class ZenodoMonitoringExporter:
                 self.monitoring_data.generate_date_slider(),
             ], class_name="p-3"),
             
-            dbc.Button(html.Span(["Download your data  ", html.I(className="fa-solid fa-download")]), id="btn-dl", ),
+            dbc.Button(html.Span([
+                    "Download your data  ", 
+                    html.I(className="fa-solid fa-download"
+                    )]), 
+                id="btn-dl", 
+                title=f"If the size of the csv file is greater than {MAX_CSV_FILE_TO_DOWNLOAD} Mb, it will be divided into smaller files to stay under the limit of {MAX_CSV_FILE_TO_DOWNLOAD} Mb." ),
             dcc.Download(id="download-dataframe-csv"),
+
+            dbc.Modal([
+                dbc.ModalHeader(dbc.ModalTitle("Summary of your export")),
+                dbc.ModalBody(id="statistic-modal-body"),
+                dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="close", className="ms-auto", n_clicks=0
+                    )
+                ),
+            ],id="statistic-modal", is_open=False, scrollable=True),
             
             dbc.Toast(
                 "After applying filters, no data remaining to export.",
@@ -167,17 +181,18 @@ class ZenodoMonitoringExporter:
                 Input('model_select', 'value'),
                 Input("local-settings-data", "modified_timestamp")
             ],
-            State("local-settings-data", 'data')
+            State("local-settings-data", 'data'),
+            State("local-session-id", 'data')
         )
-        def update_classes_on_model_change(model_id, ts, local_data):
+        def update_classes_on_model_change(model_id, ts, local_data, session_id):
             
             # Trigger on page load.
-            if (ctx.triggered_id == "local-settings-data"):
+            if (ctx.triggered_id == "local-settings-data" and session_id != None):
                 local_data = local_data or {}
-                self.settings_data.set_serialized_data(local_data)
+                self.settings_data.set_serialized_data(session_id, local_data)
 
             # Return on page load or model change.
-            return self.monitoring_data.get_class_by_model(int(model_id))
+            return self.monitoring_data.get_class_by_model(int(model_id), session_id)
         
         
         # On download, retrieve all data into a dataframe and export to csv.
@@ -186,6 +201,8 @@ class ZenodoMonitoringExporter:
                 Output("warning-toast", "is_open"),
                 Output("loading-output", "fullscreen"),
                 Output("temp-to-remove-file", "data"),
+                Output("statistic-modal", "is_open", allow_duplicate=True),
+                Output("statistic-modal-body", "children"),
             ],
             Input("btn-dl", "n_clicks"), 
             [
@@ -196,19 +213,21 @@ class ZenodoMonitoringExporter:
                 State("frame_select", "value"),
                 State("platform_select", "value"),
                 State("type_pred_select", "value"),
+                State("local-session-id", "data"),
             ],
             prevent_initial_call=True,
         )
-        def generate_csv(n_clicks, geo_json, model_id, class_ids, date_range, frame_select, platform_type, type_pred_select):
-            df_data = self.monitoring_data.build_dataframe_for_csv(geo_json, model_id, class_ids, date_range, frame_select, platform_type, type_pred_select)
+        def generate_csv(n_clicks, geo_json, model_id, class_ids, date_range, frame_select, platform_type, type_pred_select, session_id):
+            df_data = self.monitoring_data.build_dataframe_for_csv(session_id, geo_json, model_id, class_ids, date_range, frame_select, platform_type, type_pred_select)
             
             if len(df_data) == 0:
                 # Close spinner and show a Toast.
-                return True, False, None
+                return True, False, None, False, ""
             
             list_csv = self.build_list_split_csv(df_data)
+            modal_body_text = self.generate_modal_body_text(df_data)
             
-            return False, False, {'files': list_csv, 'index': -1}
+            return False, False, {'files': list_csv, 'index': -1}, True, modal_body_text
         
         # Remove csv file save localy.
         @self.app.callback(
@@ -236,6 +255,15 @@ class ZenodoMonitoringExporter:
             
             list_files_with_index['index'] = current_index
             return dcc.send_file(list_files[current_index]), list_files_with_index
+
+        @self.app.callback(
+            Output("statistic-modal", "is_open", allow_duplicate=True),
+            Input("close", "n_clicks"),
+            State("statistic-modal", "is_open"),
+            prevent_initial_call=True
+        )
+        def toggle_modal(_, is_open):
+            return not is_open
     
     def build_list_split_csv(self, df_data: pl.DataFrame) -> list[str]:
 
@@ -258,3 +286,14 @@ class ZenodoMonitoringExporter:
             chunk.write_csv(csv_name)
         
         return list_csv
+    
+    def generate_modal_body_text(self, df_data: pl.DataFrame) -> dbc.Row:
+        
+        nb_session = len(df_data["pred_doi"].unique()) if "version_doi" in df_data else "Not compute" 
+        nb_frames = len(df_data)
+        # TODO add more statistics.
+
+        return dbc.Row([
+            html.Span(f"Numbers of sessions: {nb_session}"),
+            html.Span(f"Numbers of frames: {nb_frames}")
+        ])

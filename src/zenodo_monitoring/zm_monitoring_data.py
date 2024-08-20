@@ -133,19 +133,19 @@ class MonitoringData:
         # Platform type.
         self.platform_type = list(set([deposit.platform for deposit in self.deposit_manager.deposits]))
     
-    def get_class_by_model(self, model_id: int):
+    def get_class_by_model(self, model_id: int, session_id: str):
         # Classic class from db.
         classes_with_model = self.classes_map_by_model_id[model_id] if model_id in self.classes_map_by_model_id else []
         
         # Custom group.
-        for group_name, model_group_id in self.settings_data.get_group():
+        for group_name, model_group_id in self.settings_data.get_group(session_id):
             if model_group_id != model_id: continue
             classes_with_model = [{'label': group_name, 'value': group_name}] + classes_with_model
 
         return classes_with_model
 
 
-    def parse_date_interval(self, date_range):
+    def parse_date_interval(self, date_range: tuple[int, int]):
         """ Parse date interval from user input. Retrieve a list of ["2023-12-01", "2024-11-30"]"""
         min_user, max_user = date_range
 
@@ -162,7 +162,7 @@ class MonitoringData:
         ]
 
 
-    def build_dataframe_for_csv(self, geo_json, model_id, class_to_retrieve, date_range, frame_metadata_header, platform_type, type_pred_select) -> pl.DataFrame:
+    def build_dataframe_for_csv(self, session_id, geo_json, model_id, class_to_retrieve, date_range, frame_metadata_header, platform_type, type_pred_select) -> pl.DataFrame:
         """ Parse all data and request database to build dataframe. """
         # Internal statistic.
         benchmarck = Benchmark()
@@ -178,7 +178,7 @@ class MonitoringData:
         # For each group_class, we need to get ml_class object
         group_class_by_name: dict[str, list[MultilabelClassDTO]] = {}
         for group_name in group_class:
-            group_class_by_name[group_name] = [self.ml_classes_manager.get_class_by_id(id) for id in self.settings_data.group_name_and_ids[(group_name, model_id)]]
+            group_class_by_name[group_name] = [self.ml_classes_manager.get_class_by_id(id) for id in self.settings_data.group_name_and_ids[session_id][(group_name, model_id)]]
 
         # Get all metadata if not selected.
         if not frame_metadata_header: 

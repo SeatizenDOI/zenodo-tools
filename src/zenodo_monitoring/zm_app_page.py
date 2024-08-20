@@ -1,6 +1,7 @@
 import dash
+import uuid
 import dash_bootstrap_components as dbc
-from dash import Input, Output, dcc, html
+from dash import Input, Output, dcc, html, State
 
 from src.seatizen_atlas.sa_manager import AtlasManager
 from .zm_exporter_page import ZenodoMonitoringExporter
@@ -30,13 +31,13 @@ class ZenodoMonitoringApp:
 
         # Init app.
         self.app = dash.Dash(
-            __name__, 
+            __name__,
             external_stylesheets=[dbc.themes.SKETCHY, dbc.icons.FONT_AWESOME], 
             assets_folder="../../assets/", 
             suppress_callback_exceptions=True
         )
         self.app.title = "Seatizen monitoring"
-        
+
         # Init database connection.
         atlasManager = AtlasManager({}, opt.path_seatizen_atlas_folder, from_local=opt.use_from_local, force_regenerate=False)
         
@@ -52,6 +53,7 @@ class ZenodoMonitoringApp:
     def create_layout(self):
         """ Creater app layout. """
         sidebar = html.Div([
+            dcc.Store(id='local-session-id', storage_type='local'),
             html.H2("Seatizen Monitoring", className="display-5"),
             html.Hr(),
             html.P(
@@ -101,6 +103,17 @@ class ZenodoMonitoringApp:
                 ],
                 class_name="p-3 bg-light rounded-3",
             )
+
+        @self.app.callback(
+            Output("local-session-id", 'data'),
+            Input("local-session-id", "modified_timestamp"),
+            State("local-session-id", 'data')
+        )
+        def get_or_create_local_session_id(ts, data):
+            # Create uuid to get a session_id by user.
+            if data == None:
+                data = str(uuid.uuid4())
+            return data
 
     def run(self, debug=False):
         """ Launch app."""

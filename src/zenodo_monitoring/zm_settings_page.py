@@ -1,6 +1,6 @@
 import json
 import base64
-from dash import html, dcc, ALL, ctx
+from dash import html, dcc, ALL, ctx, Dash
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
@@ -8,7 +8,7 @@ from .zm_settings_data import SettingsData
 
 
 class ZenodoMonitoringSettings:
-    def __init__(self, app):
+    def __init__(self, app: Dash):
         self.app = app
         self.settings_data = SettingsData()  
     
@@ -111,33 +111,34 @@ class ZenodoMonitoringSettings:
             [
                 State("group_name", "value"), 
                 State("model_select_settings", "value"),
-                State("class_select_settings", "value")
+                State("class_select_settings", "value"),
+                State("local-session-id", "data"),
             ],
             prevent_initial_call=True,
         )
-        def table_trigger_manager(n_1, n_2, group_name, model_id, class_ids):
+        def table_trigger_manager(n_1, n_2, group_name, model_id, class_ids, session_id):
 
             # Work with add button.
             if isinstance(ctx.triggered_id, str) and ctx.triggered_id == "btn-submit":
-
+        
                 # We don't have enough information to create a class.
                 if not class_ids or not group_name or (group_name, model_id) in self.settings_data.group_name_and_ids:
-                    return [True, group_name, class_ids, self.settings_data.serialize_data()]
+                    return [True, group_name, class_ids, self.settings_data.serialize_data(session_id)]
 
                 # Add new group and save into localstorage.
                 group_name_formatted = group_name.replace(" ", "_")
-                self.settings_data.add_group(group_name_formatted, model_id, class_ids)
-                return [False, "", None, self.settings_data.serialize_data()]
+                self.settings_data.add_group(session_id, group_name_formatted, model_id, class_ids)
+                return [False, "", None, self.settings_data.serialize_data(session_id)]
             
             # Work with delete button.
             elif isinstance(ctx.triggered_id, dict) and set(n_1) != {None}:      # We will only click once a time on delete button, so we have always a list of None
                 # Delete and save into local storage.
                 gn_to_del, model_id_to_del = ctx.triggered_id['index'].split("_/\_")
-                self.settings_data.delete_group(gn_to_del, int(model_id_to_del))
-                return [False, group_name, class_ids, self.settings_data.serialize_data()]
+                self.settings_data.delete_group(session_id, gn_to_del, int(model_id_to_del))
+                return [False, group_name, class_ids, self.settings_data.serialize_data(session_id)]
             
             # Default work.
-            return [False, group_name, class_ids, self.settings_data.serialize_data()]
+            return [False, group_name, class_ids, self.settings_data.serialize_data(session_id)]
 
 
         # Trigger when page load or when add data in localstorage.
@@ -145,14 +146,14 @@ class ZenodoMonitoringSettings:
         @self.app.callback(
             Output("row_group_table", "children"),
             Input("local-settings-data", "modified_timestamp"),
-            State("local-settings-data", 'data')
+            State("local-settings-data", 'data'),
+            State("local-session-id", 'data'),
         )
-        def on_data(ts, data):
+        def on_data(ts, data, session_id):
             # Get data from local storage and update settings-data object.
             data = data or {}
-            self.settings_data.set_serialized_data(data)
-
-            return self.generate_table()
+            self.settings_data.set_serialized_data(session_id, data)
+            return self.generate_table(session_id)
         
         
         # Change class options with model.
@@ -169,10 +170,11 @@ class ZenodoMonitoringSettings:
         @self.app.callback(
             Output("dl-export", "data"),
             Input("btn-export", "n_clicks"),
+            State("local-session-id", "data"),
             prevent_initial_call=True,
         )
-        def dl_export_custom_classes(n_clicks):
-            return dict(content=json.dumps(self.settings_data.serialize_data()), filename="custom_class.json")
+        def dl_export_custom_classes(n_clicks, session_id):
+            return dict(content=json.dumps(self.settings_data.serialize_data(session_id)), filename="custom_class.json")
 
 
         # Parse a serialized file from user input.
@@ -184,38 +186,41 @@ class ZenodoMonitoringSettings:
             Input('upload_custom', 'contents'),
             State('upload_custom', 'filename'),
             State('upload_custom', 'last_modified'),
+            State('local-session-id', 'data'),
             prevent_initial_call=True
         )
-        def update_output(list_of_contents, list_of_names, list_of_dates):
+        def update_output(list_of_contents, list_of_names, list_of_dates, session_id):
             if list_of_contents is not None:
                 for c, n, d in zip(list_of_contents, list_of_names, list_of_dates):
-                    self.parse_json_custom_class(c, n, d) 
+                    self.parse_json_custom_class(c, n, d,session_id) 
 
-            return self.settings_data.serialize_data(), None
+            return self.settings_data.serialize_data(session_id), None
 
 
-    def parse_json_custom_class(self, contents, filename, date):
+    def parse_json_custom_class(self, contents, filename, date, session_id):
         print(f"[INFO] Try to import {filename}")
         try:
             content_type, content_string = contents.split(',')
             decoded = base64.b64decode(content_string)
             custom_classes = json.loads(decoded.decode('utf-8'))
-            self.settings_data.set_and_verify_serialize_data(custom_classes)
+            self.settings_data.set_and_verify_serialize_data(session_id, custom_classes)
         except Exception as e:
             print(e)
         
 
-    def generate_table(self):
+    def generate_table(self, session_id):
         """ Generate a table with a delete button. """
-        if self.settings_data.group_name_and_ids == {}:
+        group_name_and_ids = self.settings_data.get_group(session_id)    
+        if group_name_and_ids == {}:
             return []
+    
         title = html.H2("Table of your group.")
-        
         table_header = html.Thead(html.Tr([html.Th("Group name"), html.Th("Class name"), html.Th("Model"), html.Th("")]))
+        
         rows = []
-        for group_name, model_id in self.settings_data.group_name_and_ids:
+        for group_name, model_id in group_name_and_ids:
             # Get class name.
-            classes_ids = self.settings_data.group_name_and_ids.get((group_name, model_id), [])
+            classes_ids = group_name_and_ids.get((group_name, model_id), [])
             classes = [self.settings_data.ml_classes_manager.get_class_by_id(id) for id in classes_ids]
             
             # Model name.
