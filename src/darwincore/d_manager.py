@@ -1,3 +1,4 @@
+import json
 import yaml
 import zipfile
 import pandas as pd
@@ -218,7 +219,9 @@ class DarwinCoreManager:
             for aphia_object in results_array:
                 items_value = dict(Client.items(aphia_object))
                 if items_value["status"] != "accepted": continue
-                # !FIXME Actually take last occurence of scientific name. Sometimes it's not the best case. (Ex: Vertebrata (algea and fish))
+                
+                # !WARNING Assume that the first occurence is the good one else it's not the best case. (Ex: Vertebrata (algea and fish))
+                if items_value["scientificname"] in taxa_information: continue
                 taxa_information[items_value["scientificname"]] = items_value
 
         return taxa_information

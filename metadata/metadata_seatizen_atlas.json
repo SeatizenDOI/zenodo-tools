@@ -37,6 +37,7 @@
     "access_right": "open",
     "_NB": "Work with open, ",
     "license": "cc-by-4.0",
+    "description": "./metadata/descriptions/description_seatizen_atlas.txt",
     "keywords": [
         "Coral Reef",
         "Coral Reef Habitat",
@@ -54,5 +55,5 @@
         "Artificial Intelligence",
         "Reef Ecosystem"
     ],
-    "version": "v0.0.1"
+    "version": "v1.0.0"
 }

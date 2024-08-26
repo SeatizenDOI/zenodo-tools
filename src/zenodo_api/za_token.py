@@ -75,7 +75,7 @@ class ZenodoAPI:
         self.__zenodo_send_metadata(metadata)
         
         # Publish.
-        self.__zenodo_actions_publish()
+        # self.__zenodo_actions_publish()
 
 
     def edit_metadata(self, metadata: dict) -> None:

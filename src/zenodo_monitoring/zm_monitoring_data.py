@@ -227,7 +227,7 @@ class MonitoringData:
                 predictions = self.prediction_manager.get_predictions_frame_and_class(frame, [cls.id for cls in group_class_by_name.get(group_name, [])])
                 if len(predictions) == 0:
                     group_predictions[group_name] = -1.0
-                elif True or type_pred_select == EnumPred.SCORE.value: # TODO Find a method to add score instead of bool
+                else:
                     group_predictions[group_name] = int(bool(sum([p.score >= p.ml_class.threshold for p in predictions]))) 
 
             if len(class_name) != 0 or len(group_class) != 0:

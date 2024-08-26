@@ -81,7 +81,6 @@ class AtlasManager:
         self.exporter.metadata_multilabel_predictions_csv()
         self.exporter.metadata_multilabel_annotation_csv()
         self.exporter.darwincore_annotation_csv()
-        self.exporter.global_map_gpkg()
 
 
     def clean_seatizen_folder(self) -> None:
@@ -128,18 +127,18 @@ class AtlasManager:
 
 
     def publish(self, metadata_json_path) -> None:
-        if self.from_local: 
-            print("Work from local, don't publish data on zenodo.")
-            return
-        elif self.config == {}:
+        """ Publish seatzizen folder content. """
+
+        # ! Cheatsheet command to just publish folder: python zenodo-manager.py -ulo -eno -ne -cp
+        if self.config == {}:
             print("Config file not found. We cannot processed.")
             return
 
         metadata = build_metadata(metadata_json_path)
 
-        zenodoAPI = ZenodoAPI("seatizen-atlas", self.config_json)
+        zenodoAPI = ZenodoAPI("seatizen-atlas", self.config)
 
         # Previous files to not propagate.
-        previous_files = zenodoAPI.list_files()
+        previous_files = [file_dict["filename"] for file_dict in zenodoAPI.list_files()]
 
         zenodoAPI.add_new_version_to_deposit(self.seatizen_folder_path, metadata, restricted_files=previous_files)

@@ -1,0 +1,69 @@
+This deposit offers a comprehensive collection of geospatial and metadata files that constitute the Seatizen Atlas dataset, facilitating the management and analysis of spatial information. 
+The repository includes:
+<br>
+
+<ul>
+    <li> <strong> seatizen_atlas_db.gpkg: </strong> geopackage file that stores extensive geospatial data, allowing for efficient management and analysis of spatial information. </li><br>
+
+    <li> <strong> session_doi.csv: </strong>  a CSV file listing all sessions published on Zenodo. This file contains the following columns: </li> <br>
+    <ul>
+        <li> session_name: identifies the session. </li>
+        <li> session_doi: indicates the URL of the session. </li>
+        <li> place: indicates the location of the session. </li>
+        <li> date: indicates the date of the session. </li>
+        <li> raw_data: indicates whether the session contains raw data or not. </li>
+        <li> processed_data: indicates whether the session contains processed data. </li>
+    </ul>
+    <br>
+
+    <li> metadata_images.csv: a CSV file describing all metadata for each image published in open access. This file contains the following columns: </li> <br>
+    <ul>
+        <li> OriginalFileName: indicates the original name of the photo. </li>
+        <li> FileName: indicates the name of the photo adapted to the naming convention adopted by the Seatizen team (i.e., YYYYMMDD_COUNTRYCODE-optionalplace_device_session-number_originalimagename). </li>
+        <li> relative_file_path: indicates the path of the image in the deposit. </li>
+        <li> frames_doi: indicates the DOI of the version where the image is located. </li>
+        <li> GPSLatitude: indicates the latitude of the image (if available). </li>
+        <li> GPSLongitude: indicates the longitude of the image (if available). </li>
+        <li> GPSAltitude: indicates the depth of the frame (if available). </li>
+        <li> GPSRoll: indicates the roll of the image (if available). </li>
+        <li> GPSPitch: indicates the pitch of the image (if available). </li>
+        <li> GPSTrack: indicates the track of the image (if available). </li>
+        <li> GPSDatetime: indicates when frames was take (if available). </li>
+        <li> GPSFix: indicates GNSS quality levels (if available). </li>
+    </ul>
+    <br>
+
+    <li> <strong> metadata_multilabel_predictions.csv:</strong> a CSV file describing all predictions from last multilabel model with georeferenced data. </li><br>
+    <ul>
+        <li> FileName: indicates the name of the photo adapted to the naming convention adopted by the Seatizen team (i.e., YYYYMMDD_COUNTRYCODE-optionalplace_device_session-number_originalimagename). </li>
+        <li> frames_doi: indicates the DOI of the version where the image is located. </li>
+        <li> GPSLatitude: indicates the latitude of the image (if available). </li>
+        <li> GPSLongitude: indicates the longitude of the image (if available). </li>
+        <li> GPSAltitude: indicates the depth of the frame (if available). </li>
+        <li> GPSRoll: indicates the roll of the image (if available). </li>
+        <li> GPSPitch: indicates the pitch of the image (if available). </li>
+        <li> GPSTrack: indicates the track of the image (if available). </li>
+        <li> GPSFix: indicates GNSS quality levels (if available). </li>
+        <li> prediction_doi: refers to a specific AI model prediction on the current image (if available). </li>
+        <li> A column for each class predicted by the AI model. </li>
+    </ul>
+    <br>
+
+    <li> <strong>metadata_multilabel_annotation.csv: </strong> a CSV file listing the subset of all the images that are annotated, along with their annotations. This file contains the following columns: </li><br>
+    <ul>
+        <li> FileName: indicates the name of the photo. </li>
+        <li> frame_doi: indicates the DOI of the version where the image is located. </li>
+        <li> relative_file_path: indicates the path of the image in the deposit. </li>
+        <li> annotation_date: indicates the date when the image was annotated. </li>
+        <li> A column for each class with values: </li>
+        <ul>
+            <li> 1: if the class is present. </li>
+            <li> 0: if the class is absent. </li>
+            <li> -1: if the class was not annotated. </li>
+        </ul>
+    </ul>
+
+    <li> <strong>seatizen_atlas.qgz: </strong> a qgis project which formats and highlights the geopackage file to facilitate data visualization. </li><br>
+    <li> <strong>darwincore_multilabel_annotations.zip: </strong> a Darwin Core Archive (DwC-A) file listing the subset of all the images that are annotated, along with their annotations. </li><br>
+
+</ul>

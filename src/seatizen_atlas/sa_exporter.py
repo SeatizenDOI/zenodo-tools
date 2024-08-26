@@ -43,20 +43,19 @@ class AtlasExport:
        
         list_deposit_data = []
         deposit_header = {
-            "session_name": pl.String, "place": pl.String, "date": pl.String, 
-            "have_raw_data": pl.UInt8, "have_processed_data": pl.UInt8,
-            "doi": pl.String
+            "session_name": pl.String, "session_doi": pl.String, "place": pl.String, 
+            "date": pl.String, "raw_data": pl.UInt8, "processed_data": pl.UInt8
         }
 
         for d in self.deposit_manager.deposits:
             list_deposit_data.append([
                 d.session_name, 
+                f"https://doi.org/10.5281/zenodo.{d.doi}",
                 d.location, 
                 d.session_date, 
                 d.have_raw_data, 
-                d.have_processed_data, 
-                f"https://doi.org/10.5281/zenodo.{d.doi}"
-                ])
+                d.have_processed_data
+            ])
                 
         df_deposits = pl.DataFrame(list_deposit_data, schema=deposit_header, orient="row")
         df_deposits.write_csv(session_doi_file)
@@ -143,7 +142,7 @@ class AtlasExport:
             predictions_to_add = {cls_name: None for cls_name in class_name}
             for pred in predictions:
                 if pred.ml_class.name in predictions_to_add:
-                    predictions_to_add[pred.ml_class.name] = pred.score
+                    predictions_to_add[pred.ml_class.name] = bool(pred.score >= pred.ml_class.threshold)
 
 
             data.append([
@@ -173,7 +172,7 @@ class AtlasExport:
         metadata_annotation_file = Path(self.seatizen_folder_path, "metadata_multilabel_annotation.csv")
         print(f"\n-- Generate {metadata_annotation_file}")
 
-        all_labels_schema = {"FileName": pl.String, "frame_doi": pl.String, "annotation_date": pl.String, "relative_file_path": pl.String} | \
+        all_labels_schema = {"FileName": pl.String, "frame_doi": pl.String, "relative_file_path": pl.String, "annotation_date": pl.String} | \
                 {l.name: pl.Int8 for l in self.ml_label_manager.labels}
 
         data = {}
@@ -204,38 +203,4 @@ class AtlasExport:
 
         darwincoreManager = DarwinCoreManager(darwincore_annotation_file)
         darwincoreManager.create_darwincore_package(self.ml_anno_ses_manager.ml_annotation_session)
-
-
-    def global_map_gpkg(self) -> None:
-        """ Lighter geopackage to resume all trajectory. """
-        global_map_file = Path(self.seatizen_folder_path, "global_footprint.gpkg")
-        print(f"\n-- Generate {global_map_file}")
-
-        # Extract geometries and names
-        polygons, linestrings, names, platform = [], [], [], []
-        for dl in self.deposit_linestring_manager.deposits_linestring:
-            
-            if dl.footprint_linestring == None or \
-                dl.deposit.footprint == None:
-                continue
-            
-            platform.append(dl.deposit.platform)
-            names.append(dl.deposit.session_name)
-
-            polygons.append(dl.deposit.footprint)
-            linestrings.append(dl.footprint_linestring)
-
-        if len(names) == 0:
-            print("[WARNING] No session to export in global_map.")
-            return
-        
-        # Create a GeoDataFrame with geometry and name
-        gdf_linestrings = gpd.GeoDataFrame({'name': names, 'geometry': linestrings, 'platform': platform})
-        gdf_linestrings.set_crs(epsg=4326, inplace=True)
-        gdf_linestrings.to_file(global_map_file, layer='footprint_linestrings', driver="GPKG")
-
-        gdf_polygons = gpd.GeoDataFrame({'name': names, 'geometry': polygons, 'platform': platform})
-        gdf_polygons.set_crs(epsg=4326, inplace=True)
-        gdf_polygons.to_file(global_map_file, layer='footprint_polygons', driver="GPKG")
-
         
