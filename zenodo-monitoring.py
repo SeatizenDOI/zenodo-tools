@@ -17,4 +17,12 @@ if __name__ == '__main__':
     opt = parse_args()
     my_app = ZenodoMonitoringApp(opt)
 
-    my_app.run(debug=True)
+    my_app.run()
+else:
+    # opt = parse_args()
+    opt = argparse.Namespace(
+        path_seatizen_atlas_folder="./seatizen_atlas_folder", 
+        use_from_local=False
+    )
+    my_app = ZenodoMonitoringApp(opt)
+    app = my_app.app.server

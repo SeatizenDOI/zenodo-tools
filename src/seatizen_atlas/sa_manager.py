@@ -6,6 +6,7 @@ from .sa_metadata import build_metadata
 from .sa_tools import get_annotation_type_from_opt, AnnotationType
 
 from ..utils.constants import SEATIZEN_ATLAS_GPKG, SEATIZEN_ATLAS_URN
+from ..utils.lib_tools import md5
 
 from ..zenodo_api.za_token import ZenodoAPI
 from ..zenodo_api.za_tokenless import download_manager_without_token, get_version_from_session_name
@@ -38,8 +39,8 @@ class AtlasManager:
         # Create folder if not exists.
         self.seatizen_folder_path.mkdir(exist_ok=True, parents=True)
 
-        # Clean folder if we download from zenodo or if we force to regenerate.
-        if self.force_regenerate or not self.from_local:
+        # Clean folder if we force to regenerate.
+        if self.force_regenerate:
             print("Clean local seatizen atlas folder.")
             self.clean_seatizen_folder()
         

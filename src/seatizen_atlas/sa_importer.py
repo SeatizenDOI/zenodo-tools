@@ -61,8 +61,7 @@ class AtlasImport:
         # Found doi for frames and predictions.
         filename_with_doi = {}
         have_raw_data, have_processed_data = False, False
-        for version in versions:
-            
+        for version in sorted(versions, key=lambda d: d["id"]): # Order by id to always get the last version doi.
             if version["metadata"]["version"].replace(" ", "_").upper() == "PROCESSED_DATA":
                 have_processed_data = True
 
@@ -70,7 +69,9 @@ class AtlasImport:
                 have_raw_data = True
 
             for file in version["files"]:
-                if file["key"] in filename_with_zipsize and (filename_with_zipsize[file["key"]] == file["size"] or abs(filename_with_zipsize[file["key"]] - file["size"]) < 1000):
+                if file["key"] in filename_with_zipsize and \
+                   (filename_with_zipsize[file["key"]] == file["size"] or \
+                   abs(filename_with_zipsize[file["key"]] - file["size"]) < 1000):
                     filename_with_doi[file["key"]] = version["id"]
         
         # Create or update deposit
@@ -145,12 +146,16 @@ class AtlasImport:
             
             # Datetime formatting
             creation_date = ""
-            if "SubSecDateTimeOriginal" not in row:
-                creation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            else:
+            if "SubSecDateTimeOriginal" in row: # Plancha
                 date, time = row["SubSecDateTimeOriginal"].split(".")[0].split(" ")
                 date = date.replace(":", "-")
                 creation_date = date + " " + time
+            elif "DateTimeOriginal" in row: # UAV
+                date, time = row["DateTimeOriginal"].split(" ")
+                date = date.replace(":", "-")
+                creation_date = date + " " + time
+            else:
+                creation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             frame = FrameDTO(
                 version = frame_version,

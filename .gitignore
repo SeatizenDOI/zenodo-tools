@@ -6,3 +6,4 @@ config.json
 csv_inputs
 seatizen_atlas_folder
 profiling
+output_csv

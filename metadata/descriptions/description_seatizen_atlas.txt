@@ -16,7 +16,7 @@ The repository includes:
     </ul>
     <br>
 
-    <li> metadata_images.csv: a CSV file describing all metadata for each image published in open access. This file contains the following columns: </li> <br>
+    <li><strong>  metadata_images.csv:</strong>  a CSV file describing all metadata for each image published in open access. This file contains the following columns: </li> <br>
     <ul>
         <li> OriginalFileName: indicates the original name of the photo. </li>
         <li> FileName: indicates the name of the photo adapted to the naming convention adopted by the Seatizen team (i.e., YYYYMMDD_COUNTRYCODE-optionalplace_device_session-number_originalimagename). </li>

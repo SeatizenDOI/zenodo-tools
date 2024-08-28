@@ -278,11 +278,13 @@ class ZenodoMonitoringExporter:
         nb_file = int(math.ceil(df_size_mb / MAX_CSV_FILE_TO_DOWNLOAD))
         rows_per_file = len(df_data) // nb_file
         
+        output_folder = Path("./output_csv")
+        output_folder.mkdir(exist_ok=True)
         basename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_zenodo_monitoring_data'
         list_csv = []
         for i, chunk in enumerate(split_dataframe(df_data, rows_per_file)):
-            csv_name = f"{basename}_{i + 1}.csv"
-            list_csv.append(csv_name)
+            csv_name = Path(output_folder, f"{basename}_{i + 1}.csv")
+            list_csv.append(str(csv_name))
             chunk.write_csv(csv_name)
         
         return list_csv
