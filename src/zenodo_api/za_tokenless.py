@@ -119,6 +119,9 @@ def get_all_versions_from_session_name(session_name: str) -> list:
             version_json = list_version
 
     except:
+        # TODO Implement retry
+        print(r.status_code, r)
         print(f"Cannot get version for {session_name}.")
+        input("Something failed do you want to continue ?: ")
     
     return version_json
