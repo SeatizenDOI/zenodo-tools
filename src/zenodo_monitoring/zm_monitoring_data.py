@@ -94,7 +94,8 @@ class MonitoringData:
             features.append({
                 "type": "Feature",
                 "geometry": geojson_polygon,
-                "platform": deposit.platform      
+                "platform": deposit.platform,
+                "name": deposit.session_name      
             })
 
         geojson_feature_collection = {

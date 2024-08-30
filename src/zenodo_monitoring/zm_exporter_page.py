@@ -1,11 +1,12 @@
 import math
+import uuid
 import polars as pl
 from pathlib import Path
 from datetime import datetime
 
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
-from dash_extensions.javascript import Namespace
+from dash_extensions.javascript import Namespace, assign
 from dash import html, dcc, Input, Output, State, ctx
 
 from .zm_monitoring_data import MonitoringData, EnumPred
@@ -22,7 +23,12 @@ class ZenodoMonitoringExporter:
 
     
     def create_layout(self):
+        # Tooltip and colors for each session in leafleft map
         ns = Namespace("PlatformSpace", "PlatformSpaceColor")
+        on_each_feature = assign("""function(feature, layer, context){
+            layer.bindTooltip(`<b> ${feature.name} </b>`)
+        }""")
+
         return dbc.Spinner(html.Div([
             dcc.Store(id='local-settings-data', storage_type='local'),
             dcc.Store(id='temp-to-remove-file', storage_type='session'), # Use to remove csv file.
@@ -42,13 +48,14 @@ class ZenodoMonitoringExporter:
                         dl.GeoJSON(
                             data=self.monitoring_data.get_footprint_geojson() ,
                             id="session_footprint",
-                            style=ns("platformToColorMap")
+                            style=ns("platformToColorMap"),
+                            onEachFeature=on_each_feature
                         ),
                         dl.FeatureGroup(id="feature_group", children=[
                             dl.EditControl(
                                 id="edit_control", 
                                 position="bottomleft", 
-                                draw={'polygon': False, 'rectangle': True, 'polyline': False, 'circle': False, 'marker': False, 'circlemarker': False}, 
+                                draw={'polygon': True, 'rectangle': True, 'polyline': False, 'circle': False, 'marker': False, 'circlemarker': False}, 
                                 edit={'edit': False}
                             ),
                             dl.FullScreenControl(position="topleft"),
@@ -280,7 +287,7 @@ class ZenodoMonitoringExporter:
         
         output_folder = Path("./output_csv")
         output_folder.mkdir(exist_ok=True)
-        basename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_zenodo_monitoring_data'
+        basename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{str(uuid.uuid4())}_zenodo_monitoring_data'
         list_csv = []
         for i, chunk in enumerate(split_dataframe(df_data, rows_per_file)):
             csv_name = Path(output_folder, f"{basename}_{i + 1}.csv")

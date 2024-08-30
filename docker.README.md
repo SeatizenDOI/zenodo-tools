@@ -9,4 +9,14 @@ docker push groderg/zenodo-monitoring-image:latest
 ```
 
 ## Run
-docker run --rm -v /home/bioeos/Documents/project_hub/zenodo-tools/seatizen_atlas_folder/:/app/seatizen_atlas_folder -p 8050:8050 zenodo-monitoring-image:latest
+
+
+Bind a volume to avoid download the geopackage file.
+
+```bash
+docker run --rm -v /home/bioeos/Documents/project_hub/zenodo-tools/seatizen_atlas_folder/:/app/seatizen_atlas_folder -p 8050:8050 groderg/zenodo-monitoring-image:latest
+```
+
+```bash
+docker run --rm -p 8053:8050 groderg/zenodo-monitoring-image:latest
+```
