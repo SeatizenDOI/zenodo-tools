@@ -22,7 +22,7 @@ class ZenodoMonitoringSettings:
                 dbc.Row([
                     # Input name.
                     dbc.Col([
-                        html.H4(children="Custom category name"),
+                        html.H4(children="Custom category name."),
                         dbc.Input(id="group_name", type="text", maxlength=40, minlength=1),
                         dbc.FormFeedback("Please fill this input or change name.", type="invalid"),
 

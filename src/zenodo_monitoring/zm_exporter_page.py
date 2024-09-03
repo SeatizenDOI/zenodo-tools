@@ -29,7 +29,7 @@ class ZenodoMonitoringExporter:
             layer.bindTooltip(`<b> ${feature.name} </b>`)
         }""")
 
-        return dbc.Spinner(html.Div([
+        return dcc.Loading(html.Div([
             dcc.Store(id='local-settings-data', storage_type='local'),
             dcc.Store(id='temp-to-remove-file', storage_type='session'), # Use to remove csv file.
             dbc.Row(
@@ -94,13 +94,15 @@ class ZenodoMonitoringExporter:
                 ]),
                 # Type of prediction.
                 dbc.Col([
-                    html.H4(children="Select the type of value."),
+                    html.H4(children="Select the type of value.", 
+                            title="The score is the output number of the model (float value between 0 and 1). \
+                                   The prediction value is 0 or 1 and it's computed with the score and the threshold of the class."
+                    ),
                     dbc.RadioItems(
                         [EnumPred.PRED.value, EnumPred.SCORE.value], 
                         value=EnumPred.SCORE.value, 
                         id="type_pred_select",
-                        inline=True,
-
+                        inline=True
                     ),
                 ], width=3)
             ], class_name="p-3"),
@@ -147,11 +149,12 @@ class ZenodoMonitoringExporter:
             dbc.Modal([
                 dbc.ModalHeader(dbc.ModalTitle("Summary of your export")),
                 dbc.ModalBody(id="statistic-modal-body"),
-                dbc.ModalFooter(
+                dbc.ModalFooter([
+                    html.Span("Your download will start soon..."),
                     dbc.Button(
                         "Close", id="close", className="ms-auto", n_clicks=0
                     )
-                ),
+                ]),
             ],id="statistic-modal", is_open=False, scrollable=True),
             
             dbc.Toast(
@@ -164,7 +167,9 @@ class ZenodoMonitoringExporter:
                 icon="danger",
                 style={"position": "fixed", "bottom": 20, "right": 10, "width": 350},
             ),
-        ]), id="loading-output", color="grey")
+        ]), id="loading-output", custom_spinner=dbc.Row([dbc.Spinner(color="grey", spinner_style={"width": "3rem", "height": "3rem", "margin-bottom": "50px"}),
+                                                         html.H2("Parsing data can take up to 10 min... ")], justify="center"),
+        overlay_style={"visibility":"visible", "opacity": .15, "backgroundColor": "white"})
     
     
     def register_callbacks(self):

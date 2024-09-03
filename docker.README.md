@@ -18,5 +18,5 @@ docker run --rm -v /home/bioeos/Documents/project_hub/zenodo-tools/seatizen_atla
 ```
 
 ```bash
-docker run --rm -p 8053:8050 groderg/zenodo-monitoring-image:latest
+docker run -d -p 8053:8050 groderg/zenodo-monitoring-image:latest --name zenodo-monitoring
 ```
