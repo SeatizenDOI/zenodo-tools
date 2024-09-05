@@ -24,7 +24,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context:
-        file: "{context}/Dockerfile.monitoring"
+        file: Dockerfile.monitoring
         push: true
         tags: seatizendoi/zenodo-monitoring:latest
     
@@ -32,6 +32,6 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context:
-        file: "{context}/Dockerfile.manager"
+        file: Dockerfile.manager
         push: true
         tags: seatizendoi/zenodo-manager:latest
