@@ -1,0 +1,23 @@
+# Temp folder.
+bronx
+darwincore_mapping
+old_code
+
+# Common file.
+__pycache__
+config.json
+.github
+.git
+*.md
+*.yml
+LICENSE
+profiling
+output_csv
+tests
+img
+*.ipynb
+Dockerfile.*
+
+# Specific file.
+csv_inputs/*
+seatizen_atlas_folder/*
