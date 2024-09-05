@@ -1,19 +1,26 @@
+# Temp folder.
 bronx
 darwincore_mapping
 old_code
+
+# Common file.
 __pycache__
 config.json
-csv_inputs
-seatizen_atlas_folder/*
-profiling
-output_csv
 .github
 .git
-metadata
-tests
 *.md
 *.yml
 LICENSE
+profiling
+output_csv
+tests
+img
+*.ipynb
+
+# Specific file.
+csv_inputs
+seatizen_atlas_folder/*
 zenodo-download.py
 zenodo-manager.py
 zenodo-upload.py
+metadata

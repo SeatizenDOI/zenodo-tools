@@ -66,7 +66,7 @@ def download_with_token(opt, config_json: dict) -> None:
             sessions_fail.append((i, session_name, doi))
 
     # Stat
-    print("\nEnd of process. On {} sessions, {} fails. ".format(len(list_name_doi), len(sessions_fail)))
+    print("\nEnd of process. On {} sessions, {} fails. ".format(len(selected_name_doi), len(sessions_fail)))
     if (len(sessions_fail)):
         [print(f"\t* {i}, {session_name}, {doi} failed") for i, session_name, doi in sessions_fail]
 
@@ -129,7 +129,7 @@ def download_without_token(opt) -> None:
             sessions_fail.append((i, session_name, doi))
 
     # Stat
-    print("\nEnd of process. On {} sessions, {} fails. ".format(len(list_name_doi), len(sessions_fail)))
+    print("\nEnd of process. On {} sessions, {} fails. ".format(len(selected_name_doi), len(sessions_fail)))
     if (len(sessions_fail)):
         [print(f"\t* {i}, {session_name}, {doi} failed") for i, session_name, doi in sessions_fail]
 
@@ -185,6 +185,7 @@ def download_specific_frames(opt) -> None:
             session_manager = SessionManager(session_name, path_output)
             frames_folder = session_manager.get_frame_parent_folder(frames)
             frames_zipped_folder = f'{frames_folder.replace("/", "_")}.zip'
+            frames_name = [Path(frame).name for frame in frames]
 
             # Get which folder to download.
             file_to_download = []
@@ -197,6 +198,7 @@ def download_specific_frames(opt) -> None:
 
             # Move frame.
             for file in Path(path_output, session_name, frames_folder).iterdir():
+                if file.name not in frames_name: continue # Move only frame in csv file.
                 shutil.move(file, Path(path_frame_folder_output, file.name))
 
             # Remove folder.

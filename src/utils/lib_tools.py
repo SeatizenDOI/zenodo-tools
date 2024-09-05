@@ -136,7 +136,7 @@ def get_doi_from_custom_frames_csv(opt) -> dict[str, list[str]]:
         return []
 
     data = {}
-    for doi_unformatted in  list(set(df["version_doi"].to_list())):
+    for doi_unformatted in list(set(df["version_doi"].to_list())):
         doi = clean_doi(doi_unformatted)
         if doi == None: continue
 
