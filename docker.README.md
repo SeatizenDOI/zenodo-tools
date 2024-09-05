@@ -22,8 +22,9 @@ Run command :
 ```bash
 docker run -it --user 1001 --rm \
   -v ./seatizen_atlas_folder/:/home/seatizen/app/seatizen_atlas_folder \
-  -v /home/bioeos/Documents/Bioeos/plancha-session/:/home/seatizen/plancha \
- --name zenodo-manager zenodo-manager:latest bash
+  -v ./plancha_test:/home/seatizen/plancha \
+  -v ./inputs:/home/seatizen/app/csv_inputs \
+ --name zenodo-manager seatizendoi/zenodo-manager:latest bash
 ```
 
 ## zenodo-monitoring
@@ -37,5 +38,5 @@ docker build -f Dockerfile.monitoring -t zenodo-monitoring:latest .
 
 Run command
 ```bash
-docker run --rm -v ./seatizen_atlas_folder/:/app/seatizen_atlas_folder --name zenodo-monitoring -p 8050:8050 zenodo-monitoring:latest
+docker run --rm -v ./seatizen_atlas_folder/:/app/seatizen_atlas_folder --name zenodo-monitoring -p 8050:8050 seatizendoi/zenodo-monitoring:latest
 ```
