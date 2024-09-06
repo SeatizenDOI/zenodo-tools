@@ -53,7 +53,7 @@ def download_with_token(opt, config_json: dict) -> None:
                 zenodoAPI.zenodo_download_files(path_output)
 
             # For processed data we don't need to download all version but only the last or the specified one.
-            if opt.download_processed_data:
+            if opt.download_processed_data and len(processed_data_ids) != 0:
                 id_processed_data = doi if doi and doi in processed_data_ids else max(processed_data_ids)
                 
                 print(f"Working for PROCESSED DATA Version {id_processed_data}")

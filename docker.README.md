@@ -20,7 +20,7 @@ docker build -f Dockerfile.manager -t zenodo-manager:latest .
 
 Run command :
 ```bash
-docker run -it --user 1001 --rm \
+docker run -it --user 1000 --rm \
   -v ./seatizen_atlas_folder/:/home/seatizen/app/seatizen_atlas_folder \
   -v ./plancha_test:/home/seatizen/plancha \
   -v ./inputs:/home/seatizen/app/csv_inputs \
