@@ -184,7 +184,7 @@ class ZenodoAPI:
         deposit = self.__get_single_deposit()
         try:
             for identifier in deposit["metadata"]["related_identifiers"]:
-                if identifier["relation"] == "isAlternateIdentifier" and identifier["scheme"] == "urn":
+                if identifier["relation"] in ["isAlternateIdentifier", "isIdenticalTo"] and identifier["scheme"] == "urn":
                     self.session_name = identifier["identifier"].replace("urn:", "")
                     break
         except KeyError:
