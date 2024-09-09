@@ -91,6 +91,7 @@ def clean_doi(doi) -> int | None:
     # check for doi is not float nan
     if doi != doi or doi in ["", None, np.nan]: return None
 
+    doi = str(doi)
     # In case user take the whole url 
     if "zenodo." in doi:
         doi = doi.split("zenodo.")[1]
