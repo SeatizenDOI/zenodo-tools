@@ -97,6 +97,8 @@ Optional. **Create config.json:** To use this repository, you need a config.json
 
 ![Seatizen monitoring exporter page explanation](img/sm_1.png)
 
+![Seatizen monitoring settings page explanation](img/sm_2.png)
+
 ### Create a custom part
 
 
@@ -153,6 +155,20 @@ python zenodo-download.py -ename 20221023_SYC-ALDABRA-DUBOIS_ASV-02_02 -dp -po /
 
 ### Download session data from csv file
 
+If you want to download a bunch of session, you can fill a csv file with this information. You can provide either doi or session_name.
 
+```csv
+session_name,doi
+urn:20231021_REU-ST-LEU_ASV-2_01,
+20231021_REU-ST-LEU_ASV-2_02,
+,54060
+,10.5072/zenodo.54059
+,
+urn:20231021_REU-ST-LEU_ASV-2_04,10.5072/zenodo.54059
+```
 
+Execute this bash command in your terminal or in your docker container :
 
+```bash
+python zenodo-download.py -ecsv -pcsv /path/to/csv/file -po /path/where/you/want/your/sessions/ -dp -dr
+```

@@ -9,10 +9,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-
+    
     steps:
     - name: Check out the repo
       uses: actions/checkout@v4
@@ -25,19 +22,32 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-
+    
+    - name: Use Custom .dockerignore
+      run: cp Dockerfile.monitoring.dockerignore .dockerignore
+    
     - name: Build and push zenodo-monitoring to dockerhub
       uses: docker/build-push-action@v5
       with:
-        context:
-        file: Dockerfile.monitoring
+        context: .
+        file: ./Dockerfile.monitoring
         push: true
         tags: seatizendoi/zenodo-monitoring:latest
+    
+    - name: Cleanup .dockerignore
+      run: rm .dockerignore
+    
+    - name: Use Custom .dockerignore
+      run: cp Dockerfile.manager.dockerignore .dockerignore
     
     - name: Build and push zenodo-manager to dockerhub
       uses: docker/build-push-action@v5
       with:
-        context:
-        file: Dockerfile.manager
+        context: .
+        file: ./Dockerfile.manager
         push: true
         tags: seatizendoi/zenodo-manager:latest
+    
+    - name: Cleanup .dockerignore
+      run: rm .dockerignore
+      
