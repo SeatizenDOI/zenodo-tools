@@ -60,6 +60,6 @@ jobs:
       run: |
         ssh -tt -o StrictHostKeyChecking=no debian@ifremer.re << EOF
           docker stop zenodo-monitoring || true && docker rm zenodo-monitoring || true && docker image rm seatizendoi/zenodo-monitoring:latest || true && \
-          docker run -d --name zenodo-monitoring -p 8053:8050 seatizendoi/zenodo-monitoring:latest
+          nohup docker run -d --name zenodo-monitoring -p 8053:8050 seatizendoi/zenodo-monitoring:latest
         EOF
       
