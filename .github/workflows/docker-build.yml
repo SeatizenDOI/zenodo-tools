@@ -58,7 +58,7 @@ jobs:
 
     - name: Deploy to OVH server
       run: |
-        ssh -tt debian@ifremer.re << EOF
+        ssh -tt -o StrictHostKeyChecking=no debian@ifremer.re << EOF
           sudo docker stop zenodo-monitoring || true
           sudo docker rm zenodo-monitoring || true
           sudo docker run -d --name zenodo-monitoring -p 8053:8050 seatizendoi/zenodo-monitoring:latest
