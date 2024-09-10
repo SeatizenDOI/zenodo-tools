@@ -6,6 +6,7 @@ from datetime import datetime
 
 import shapely
 from shapely import Polygon, Point
+from pyproj import Geod
 
 from src.models.deposit_model import DepositDAO
 from src.models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO, MultilabelClassDTO
@@ -90,12 +91,28 @@ class MonitoringData:
                 d_compare = datetime.strptime(deposit.session_date, "%Y-%m-%d")
                 if d_compare < d_start or d_compare > d_end: continue
 
+            # Footprint.
             geojson_polygon = shapely.geometry.mapping(deposit.footprint)
+            
+            # Area in squared meters.
+            geod = Geod(ellps="WGS84")
+            poly_area, poly_perimeter = geod.geometry_area_perimeter(deposit.footprint)
+
+            # Add min max depth
+            # self.frame_manager.get_min_max_depth_by_deposit(deposit) # Too much time consuming.
+            
+            # Add predict classes
+            # self.ml_classes_manager.get_first_n_class_deposit(self.ml_model_manager.last_model, deposit, 3) # Too much time consuming.
+            
+            
             features.append({
                 "type": "Feature",
                 "geometry": geojson_polygon,
                 "platform": deposit.platform,
-                "name": deposit.session_name      
+                "name": deposit.session_name,
+                "area": f"{round(poly_area , 2)} m²",
+                "date": deposit.session_date,
+                "doi": deposit.doi
             })
 
         geojson_feature_collection = {

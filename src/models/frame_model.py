@@ -6,7 +6,7 @@ from shapely import wkt
 from shapely.geometry import Point, Polygon
 
 from .base_model import AbstractBaseDAO
-from .deposit_model import VersionDTO, VersionDAO
+from .deposit_model import VersionDTO, VersionDAO, DepositDTO
 
 @dataclass
 class FrameDTO():
@@ -302,3 +302,22 @@ class FrameDAO(AbstractBaseDAO):
             data[platform_type] = frame_count
         
         return data
+    
+    def get_min_max_depth_by_deposit(self, deposit: DepositDTO) -> tuple[float, float]:
+        """ Return min max depth """
+        
+        query = f"""
+            SELECT MIN(f.GPSAltitude), MAX(f.GPSAltitude)
+            FROM frame f
+            JOIN version v on f.version_doi = v.doi
+            WHERE v.deposit_doi = ?
+        """
+        params = (deposit.doi, )
+        v_min, v_max = self.sql_connector.execute_query(query, params)[0]
+
+        if v_min == None or v_max == None: return
+        if v_min > v_max: v_min, v_max = v_max, v_min
+
+        return round(v_min, 2), round(v_max, 2)
+
+        

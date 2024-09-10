@@ -6,7 +6,7 @@ from datetime import datetime
 
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
-from dash_extensions.javascript import Namespace, assign
+from dash_extensions.javascript import Namespace, assign, arrow_function
 from dash import html, dcc, Input, Output, State, ctx
 
 from .zm_monitoring_data import MonitoringData, EnumPred
@@ -26,7 +26,12 @@ class ZenodoMonitoringExporter:
         # Tooltip and colors for each session in leafleft map
         ns = Namespace("PlatformSpace", "PlatformSpaceColor")
         on_each_feature = assign("""function(feature, layer, context){
-            layer.bindTooltip(`<b> ${feature.name} </b>`)
+            layer.bindTooltip(`<h6> ${feature.name} </h6><br>
+                               <b>Surface : ${feature.area}</b><br>
+                               <b>Acquisition date : ${feature.date}</b><br>
+                            <b>Platform type : ${feature.platform}</b><br>
+                                 <b>DOI : ${feature.doi}</b
+                                 `)
         }""")
 
         return dcc.Loading(html.Div([
@@ -49,7 +54,8 @@ class ZenodoMonitoringExporter:
                             data=self.monitoring_data.get_footprint_geojson() ,
                             id="session_footprint",
                             style=ns("platformToColorMap"),
-                            onEachFeature=on_each_feature
+                            onEachFeature=on_each_feature,
+                            hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray=''))
                         ),
                         dl.FeatureGroup(id="feature_group", children=[
                             dl.EditControl(

@@ -2,6 +2,7 @@ from datetime import datetime
 from dataclasses import dataclass, field
 
 from .base_model import AbstractBaseDAO
+from .deposit_model import DepositDTO
 from .ml_label_model import MultilabelLabelDAO, MultilabelLabelDTO
 
 @dataclass
@@ -240,3 +241,22 @@ class MultilabelClassDAO(AbstractBaseDAO):
                 ml_model=ml_model,
                 threshold=threshold
             ))
+    
+    def get_first_n_class_deposit(self, model: MultilabelModelDTO, deposit: DepositDTO, n_class: int) -> list[tuple]:
+        """ Return the n class with the most occurence in a session """
+
+        query = f"""
+                 SELECT mlc.name, COUNT(mlc.name) as "count_class"
+                 FROM multilabel_class mlc
+                 JOIN multilabel_prediction mlp on mlp.ml_class_id = mlc.id
+                 JOIN frame f on f.id = mlp.frame_id
+                 JOIN version v on v.doi = f.version_doi
+                 WHERE v.deposit_doi = ? AND mlp.score >= mlc.threshold AND mlc.ml_model_id = ?
+                 GROUP BY mlc.name
+                 ORDER BY count_class DESC
+                 LIMIT ?;
+                 """
+        params = (deposit.doi, model.id, n_class, )
+        res = self.sql_connector._query(query, params)
+
+        return res

@@ -1,21 +1,5 @@
 # Tutorial to use zenodo-tools
 
-* Installation
-* Launch and use SeatizenMonitoring
-
-* Download a session
-    a single session from a doi
-    a 
-
-* Upload a session
-    - Raw data session
-    - Processed data session
-    - Update metadata
-    - Delete all 
-
-* Construct geopackage
-
-
 # Installation
 
 To use this github repository, you have two options. You can either use docker or install the libraries and packages manually with a conda environment.
@@ -139,6 +123,8 @@ python zenodo-download.py -ecf -pcf /path/to/csv/file/provide/by/seatizen/monito
 ### Download raw data from a doi
 
 You can provide generic DOI or version DOI. He will find all version with raw data.
+
+/!\ WARNING /!\ If raw data is in restricted on zenodo and you don't provide config.json with valid token, it will download the latest version.
 
 ```bash
 python zenodo-download.py -edoi 11143166 -po /path/where/you/want/your/session/folder -dr
