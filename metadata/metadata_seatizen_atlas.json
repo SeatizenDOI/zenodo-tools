@@ -1,6 +1,11 @@
 {
     "creators": [
         {
+            "name": "Matteo Contini",
+            "affiliation": "IFREMER, DOI, France",
+            "orcid": "0009-0007-8665-6201"
+        },
+        {
             "name": "Julien Barde",
             "affiliation": "IRD",
             "orcid": "0000-0002-3519-6141"
@@ -9,11 +14,6 @@
             "name": "Sylvain Bonhommeau",
             "affiliation": "IFREMER, DOI, France",
             "orcid": "0000-0002-0882-5918"
-        },
-        {
-            "name": "Matteo Contini",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0009-0007-8665-6201"
         },
         {
             "name": "Victor Illien",

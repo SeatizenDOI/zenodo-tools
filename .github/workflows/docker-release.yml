@@ -1,0 +1,28 @@
+name: Deploy zenodo-monitoring on release
+
+on:
+  release:
+    types: [published]
+    
+jobs:
+  deploy:
+    name: Connect to ovh server and deploy docker image
+    runs-on: ubuntu-latest
+    
+    steps:      
+    - name: Check out the repo
+      uses: actions/checkout@v4
+ 
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy to OVH server
+      run: |
+        ssh -tt -o StrictHostKeyChecking=no debian@ifremer.re << EOF
+          docker stop zenodo-monitoring || true && docker rm zenodo-monitoring || true && docker image rm seatizendoi/zenodo-monitoring:latest || true && \
+          docker run -d --name zenodo-monitoring -p 8053:8050 seatizendoi/zenodo-monitoring:latest > /dev/null 2>&1
+          exit
+        EOF
+      

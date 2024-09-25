@@ -3,7 +3,7 @@ name: Zenodo tools CI pipeline
 on: [push, pull_request]
 
 jobs:
-  build:
+  tests:
     runs-on: ubuntu-latest
     defaults:
       run:

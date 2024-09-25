@@ -158,3 +158,48 @@ Execute this bash command in your terminal or in your docker container :
 ```bash
 python zenodo-download.py -ecsv -pcsv /path/to/csv/file -po /path/where/you/want/your/sessions/ -dp -dr
 ```
+
+### Zenodo manager
+
+Cheatsheet to create database with example :
+
+```bash
+python zenodo-manager.py -efol -pfol /media/bioeos/E/2015_plancha_session/ -ulo -ffi -fr -ne
+python zenodo-manager.py -efol -pfol /media/bioeos/E/poulain_syc -ulo -ffi -ne
+python zenodo-manager.py -ecsv -pcsv ../../Bioeos/OUTPUT_DATA/zenodo_suivi/processed_data_without_2015.csv -ulo -la ../../Bioeos/annotations_some_image/Export_human/
+```
+
+Command to just send folder :
+```bash
+python zenodo-manager.py -ulo -eno -ne -cp
+```
+
+Command to update last metadata folder
+```bash
+python zenodo-manager.py -eno -um
+```
+
+### Zenodo upload
+
+Command to update metadata for each folder
+
+```bash
+python zenodo-upload.py -efol -pfol /media/bioeos/F/202405_plancha_session -um -pmj metadata/metadata.json
+python zenodo-upload.py -efol -pfol /media/bioeos/F/202404_plancha_session -um -pmj metadata/metadata.json
+python zenodo-upload.py -efol -pfol /media/bioeos/F/202403_plancha_session -um -pmj metadata/metadata.json
+python zenodo-upload.py -efol -pfol /media/bioeos/F/202301-07_plancha_session -um -pmj metadata/metadata.json
+python zenodo-upload.py -efol -pfol /media/bioeos/F/202210_plancha_session -um -pmj metadata/metadata_aldabra.json
+python zenodo-upload.py -efol -pfol /media/bioeos/D/202311_plancha_session -um -pmj metadata/metadata.json
+python zenodo-upload.py -efol -pfol /media/bioeos/D/202312_plancha_session -um -pmj metadata/metadata.json
+python zenodo-upload.py -efol -pfol /media/bioeos/E/202310_plancha_session -um -pmj metadata/metadata.json
+python zenodo-upload.py -efol -pfol /media/bioeos/E/202309_plancha_session -um -pmj metadata/metadata.json
+python zenodo-upload.py -efol -pfol /media/bioeos/E/202211_plancha_session -um -pmj metadata/metadata_brandon.json
+python zenodo-upload.py -efol -pfol /media/bioeos/E/2021_plancha_session -um -pmj metadata/metadata.json
+python zenodo-upload.py -efol -pfol /media/bioeos/E/2015_plancha_session -umc -pmj metadata/metadata_2015.json
+```
+
+Update seatizen atlas dataset metadata. You need to create a blank folder called "seatizen_atlas_dataset".
+
+```bash
+python zenodo-upload.py -eses -pses /home/bioeos/Documents/Bioeos/plancha-session/seatizen_atlas_dataset/ -umc -pmj metadata/metadata_dataset.json
+```

@@ -1,13 +1,12 @@
-name: Build and push Docker monitoring
+name: Build and push on Dockerhub
 
 on:
   push:
     branches: [ "master" ]
     
 jobs:
-
   build:
-
+    name: Build and push images to dockerhub
     runs-on: ubuntu-latest
     
     steps:
@@ -50,17 +49,3 @@ jobs:
     
     - name: Cleanup .dockerignore
       run: rm .dockerignore
-    
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-    - name: Deploy to OVH server
-      run: |
-        ssh -tt -o StrictHostKeyChecking=no debian@ifremer.re << EOF
-          docker stop zenodo-monitoring || true && docker rm zenodo-monitoring || true && docker image rm seatizendoi/zenodo-monitoring:latest || true && \
-          docker run -d --name zenodo-monitoring -p 8053:8050 seatizendoi/zenodo-monitoring:latest > /dev/null 2>&1
-          exit
-        EOF
-      
