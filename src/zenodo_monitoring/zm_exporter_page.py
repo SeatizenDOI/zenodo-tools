@@ -41,14 +41,19 @@ class ZenodoMonitoringExporter:
                 dbc.Col([
                     # Map. Geography selector.
                     html.H2(children="Select the zone to export."),
-                    dl.Map(style={'width': '100%', 'height': '50vh'}, center=[-21.085198, 55.222047], zoom=14, maxZoom=18, minZoom=4 ,children=[
+                    dl.Map(style={'width': '100%', 'height': '50vh'}, center=[-21.085198, 55.222047], zoom=14, maxZoom=23, minZoom=4,children=[
                         dl.TileLayer(
                             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-                            attribution='Tiles © Esri'
+                            attribution='Tiles © Esri',
                         ),
                         dl.TileLayer(
                             url="https://{s}.basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}{r}.png'",
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        ),
+                        dl.TileLayer(
+                            url="http://ifremer.re:5004/wmts?request=GetTile&tilematrix={z}&tilerow={x}&tilecol={y}",
+                            attribution='Tiles © Ifremer DOI',
+                            maxZoom=23
                         ),
                         dl.GeoJSON(
                             data=self.monitoring_data.get_footprint_geojson() ,
