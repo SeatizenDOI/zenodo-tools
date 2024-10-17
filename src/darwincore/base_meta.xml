@@ -23,12 +23,12 @@
         <field index="16" term="http://rs.tdwg.org/dwc/terms/order" />
         <field index="17" term="http://rs.tdwg.org/dwc/terms/family" />
         <field index="18" term="http://rs.tdwg.org/dwc/terms/genus" />
-        <field index="19" term="http://rs.tdwg.org/dwc/terms/scientificNameAuthorship" />
-        <field index="20" term="http://rs.tdwg.org/dwc/terms/taxonomicStatus" />
-        <field index="21" term="http://rs.tdwg.org/dwc/terms/decimalLatitude" />
-        <field index="22" term="http://rs.tdwg.org/dwc/terms/decimalLongitude" />
-        <field index="23" term="http://rs.tdwg.org/dwc/terms/coordinatePrecision" />
-        <field index="24" term="http://rs.tdwg.org/dwc/terms/associatedMedia" />
+        <field index="19" term="http://rs.tdwg.org/dwc/terms/species" />
+        <field index="20" term="http://rs.tdwg.org/dwc/terms/scientificNameAuthorship" />
+        <field index="21" term="http://rs.tdwg.org/dwc/terms/taxonomicStatus" />
+        <field index="22" term="http://rs.tdwg.org/dwc/terms/decimalLatitude" />
+        <field index="23" term="http://rs.tdwg.org/dwc/terms/decimalLongitude" />
+        <field index="24" term="http://rs.tdwg.org/dwc/terms/coordinatePrecision" />
         <field index="25" term="http://rs.tdwg.org/dwc/terms/occurrenceStatus" />
     </core>
     <extension encoding="UTF-8" linesTerminatedBy="\n" fieldsTerminatedBy=";" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/ResourceRelationship">

@@ -153,8 +153,10 @@ CREATE VIRTUAL TABLE rtree_frame_GPSPosition USING rtree(id, minx, maxx, miny, m
 CREATE TABLE IF NOT EXISTS multilabel_label (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
+    creation_date DATETIME NOT NULL,
     description TEXT,
-    creation_date DATETIME NOT NULL
+    id_gbif INTEGER,
+    code_gcrmn TEXT
 );
 
 -- Multilabel model

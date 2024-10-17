@@ -1,5 +1,7 @@
 import yaml
+import uuid
 import zipfile
+import requests
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
@@ -9,7 +11,7 @@ import xml.etree.ElementTree as ET
 
 from ..utils.constants import TMP_PATH
 
-from ..models.ml_annotation_model import MultilabelAnnotationSessionDAO, MultilabelAnnotationDAO, MultilabelAnnotationSessionDTO
+from ..models.ml_annotation_model import MultilabelAnnotationSessionDAO, MultilabelAnnotationDAO, MultilabelAnnotationSessionDTO, MultilabelLabelDAO
 
 class DarwinCoreManager:
     def __init__(self, archive_name: Path) -> None:
@@ -34,6 +36,7 @@ class DarwinCoreManager:
         # Manager.
         self.ml_annotation_manager = MultilabelAnnotationDAO()
         self.ml_anno_ses_manager = MultilabelAnnotationSessionDAO()
+        self.ml_label_manager = MultilabelLabelDAO()
 
 
     def create_darwincore_package(self, annotationSessions: list[MultilabelAnnotationSessionDTO]) -> None:
@@ -42,19 +45,18 @@ class DarwinCoreManager:
         if len(annotationSessions) == 0:
             print("No annotations to export to darwincore format.")
             return
-
+        
         # Open all config file for darwin core
         t_start = datetime.now()
+        
         taxon_mapping = Path(Path.cwd(), "src/darwincore", "taxon_mapping.yaml")
 
         with open(taxon_mapping) as f:
             classes_taxon_mapping = yaml.load(f, Loader=yaml.FullLoader)
 
-        scinames = []
-        for label in classes_taxon_mapping['CLASSES']:
-            scinames.append(classes_taxon_mapping['CLASSES'][label]['taxon_research'])
+        # Get all gbif information for each label
+        gbif_by_label = self.retrieve_gbif_information()
 
-        taxon_information_df = self.match_taxa_in_worms_database(scinames)
         print(f"Retrieve information in {datetime.now() - t_start}")
 
         header_data = []
@@ -84,7 +86,7 @@ class DarwinCoreManager:
             print(f"-- Launching {occurence_path}")
             for annotation in tqdm(self.ml_annotation_manager.get_annotations_from_anno_ses(sa)):
                 label = annotation.ml_label.name
-                if label not in classes_taxon_mapping['CLASSES']: continue
+                if len(gbif_by_label[label]) == 0: continue
 
                 eventDate, eventTime, year, month, day = "", "", "", "", ""
                 if annotation.frame.gps_datetime is not None:
@@ -92,11 +94,9 @@ class DarwinCoreManager:
                     year, month, day = eventDate.split("-")
 
                 scientific_data = {}
-                label_sciname = classes_taxon_mapping['CLASSES'][label]['taxon_research']
-                label_data = taxon_information_df[label_sciname] if label_sciname in taxon_information_df else None
-                for our_label_field_key, label_field_key in classes_taxon_mapping['DARWINCORE_WORMS_FIELDS_MAPPING'].items():
-                    scientific_data[our_label_field_key] = label_data[label_field_key] if label_data else ""
-                
+                for our_label_field_key, label_field_key in classes_taxon_mapping['DARWINCORE_GBIF_FIELDS_MAPPING'].items():
+                    scientific_data[our_label_field_key] = gbif_by_label[label][label_field_key] if label_field_key in gbif_by_label[label] else ""
+
                 occurence_data.append({
                     "type": "DCIM",
                     "datasetID": sa.id,
@@ -105,12 +105,11 @@ class DarwinCoreManager:
                     "year": year,
                     "month": month,
                     "day": day,
-                    "occurrenceID": annotation.frame.filename,
-                    "vernacularName": classes_taxon_mapping["CLASSES"][label]["vernacularName"],
+                    "occurrenceID": f"{annotation.frame.filename}_{uuid.uuid4()}",
+                    "vernacularName": label,
                     "decimalLatitude": annotation.frame.gps_latitude,
                     "decimalLongitude": annotation.frame.gps_longitude,
                     "coordinatePrecision": annotation.frame.gps_fix,
-                    "associatedMedia": "",
                     "occurrenceStatus": "present"
                 } | scientific_data)
 
@@ -193,34 +192,32 @@ class DarwinCoreManager:
             archive.write(self.header_path, self.header_path.name)
             archive.write(self.meta_path, self.meta_path.name)
             archive.write(self.eml_path, self.eml_path.name)
+
     
+    def retrieve_gbif_information(self) -> dict[str, dict]:
+        """ Fetch gbif information. """
+        print("func: Fetching gbif information. ")
 
-    def match_taxa_in_worms_database(self, taxa_scientific_names: list) -> dict:
-        '''Match taxa information in the WORMS database (https://www.marinespecies.org/)
+        gbif_map_by_label = {}
+        cache = {}
+        print("Fetching: ", end="")
+        for label in self.ml_label_manager.labels:
+            print(f"{label.name}", end=", ", flush=True)
 
-        Input:
-        - taxa_scientific_names : a string or a list of strings containing the taxa scientific names to reach in the database.
+            gbif_map_by_label[label.name] = {}
+            if not label.id_gbif: continue
 
-        Output :
-        - a panda_dataframe with taxonomic information on the input names. Each row represents a taxa.
-        '''
+            if label.id_gbif in cache:
+                gbif_map_by_label[label.name] = cache[label.id_gbif]
+                continue
 
-        cl = Client('https://www.marinespecies.org/aphia.php?p=soap&wsdl=1')
-
-        scinames = cl.factory.create('scientificnames')
-        scinames["_arrayType"] = "string[]"
-        scinames["scientificname"] = taxa_scientific_names
-
-        array_of_results_array = cl.service.matchAphiaRecordsByNames(scinames, like="true", fuzzy="false", marine_only="false")
-
-        taxa_information = {}
-        for results_array in array_of_results_array:
-            for aphia_object in results_array:
-                items_value = dict(Client.items(aphia_object))
-                if items_value["status"] != "accepted": continue
-                
-                # !WARNING Assume that the first occurence is the good one else it's not the best case. (Ex: Vertebrata (algea and fish))
-                if items_value["scientificname"] in taxa_information: continue
-                taxa_information[items_value["scientificname"]] = items_value
-
-        return taxa_information
+            r = requests.get(f"https://api.gbif.org/v1/species/{label.id_gbif}")
+    
+            if r.status_code == 404:
+                print(f"Cannot access to {label.name}. Error 404")
+            else:
+                gbif_map_by_label[label.name] = r.json()
+                cache[label.id_gbif] = r.json()
+        
+        print()
+        return gbif_map_by_label

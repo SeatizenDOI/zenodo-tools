@@ -9,6 +9,8 @@ class MultilabelLabelDTO():
     name: str
     creation_date: str
     description: str
+    id_gbif: int
+    code_gcrmn: str
 
     @property
     def creation_date_convert(self) -> datetime:
@@ -36,7 +38,7 @@ class MultilabelLabelDAO(AbstractBaseDAO):
         if label_id in self.__labels_by_id:
             return self.__labels_by_id.get(label_id)
 
-        query = f""" SELECT id, name, creation_date, description 
+        query = f""" SELECT id, name, creation_date, description, id_gbif, code_gcrmn
                      FROM {self.table_name}
                      WHERE id = ?
                  """
@@ -45,12 +47,14 @@ class MultilabelLabelDAO(AbstractBaseDAO):
         if len(result) == 0:
             raise NameError("[ERROR] No multilabel label for this id.")
         
-        id, name, creation_date, description = result[0]
+        id, name, creation_date, description, id_gbif, code_gcrmn = result[0]
         label = MultilabelLabelDTO(
                 id=id,
                 name=name,
                 creation_date=creation_date,
-                description=description
+                description=description,
+                id_gbif=id_gbif,
+                code_gcrmn=code_gcrmn
             )
         self.__labels_by_id[id] = label
         return label
@@ -61,7 +65,7 @@ class MultilabelLabelDAO(AbstractBaseDAO):
         if label_name in self.__labels_by_name:
             return self.__labels_by_name.get(label_name)
 
-        query = f""" SELECT id, name, creation_date, description 
+        query = f""" SELECT id, name, creation_date, description, id_gbif, code_gcrmn
                      FROM {self.table_name}
                      WHERE name = ?
                  """
@@ -74,12 +78,14 @@ class MultilabelLabelDAO(AbstractBaseDAO):
         if len(result) > 1:
             raise NameError("[ERROR] Too much multilabel label name for this name.")
         
-        id, name, creation_date, description = result[0]
+        id, name, creation_date, description, id_gbif, code_gcrmn = result[0]
         label = MultilabelLabelDTO(
                 id=id,
                 name=name,
                 creation_date=creation_date,
-                description=description
+                description=description,
+                id_gbif=id_gbif,
+                code_gcrmn=code_gcrmn
             )
         self.__labels_by_name[name] = label
         return label
@@ -87,16 +93,18 @@ class MultilabelLabelDAO(AbstractBaseDAO):
 
     def __get_all(self) -> None:
         """ Get all labels. """
-        query = f""" SELECT id, name, creation_date, description 
+        query = f""" SELECT id, name, creation_date, description, id_gbif, code_gcrmn
                      FROM {self.table_name}
                  """
         results = self.sql_connector.execute_query(query)
 
-        for id, name, creation_date, description in results:
+        for id, name, creation_date, description, id_gbif, code_gcrmn in results:
             self.__labels.append(MultilabelLabelDTO(
                 id=id,
                 name=name,
                 creation_date=creation_date,
-                description=description
+                description=description,
+                id_gbif=id_gbif,
+                code_gcrmn=code_gcrmn
             ))
     

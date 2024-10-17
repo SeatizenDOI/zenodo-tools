@@ -1,91 +1,17 @@
-CLASSES:
-  Acanthaster : {taxon_research : 'Acanthaster', vernacularName : 'starfish'}
-  Acanthasters : {taxon_research : 'Acanthaster', vernacularName : 'starfish'}
-  sea cucumber : {taxon_research : 'Holothuroidea', vernacularName : 'sea cucumber'}
-  Sea_cucumber : {taxon_research : 'Holothuroidea', vernacularName : 'sea cucumber'}
-  Stichopus_chloronotus : {taxon_research : 'Stichopus chloronotus', vernacularName : 'greenfish sea cucumber'}
-  Syringodium isoetifolium : {taxon_research : 'Syringodium isoetifolium', vernacularName : 'noodle seagrass'}
-  Syringodium_isoetifolium : {taxon_research : 'Syringodium isoetifolium', vernacularName : 'noodle seagrass'}
-  Syringodium_isoetifolium_algae : {taxon_research : 'Syringodium isoetifolium', vernacularName : 'noodle seagrass'}
-  Thalassodendron_ciliatum : {taxon_research : 'Thalassodendron ciliatum', vernacularName : 'sickle-leaved cymodocea'}
-  Sargassum_ilicifolium : {taxon_research : 'Sargassum ilicifolium', vernacularName : 'brown algae'}
-  Padina_boryana : {taxon_research : 'Padina boryana', vernacularName : 'brown algae'}
-  Turbinaria_ornata : {taxon_research : 'Turbinaria ornata', vernacularName : 'brown algae'}
-  Ascidia : {taxon_research : 'Ascidia', vernacularName : 'sea squirt'}
-  Acropora_hyacinthus : {taxon_research : 'Acropora hyacinthus', vernacularName : 'hyacinth tabling coral'}
-  Acropora_formosa : {taxon_research : 'Acropora muricata', vernacularName : 'staghorn coral'}
-  Acropore Branched : {taxon_research : 'Acropora', vernacularName : 'branched coral'}
-  Acropore_branched : {taxon_research : 'Acropora', vernacularName : 'branched coral'}
-  Acropore Digitised : {taxon_research : 'Acropora', vernacularName : 'digitised coral'}
-  Acropore_digitised : {taxon_research : 'Acropora', vernacularName : 'digitised coral'}
-  Acropore Sub-massive : {taxon_research : 'Acropora', vernacularName : 'sub-massive coral'}
-  Acropore Tabular : {taxon_research : 'Acropora', vernacularName : 'tabular coral'}
-  Acropore_tabular : {taxon_research : 'Acropora', vernacularName : 'tabular coral'}
-  No acropore Branched : {taxon_research : 'Scleractinia', vernacularName : 'branched coral'}
-  No acropore Encrusting : {taxon_research : 'Scleractinia', vernacularName : 'encrusted coral'}
-  No_acropore_encrusting : {taxon_research : 'Scleractinia', vernacularName : 'encrusted coral'}
-  No acropore Foliaceous : {taxon_research : 'Scleractinia', vernacularName : 'foliaceous coral'}
-  No acropore Massive : {taxon_research : 'Scleractinia', vernacularName : 'massive coral'}
-  No_acropore_massive : {taxon_research : 'Scleractinia', vernacularName : 'massive coral'}
-  No acropore Sub massive : {taxon_research : 'Scleractinia', vernacularName : 'sub-massive coral'}
-  No_acropore_sub_massive : {taxon_research : 'Scleractinia', vernacularName : 'sub-massive coral'}
-  No acropore Solitary : {taxon_research : 'Scleractinia', vernacularName : 'solitary coral'}
-  No_acropore_solitary : {taxon_research : 'Scleractinia', vernacularName : 'solitary coral'}
-  Millepore : {taxon_research : 'Millepora', vernacularName : 'fire coral'}
-  Millepora : {taxon_research : 'Millepora', vernacularName : 'fire coral'}
-  Porites : {taxon_research : 'Porites', vernacularName : 'jeweled toe'}
-  Fungia_fungites : {taxon_research : 'Fungia fungites', vernacularName : 'mushroom coral'}
-  fish : {taxon_research : 'Vertebrata', vernacularName : 'fish'}
-  Fish : {taxon_research : 'Vertebrata', vernacularName : 'fish'}
-  Naso_unicornis : {taxon_research : 'Naso unicornis', vernacularName : 'long-snouted unicornfish'}
-  Scarus_ghobban : {taxon_research : 'Scarus ghobban', vernacularName : 'bluechin parrotfish'}
-  Zanclus_cornutus : {taxon_research : 'Zanclus cornutus', vernacularName : 'Moorish idol'}
-  Acanthurus_triostegus : {taxon_research : 'Acanthurus triostegus', vernacularName : 'convict surgeonfish'}
-  ray : {taxon_research : 'Batoidea', vernacularName : 'ray'}
-  caranx : {taxon_research : 'Carangidae Rafinesque', vernacularName : 'jacks and pompanos'}
-  shark : {taxon_research : 'Selachii', vernacularName : 'shark'}
-  poisson jaune point noir : {taxon_research : 'Chaetodon  interruptus', vernacularName : 'Indian teardrop butterflyfish'}
-  Arothron nigropunctatus : {taxon_research : 'Arothron nigropunctatus', vernacularName : 'blackspotted puffer'}
-  Rhinecanthus aculeatus : {taxon_research : 'Rhinecanthus aculeatus', vernacularName : 'white-banded triggerfish'}
-  Sponge : {taxon_research : 'Porifera', vernacularName : 'sponge'}
-  Sea urchins : {taxon_research : 'Echinoidea', vernacularName : 'sea urchins'}
-  Sea_urchins : {taxon_research : 'Echinoidea', vernacularName : 'sea urchins'}
-  Clam : {taxon_research : 'Bivalvia', vernacularName : 'clam'}
-  bénitier : {taxon_research : 'Bivalvia', vernacularName : 'clam'}
-  algae : {taxon_research : 'Plantae', vernacularName : 'algae'}
-  Algae Limestone : {taxon_research : 'Plantae', vernacularName : 'algae limestone'}
-  Algae_limestone : {taxon_research : 'Plantae', vernacularName : 'algae limestone'}
-  Algae Drawn up : {taxon_research : 'Plantae', vernacularName : 'algae drawn up'}
-  Algae assembly : {taxon_research : 'Plantae', vernacularName : 'algae assembly'}
-  Algae_assembly : {taxon_research : 'Plantae', vernacularName : 'algae assembly'}
-  Algae_sodding : {taxon_research : 'Plantae', vernacularName : 'algae sodding'}
-  Soft coral : {taxon_research : 'Alcyonacea', vernacularName : 'soft coral'}
-  Living Coral : {taxon_research : 'Scleractinia', vernacularName : 'coral'}
-  Living_coral : {taxon_research : 'Scleractinia', vernacularName : 'coral'}
-  Bleached coral : {taxon_research : 'Scleractinia', vernacularName : 'bleached coral'}
-  turtle : {taxon_research : 'Testudines', vernacularName : 'turtle'}
-  tortue : {taxon_research : 'Testudines', vernacularName : 'turtle'}
-  Anemone : {taxon_research : 'Actiniaria', vernacularName : 'sea anemone'}
-  anemone : {taxon_research : 'Actiniaria', vernacularName : 'sea anemone'}
-  Gorgon : {taxon_research : 'Gorgonacea', vernacularName : 'gorgon'}
-  Other starfish : {taxon_research : 'Asteroidea', vernacularName : 'starfish'}
-
-
-DARWINCORE_WORMS_FIELDS_MAPPING:
-  scientifiNameID : 'lsid'
-  scientificName : 'scientificname'
+DARWINCORE_GBIF_FIELDS_MAPPING:
+  scientifiNameID : 'taxonID'
+  scientificName : 'scientificName'
   taxonRank: 'rank'
-  namePublishedIn : 'citation'
-  #namePublishedInYear : 2022
-  #higherClassification : 'Animalia | Echinodermata | Echinozoa | Holothuroidea', 
   kingdom : 'kingdom'
   phylum : 'phylum'
-  class : 'cls' 
+  class : 'class'
   order : 'order'
   family : 'family'
   genus : 'genus'
-  scientificNameAuthorship : 'authority'
-  taxonomicStatus : 'status'
+  species : 'species'
+  namePublishedIn: 'publishedIn'
+  scientificNameAuthorship : 'authorship'
+  taxonomicStatus : 'taxonomicStatus'
 
 
 

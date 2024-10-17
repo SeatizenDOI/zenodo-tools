@@ -1,7 +1,7 @@
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ..models.base_model import DataStatus
 from ..models.frame_model import FrameDAO, FrameDTO
@@ -90,6 +90,8 @@ class AtlasImport:
 
         # Insert versions
         for v in versions:
+            # Do not insert version different from processed_data and raw_data
+            if v["metadata"]["version"].upper().replace(" ", "_") not in ["PROCESSED_DATA", "RAW_DATA"]: continue
             self.version_manager.insert(VersionDTO(doi=v["id"], deposit=deposit))
 
         
@@ -144,9 +146,14 @@ class AtlasImport:
     
             row = metadata_csv.loc[frame_name]
             
+            original_filename = frame_name if "OriginalFileName" not in row else row["OriginalFileName"]
+            # Check if session_name in frame_name, else add it.
+            if session.session_name not in frame_name:
+                frame_name = f"{session.session_name}_{frame_name}"
+
             # Datetime formatting
             creation_date = ""
-            if "SubSecDateTimeOriginal" in row: # Plancha
+            if "SubSecDateTimeOriginal" in row and "1970" not in row["SubSecDateTimeOriginal"].split(".")[0]: # Plancha with correct datetime
                 date, time = row["SubSecDateTimeOriginal"].split(".")[0].split(" ")
                 date = date.replace(":", "-")
                 creation_date = date + " " + time
@@ -154,13 +161,21 @@ class AtlasImport:
                 date, time = row["DateTimeOriginal"].split(" ")
                 date = date.replace(":", "-")
                 creation_date = date + " " + time
+            elif "GPSDateTime" in row: # 2015 Scuba diving
+                date, time = row["GPSDateTime"].replace("Z", "").split(".")[0].split(" ")
+                date = date.replace(":", "-")
+                creation_date = date + " " + time
+            elif "SubSecDateTimeOriginal" in row and "1970" in row["SubSecDateTimeOriginal"].split(".")[0]: # Plancha with 1970 as year replace with session date and add 12.
+                _, time = row["SubSecDateTimeOriginal"].split(".")[0].split(" ")
+                time = (datetime.strptime(time, "%H:%M:%S") + timedelta(hours=12)).strftime("%H:%M:%S")
+                creation_date = session.date + " " + time
             else:
-                creation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                creation_date = None
 
             frame = FrameDTO(
                 version = frame_version,
                 filename = frame_name,
-                original_filename = frame_name if "OriginalFileName" not in row else row["OriginalFileName"],
+                original_filename = original_filename,
                 gps_latitude = None if "GPSLatitude" not in row else row["GPSLatitude"],
                 gps_longitude = None if "GPSLongitude" not in row else row["GPSLongitude"],
                 gps_altitude = None if "GPSAltitude" not in row else row["GPSAltitude"],

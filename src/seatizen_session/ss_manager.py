@@ -475,9 +475,9 @@ class SessionManager:
         """ Return echo sounder name based on ASV number. """
         asv_number = int(self.session_name.split("_")[2].replace("ASV-", ""))
         if asv_number == 1:
-            return '<a href="https://www.echologger.com/products/single-frequency-echosounder-deep" _target="blank">ETC 400</a>'
+            return '<a href="https://www.echologger.com/products/single-frequency-echosounder-deep" target="_blank">ETC 400</a>'
         elif asv_number == 2:
-            return '<a href="https://ceruleansonar.com/products/sounder-s500" _target="blank">S500</a>'
+            return '<a href="https://ceruleansonar.com/products/sounder-s500" target="_blank">S500</a>'
         else:
             return ""
 
@@ -586,7 +586,7 @@ class SessionManager:
             print(f"No metadata_csv found for session {self.session_name}\n")
             return {}
 
-        index_col = None
+        index_col = False
         if indexingByFilename:
             with open(metadata_path, "r") as f:
                 try:

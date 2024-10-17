@@ -50,6 +50,7 @@ class SQLiteConnector:
         self._connection.commit()
         cursor.close()
     
+
     def _executemany(self, query, params):
         if self._connection is None:
             print("Error: database connection not established")
@@ -75,6 +76,7 @@ class SQLiteConnector:
                 self._executemany(query, params)
             return None
     
+
     def generate(self, sqlite_filepath: Path):
         """ Regenerate gpkg file. """
 
@@ -92,7 +94,20 @@ class SQLiteConnector:
         self._connection.execute('PRAGMA user_version = 10300;')  # GeoPackage version 1.3
         self._connection.executescript(sql_script)
     
+
     def close(self):
         if self._connection is not None:
             self._connection.close()
             SQLiteConnector._instance = None
+    
+
+    def apply_script(self, script_path: Path):
+        """ Apply a script. """
+
+        if not script_path.exists or not script_path.is_file():
+            raise NameError(f"File {script_path} not found")
+    
+        with open(script_path, 'r') as file:
+            sql_script = file.read()
+        
+        self._connection.executescript(sql_script)

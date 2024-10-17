@@ -54,6 +54,46 @@ To ensure a consistent environment for all users, this project uses a Conda envi
 sudo apt-get install libsqlite3-mod-spatialite
 ```
 
+6. **Troubleshooting:** If `sqlite3.OperationalError: /home/bioeos/miniconda3/envs/zenodo_env/bin/../lib/libstdc++.so.6: version 'GLIBCXX_3.4.32' not found (required by /usr/lib/x86_64-linux-gnu/libproj.so.25)`
+
+Use:
+
+`sudo find / -name libstdc++.so.6` to find your local file.
+
+`strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX` to check if the `version 'GLIBCXX_3.4.32'` is present.
+
+Then:
+```bash
+ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /home/bioeos/miniconda3/envs/zenodo_env/lib/libstdc++.so
+ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /home/bioeos/miniconda3/envs/zenodo_env/lib/libstdc++.so.6
+```
+
+## Cheatsheet command to generate all from seatizen data
+
+```bash
+python zenodo-manager.py -efol -pfol /media/bioeos/E/2015_plancha_session/ -ulo -ffi -fr -ne # Force inserting frame in database with no export and regenerate database.
+python zenodo-manager.py -efol -pfol /media/bioeos/E/poulain_syc -ulo -ffi -ne # Force inserting frame in database with no export.
+python zenodo-manager.py -ecsv -pcsv ../../Bioeos/OUTPUT_DATA/zenodo_suivi/processed_data_without_2015.csv -ulo -la ../../Bioeos/annotations_some_image/Export_human/ -ne # Add frames and import annotations.
+python zenodo-manager.py -eno -ulo -ssn 1 # Update database data (all class and label).
+python zenodo-manager.py -eno -ulo # Export all files.
+```
+
+# Qgis command to load data
+```SQL
+-- Load prediction map of a class 
+SELECT f.GPSPosition, mlc.name, mlp.score
+FROM multilabel_prediction mlp
+JOIN frame f ON f.id = mlp.frame_id
+JOIN multilabel_class mlc on mlc.id = mlp.ml_class_id;
+
+-- Load deposit linestring
+SELECT d.session_name, d.platform_type, dl.footprint_linestring
+FROM deposit_linestring dl
+JOIN deposit d on d.doi = dl.deposit_doi
+WHERE dl.footprint_linestring NOT NULL;
+
+```
+
 
 ## Contributing
 

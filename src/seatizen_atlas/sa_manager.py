@@ -6,7 +6,6 @@ from .sa_metadata import build_metadata
 from .sa_tools import get_annotation_type_from_opt, AnnotationType
 
 from ..utils.constants import SEATIZEN_ATLAS_GPKG, SEATIZEN_ATLAS_URN
-from ..utils.lib_tools import md5
 
 from ..zenodo_api.za_token import ZenodoAPI
 from ..zenodo_api.za_tokenless import download_manager_without_token, get_version_from_session_name
@@ -126,7 +125,6 @@ class AtlasManager:
                 self.importer.multilabel_annotation_importer(file)
 
 
-
     def publish(self, metadata_json_path) -> None:
         """ Publish seatzizen folder content. """
 
@@ -143,3 +141,17 @@ class AtlasManager:
         previous_files = [file_dict["filename"] for file_dict in zenodoAPI.list_files()]
 
         zenodoAPI.add_new_version_to_deposit(self.seatizen_folder_path, metadata, restricted_files=previous_files)
+
+
+    def apply_sql_script(self, sql_script_number: str) -> None:
+        """ Apply an sql_script. """
+
+        if not sql_script_number.isnumeric() or int(sql_script_number) < 0: return
+
+        for file in Path(Path.cwd(), "src/sql_connector").iterdir():
+            if file.suffix != ".sql": continue
+
+            start_number = file.name.split("_")[0]
+            if start_number != sql_script_number.rjust(2, '0'): continue
+
+            self.sql_connector.apply_script(file)

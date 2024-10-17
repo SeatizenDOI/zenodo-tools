@@ -1,11 +1,17 @@
 This deposit offers a comprehensive collection of geospatial and metadata files that constitute the Seatizen Atlas dataset, facilitating the management and analysis of spatial information. 
 
+<br><br>
 
-To navigate through the data, you can use an interface available at <a href="seatizenmonitoring.ifremer.re">seatizenmonitoring.ifremer.re</a>, which provides a condensed CSV file tailored to your choice of metadata and the selected area.
 
-To retrieve the associated images, you will need to use a script that extracts the relevant frames. A brief tutorial is available here: <a href="https://github.com/SeatizenDOI/zenodo-tools/blob/master/Tutorial.md">Tutorial</a>.
+To navigate through the data, you can use an interface available at <a href="http://seatizenmonitoring.ifremer.re" target="_blank">seatizenmonitoring.ifremer.re</a>, which provides a condensed CSV file tailored to your choice of metadata and the selected area.
+<br>
 
-All the scripts for processing sessions, creating the geopackage, and generating files can be found here: <a href="https://github.com/SeatizenDOI">SeatizenDOI github repository</a>.
+To retrieve the associated images, you will need to use a script that extracts the relevant frames. A brief tutorial is available here: <a href="https://github.com/SeatizenDOI/zenodo-tools/blob/master/Tutorial.md" target="_blank">Tutorial</a>.
+<br>
+
+All the scripts for processing sessions, creating the geopackage, and generating files can be found here: <a href="https://github.com/SeatizenDOI" target="_blank">SeatizenDOI github repository</a>.
+
+<br><br>
 
 The repository includes:
 <br>

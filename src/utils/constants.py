@@ -7,7 +7,7 @@ BYTE_TO_GIGA_BYTE = 1000000000
 SEATIZEN_ATLAS_DOI = "11125847"
 SEATIZEN_ATLAS_URN = "seatizen-atlas"
 SEATIZEN_ATLAS_GPKG = "seatizen_atlas_db.gpkg"
-SQL_FILE = "./src/sql_connector/base_database.sql"
+SQL_FILE = "./src/sql_connector/00_base_database.sql"
 
 # Zenodo constant for upload
 MAXIMAL_DEPOSIT_FILE_SIZE = 50 # GB

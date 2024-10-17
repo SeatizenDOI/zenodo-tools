@@ -41,6 +41,7 @@ def parse_args():
     parser.add_argument("-ffi", "--force_frames_insertion", action="store_true", help="Force inserting all frames in database without useful check")
     parser.add_argument("-cp", "--confirm_upload", action="store_true", help="Upload to zenodo.")
     parser.add_argument("-ne", "--no_export", action="store_true", help="No export.")
+    parser.add_argument("-ssn", "--sql_script_number", default=None, help="If fill with a number, try to apply the correspondant script.")
 
 
     return parser.parse_args()
@@ -63,6 +64,11 @@ def main(opt):
         return
 
     seatizenManager = AtlasManager(config_json, opt.path_seatizen_atlas_folder, opt.use_from_local, opt.force_regenerate)
+
+    # Try to apply a sql_script.
+    if opt.sql_script_number != None:
+        seatizenManager.apply_sql_script(opt.sql_script_number)
+        return
 
     if not opt.enable_nothing:
         sessions_fail = []
