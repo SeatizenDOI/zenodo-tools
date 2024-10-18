@@ -21,5 +21,6 @@ Dockerfile.*
 # Specific file.
 csv_inputs/*
 seatizen_atlas_folder/*
+seatizen_atlas_dataset/*
 zenodo-monitoring.py
 assets

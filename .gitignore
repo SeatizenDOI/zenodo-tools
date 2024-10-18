@@ -4,6 +4,6 @@ old_code
 __pycache__
 config.json
 csv_inputs
-seatizen_atlas_folder
+seatizen_atlas_*
 profiling
 output_csv
