@@ -1,10 +1,11 @@
-<h1>Seatizen Atlas Dataset</h1>
+
+<h1>Seatizen Atlas image dataset</h1>
 
 <p>This repository contains the resources and tools for accessing and utilizing the annotated images within the Seatizen Atlas dataset, as described in the paper <em>"Seatizen Atlas: a collaborative dataset of underwater and aerial marine imagery"</em>.</p>
 
 <h2>Download the Dataset</h2>
 
-<p>This annotated dataset is part of a bigger dataset composed of lebeled and unlabeled images. To access informations about the whole dataset, please visit the <a href="https://zenodo.org/record/11125847">Zenodo repository</a> and follow the download instructions provided.</p>
+<p>This annotated dataset is part of a bigger dataset composed of labeled and unlabeled images. To access information about the whole dataset, please visit the <a href="https://zenodo.org/record/11125847">Zenodo repository</a> and follow the download instructions provided.</p>
 
 <h2>Scientific Publication</h2>
 
@@ -34,127 +35,69 @@ For detailed information about the dataset and experimental results, please refe
 
 <h2>List of Classes</h2>
 
-<table>
-    <thead>
-        <tr>
-            <th>Algae</th>
-            <th>Coral</th>
-            <th>Other Categories</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Algae Assembly</td>
-            <td>Acropore Branched</td>
-            <td>Syringodium Isoetifolium</td>
-        </tr>
-        <tr>
-            <td>Algae Drawn Up</td>
-            <td>Acropore Digitised</td>
-            <td>Thalassodendron Ciliatum</td>
-        </tr>
-        <tr>
-            <td>Algae Limestone</td>
-            <td>Acropore Submassive</td>
-            <td><strong>Habitat</strong></td>
-        </tr>
-        <tr>
-            <td>Algae Sodding</td>
-            <td>Acropore Tabular</td>
-            <td>Rock</td>
-        </tr>
-        <tr>
-            <td><strong>Seagrass</strong></td>
-            <td>Bleached Coral</td>
-            <td>Rubble</td>
-        </tr>
-        <tr>
-            <td>Syringodium Isoetifolium</td>
-            <td>Dead Coral</td>
-            <td>Sand</td>
-        </tr>
-        <tr>
-            <td>Thalassodendron Ciliatum</td>
-            <td>Gorgon</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td><strong>Habitat</strong></td>
-            <td>Living Coral</td>
-            <td><strong>Other Organisms</strong></td>
-        </tr>
-        <tr>
-            <td>Rock</td>
-            <td>Millepore</td>
-            <td>Acanthasters</td>
-        </tr>
-        <tr>
-            <td>Rubble</td>
-            <td>No Acropore Encrusting</td>
-            <td>Anemone</td>
-        </tr>
-        <tr>
-            <td>Sand</td>
-            <td>No Acropore Foliaceous</td>
-            <td>Ascidia</td>
-        </tr>
-        <tr>
-            <td><strong>Other Organisms</strong></td>
-            <td>No Acropore Massive</td>
-            <td>Clam</td>
-        </tr>
-        <tr>
-            <td>Acanthasters</td>
-            <td>No Acropore Solitary</td>
-            <td>Fish</td>
-        </tr>
-        <tr>
-            <td>Anemone</td>
-            <td>No Acropore Submassive</td>
-            <td>Other Starfish</td>
-        </tr>
-        <tr>
-            <td>Ascidia</td>
-            <td></td>
-            <td>Sea Cucumber</td>
-        </tr>
-        <tr>
-            <td>Clam</td>
-            <td><strong>Custom Classes</strong></td>
-            <td>Sea Urchins</td>
-        </tr>
-        <tr>
-            <td>Fish</td>
-            <td>Blurred</td>
-            <td>Sponge</td>
-        </tr>
-        <tr>
-            <td>Other Starfish</td>
-            <td>Homo Sapiens</td>
-            <td>Turtle</td>
-        </tr>
-        <tr>
-            <td>Sea Cucumber</td>
-            <td>Human Object</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Sea Urchins</td>
-            <td>Trample</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Sponge</td>
-            <td>Useless</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Turtle</td>
-            <td>Waste</td>
-            <td></td>
-        </tr>
-    </tbody>
-</table>
+<h2>Algae</h2>
+<ol>
+    <li>Algal Assemblage</li>
+    <li>Algae Halimeda</li>
+    <li>Algae Coralline</li>
+    <li>Algae Turf</li>
+</ol>
+
+<h2>Coral</h2>
+<ol>
+    <li>Acropora Branching</li>
+    <li>Acropora Digitate</li>
+    <li>Acropora Submassive</li>
+    <li>Acropora Tabular</li>
+    <li>Bleached Coral</li>
+    <li>Dead Coral</li>
+    <li>Gorgonian</li>
+    <li>Living Coral</li>
+    <li>Non-acropora Millepora</li>
+    <li>Non-acropora Branching</li>
+    <li>Non-acropora Encrusting</li>
+    <li>Non-acropora Foliose</li>
+    <li>Non-acropora Massive</li>
+    <li>Non-acropora Coral Free</li>
+    <li>Non-acropora Submassive</li>
+</ol>
+
+<h2>Seagrass</h2>
+<ol>
+    <li>Syringodium Isoetifolium</li>
+    <li>Thalassodendron Ciliatum</li>
+</ol>
+
+<h2>Habitat</h2>
+<ol>
+    <li>Rock</li>
+    <li>Rubble</li>
+    <li>Sand</li>
+</ol>
+
+<h2>Other Organisms</h2>
+<ol>
+    <li>Thorny Starfish</li>
+    <li>Sea Anemone</li>
+    <li>Ascidians</li>
+    <li>Giant Clam</li>
+    <li>Fish</li>
+    <li>Other Starfish</li>
+    <li>Sea Cucumber</li>
+    <li>Sea Urchin</li>
+    <li>Sponges</li>
+    <li>Turtle</li>
+</ol>
+
+<h2>Custom Classes</h2>
+<ol>
+    <li>Blurred</li>
+    <li>Homo Sapiens</li>
+    <li>Human Object</li>
+    <li>Trample</li>
+    <li>Useless</li>
+    <li>Waste</li>
+</ol>
 
 <p>These classes reflect the biodiversity and variety of habitats captured in the Seatizen Atlas dataset, providing valuable resources for training AI models in marine biodiversity research.</p>
 
