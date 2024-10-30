@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session") # ! Caution could be dangerous when we get multiple processed version
     
     parser.add_argument("-uc", "--upload-custom", default="", help="Upload custom data. Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA, d: DCIM, s: SENSORS")
-    parser.add_argument("-umc", "--update-metadata-custom", action="store_true", help="Update custom metadata from a session")
+    parser.add_argument("-umc", "--update-metadata-custom", action="store_true", help="Update custom metadata from a session => last version")
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
@@ -145,14 +145,15 @@ def main(opt):
                 if zenodoAPI.deposit_id == None:
                     print("With no id, we cannot update our data, continue")
                     continue
-                
+
                 custom_metadata = plancha_metadata.build_for_custom() 
                 raw_data_ids, processed_data_ids, others_versions_ids = \
                     zenodoAPI.get_all_version_ids_for_deposit(zenodoAPI.get_conceptrecid_specific_deposit(), otherVersion=False) # !FIXME Need to toggle manually True to update other type of deposit like seatizen atlas dataset
-                for id in raw_data_ids + processed_data_ids + others_versions_ids:
-                    print(f"Working with id {id}")
-                    zenodoAPI.deposit_id = id
-                    zenodoAPI.edit_metadata(custom_metadata)            
+                
+                id = max(raw_data_ids + processed_data_ids + others_versions_ids)
+                print(f"Working with id {id}")
+                zenodoAPI.deposit_id = id
+                zenodoAPI.edit_metadata(custom_metadata)            
 
         except Exception:
             print(traceback.format_exc(), end="\n\n")
