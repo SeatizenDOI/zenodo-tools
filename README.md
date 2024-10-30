@@ -106,4 +106,4 @@ Contributions are welcome! To contribute, please follow these steps:
 
 ## License
 
-This framework is distributed under the wtfpl license. See `LICENSE` for more information.
+This framework is distributed under the CC0-1.0 license. See `LICENSE` for more information.
