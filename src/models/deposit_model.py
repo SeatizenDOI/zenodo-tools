@@ -158,7 +158,8 @@ class DepositLinestringDAO(AbstractBaseDAO):
         )
         self.sql_connector.execute_query(query, params)
 
-
+    # !FIXME All get by ID need to be retrieve in one time to avoid n select in the database
+    # !FIXME If too much occurences, get all id to retrieve and do only one select with IN statement
     def get_deposit_linestring_by_id(self, deposit_linestring_id: int) -> DepositLinestringDTO:
         """ Retrieve deposit_linestring filter by the deposit_doi parameter. """
         if deposit_linestring_id in self.__deposits_linestrings_by_key:
