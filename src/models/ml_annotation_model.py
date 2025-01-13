@@ -110,7 +110,7 @@ class MultilabelAnnotationSessionDAO(AbstractBaseDAO):
     def insert_and_get_id(self, anno_ses: MultilabelAnnotationSessionDTO) -> DataStatus | MultilabelAnnotationSessionDTO:
         """ Insert a multilabel annotation session and return a multilabel annotation session or Datastatus. """
         status = self.get_specific_annotation_session(anno_ses)
-        if not isinstance(status, DataStatus): return  DataStatus.ALLREADY # Exists no need to add
+        if not isinstance(status, DataStatus): return  DataStatus.ALREADY # Exists no need to add
 
         # Insert
         query = f""" INSERT INTO {self.table_name} 

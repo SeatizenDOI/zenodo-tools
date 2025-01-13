@@ -7,7 +7,7 @@ from ..sql_connector.sc_connector import SQLiteConnector
 class DataStatus(enum.Enum):
     NO_DATA = 1
     MISSING_VALUE = 2
-    ALLREADY = 3
+    ALREADY = 3
 
 # Base DAO (Data Access Object).
 class AbstractBaseDAO(abc.ABC):

@@ -259,7 +259,7 @@ class AtlasImport:
         )
         
         annotation_session = self.ml_anno_ses_manager.insert_and_get_id(ml_annotation_session)
-        if isinstance(annotation_session, DataStatus) and annotation_session == DataStatus.ALLREADY:
+        if isinstance(annotation_session, DataStatus) and annotation_session == DataStatus.ALREADY:
             print("This annotation session is already in database.")
             return
         elif isinstance(annotation_session, DataStatus) and annotation_session == DataStatus.NO_DATA:

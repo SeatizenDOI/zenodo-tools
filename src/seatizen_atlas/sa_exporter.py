@@ -129,7 +129,7 @@ class AtlasExport:
         
         data = []
         cpt_predictions_not_found = 0
-        for frame in tqdm(self.frames_manager.frames): # Can be very long but normally when we have export metadata_images.csv we allready retrieve all frames.
+        for frame in tqdm(self.frames_manager.frames): # Can be very long but normally when we have export metadata_images.csv we already retrieve all frames.
             
             predictions = self.ml_prediciton_manager.get_predictions_for_specific_model_and_frame_name(frame, last_model)
             if predictions == None or len(predictions) == 0:
