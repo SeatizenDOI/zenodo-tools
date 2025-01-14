@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from scipy.spatial import ConvexHull
 from shapely.geometry import LineString, Polygon
 from ..ss_zipper import SessionZipper
-from ...utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE, MULTILABEL_MODEL_NAME
+from ...utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE, MULTILABEL_MODEL_NAME, JACQUES_MODEL_NAME
 
 class BaseType(Enum):
     RGP = "RGP Station from IGN"
@@ -38,7 +38,7 @@ class BaseSessionManager(ABC):
         self.temp_folder.mkdir(parents=True, exist_ok=True)
         
         # Compute informations.
-        self.place, self.date, self.country, self.platform = None, None, None, None
+        self.place, self.date, self.country, self.platform = "", "", "", ""
         self.compute_basics_info()
 
     @abstractmethod
@@ -136,7 +136,7 @@ class BaseSessionManager(ABC):
         
         t_start = datetime.now()
         print(f"Preparing {folder_to_zip} folder")
-        shutil.make_archive(zip_folder, "zip", raw_folder)
+        shutil.make_archive(str(zip_folder), "zip", raw_folder)
 
         # Add photog report in preview files.
         if "PHOTOGRAMMETRY" in folder_to_zip:
@@ -230,9 +230,9 @@ class BaseSessionManager(ABC):
     def __set_place(self) -> None:
         """ Set country and place as variable from session_name. """
         place = self.session_name.split("_")[1].split("-")
-        self.country = pycountry.countries.get(alpha_3=place[0])
-        if self.country != None:
-            self.country = self.country.name.lower().title()
+        country = pycountry.countries.get(alpha_3=place[0])
+        if country != None:
+            self.country = country.name.lower().title()
         else:
             print("[WARNING] Error in country code")
         self.place = "-".join([a.lower().title() for a in place[1:]])
@@ -283,7 +283,7 @@ class BaseSessionManager(ABC):
             return [self.temp_folder]
         
         # We need to move file to subdir
-        cum_size, nb_ses = 0, 1
+        cum_size, nb_ses = 0.0, 1.0
         f_to_move = Path(self.temp_folder, "RAW_DATA")
         f_to_move.mkdir(exist_ok=True)
         folders_to_upload = [f_to_move]
@@ -302,6 +302,63 @@ class BaseSessionManager(ABC):
         print(f"We will have {nb_ses} versions for RAW DATA")
         return folders_to_upload
 
+    def get_jacques_csv(self) -> pd.DataFrame:
+        """ Return jacques model data from csv."""
+        IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
+        if not IA_path.exists() or not IA_path.is_dir(): return pd.DataFrame()
+
+        jacques_name = Path()
+        for file in IA_path.iterdir():
+            if JACQUES_MODEL_NAME in file.name:
+                jacques_name = file
+                break
+        
+        if jacques_name == "":
+            print("[WARNING] Cannot find jacques predictions file.")
+            return pd.DataFrame()
+
+        jacques_csv = pd.read_csv(jacques_name)
+        if len(jacques_csv) == 0: return pd.DataFrame()
+
+        return jacques_csv
+
+
+    def get_jacques_stat(self) -> tuple[float, float]:
+        """ Return proportion of useful/useless. """
+        
+        jacques_csv = self.get_jacques_csv()
+        if len(jacques_csv) == 0: return 0, 0
+        
+        useful = round(len(jacques_csv[jacques_csv["Useless"] == 0]) * 100 / len(jacques_csv), 2)
+        useless = round(len(jacques_csv[jacques_csv["Useless"] == 1]) * 100 / len(jacques_csv), 2)
+        
+        return useful, useless
+
+
+    def get_useful_frames_name(self) -> list[str]:
+            """ Return a list of frames path predicted useful by jacques. """
+            useful_frames = []
+            try_ia = False
+            # Get frame predictions.
+            df_predictions_gps = self.get_predictions_gps()
+            if len(df_predictions_gps) == 0: 
+                print(f"Predictions GPS empty for session {self.session_name}\n")
+                try_ia = True
+            else:
+                useful_frames = df_predictions_gps["FileName"].to_list() # CSV without useless images
+            
+            if not try_ia: return useful_frames
+
+            print("We didn't find predictions gps, so we try with jacques csv annotations to select useful frames.")
+            # Cannot find predictions_gps, try with jacques annotation_files
+            
+            df_jacques = self.get_jacques_csv()
+            if len(df_jacques) == 0: return useful_frames
+
+            useful_frames = df_jacques[df_jacques["Useless"] == 0]["FileName"].to_list()
+
+            return useful_frames   
+
 
     def is_video_or_images(self) -> tuple[DCIMType, float]:
         """ Return media type of raw data. """
@@ -319,12 +376,12 @@ class BaseSessionManager(ABC):
         return isVideoOrImagesOrNothing, 0 if isVideoOrImagesOrNothing == DCIMType.NONE else self.get_file_dcim_size([".mp4"] if isVideoOrImagesOrNothing == DCIMType.VIDEO else [".jpg", ".jpeg"])
 
 
-    def get_file_dcim_size(self, extension: str) -> float:
+    def get_file_dcim_size(self, extension: list[str]) -> float:
         """ Return Sum of filesize in Gb"""
         dcim_path = Path(self.session_path, "DCIM")
         if not Path.exists(dcim_path) or not dcim_path.is_dir(): return 0
 
-        size = 0
+        size = 0.0
         for file in dcim_path.iterdir():
             if file.suffix.lower() in extension:
                 size += os.path.getsize(str(file)) / BYTE_TO_GIGA_BYTE
@@ -336,7 +393,7 @@ class BaseSessionManager(ABC):
 
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
         if not Path.exists(IA_path) or not IA_path.is_dir():
-            return {}
+            return pd.DataFrame()
         
         multilabel_model_filename = None
         for file in IA_path.iterdir():
@@ -345,7 +402,7 @@ class BaseSessionManager(ABC):
             
             multilabel_model_filename = file
         
-        if multilabel_model_filename == None: return {}
+        if multilabel_model_filename == None: return pd.DataFrame()
         
         index_col = None
         if indexingByFilename:
@@ -357,17 +414,17 @@ class BaseSessionManager(ABC):
 
 
         multilabel_model_csv = pd.read_csv(multilabel_model_filename, index_col=index_col)
-        if len(multilabel_model_csv) == 0: return {}
+        if len(multilabel_model_csv) == 0: return pd.DataFrame()
         return multilabel_model_csv
 
 
     def get_predictions_gps(self) -> pd.DataFrame:
         """ Return predictions_gps content else {} if not found. """
         predictions_gps_path = Path(self.session_path, "METADATA", "predictions_gps.csv")
-        if not Path.exists(predictions_gps_path): return {}
+        if not Path.exists(predictions_gps_path): return pd.DataFrame()
         predictions_gps = pd.read_csv(predictions_gps_path)
 
-        return predictions_gps if len(predictions_gps) != 0 else {} # Avoid dataframe with just header and no data.
+        return predictions_gps if len(predictions_gps) != 0 else pd.DataFrame() # Avoid dataframe with just header and no data.
     
 
     def get_predictions_gps_with_filtering(self) -> pd.DataFrame:
@@ -375,15 +432,15 @@ class BaseSessionManager(ABC):
 
         predictions_gps = self.get_predictions_gps()
         
-        if "GPSLongitude" not in predictions_gps or "GPSLatitude" not in predictions_gps: return {} # No GPS coordinate
-        if round(predictions_gps["GPSLatitude"].std(), 10) == 0.0 or round(predictions_gps["GPSLongitude"].std(), 10) == 0.0: return {} # All frames have the same gps coordinate
+        if "GPSLongitude" not in predictions_gps or "GPSLatitude" not in predictions_gps: return pd.DataFrame() # No GPS coordinate
+        if round(predictions_gps["GPSLatitude"].std(), 10) == 0.0 or round(predictions_gps["GPSLongitude"].std(), 10) == 0.0: return pd.DataFrame() # All frames have the same gps coordinate
 
         return predictions_gps
 
 
-    def get_frames_list(self) -> list:
+    def get_frames_list(self) -> list[Path]:
         """ Return list of frames from relative path in metadata csv. """
-        frames_path = []
+        frames_path: list[Path] = []
 
         # Get frame relative path.
         metadata_df = self.get_metadata_csv()
@@ -404,7 +461,7 @@ class BaseSessionManager(ABC):
         return frames_path
 
 
-    def get_frame_parent_folder(self, list_frames: str) -> str:
+    def get_frame_parent_folder(self, list_frames: list) -> str:
         """ Extract common parent name from all relative path. """
 
         if len(list_frames) == 0: return ""
@@ -429,9 +486,9 @@ class BaseSessionManager(ABC):
         metadata_path = Path(self.session_path, "METADATA/metadata.csv")
         if not Path.exists(metadata_path):
             print(f"No metadata_csv found for session {self.session_name}\n")
-            return {}
+            return pd.DataFrame()
 
-        index_col = False
+        index_col: bool | int = False
         if indexingByFilename:
             with open(metadata_path, "r") as f:
                 try:
@@ -446,7 +503,7 @@ class BaseSessionManager(ABC):
         sensors_path = Path(self.session_path, "SENSORS")
         if not Path.exists(sensors_path) or not sensors_path.is_dir():
             print(f"No SENSORS folder for session {self.session_name}")
-            return {}
+            return pd.DataFrame()
         
         
         for file in sensors_path.iterdir():
@@ -468,7 +525,7 @@ class BaseSessionManager(ABC):
             return pd.DataFrame(waypoints, columns=["GPSLatitude", "GPSLongitude"])
 
         print(f"No waypoints file found for session {self.session_name}")
-        return {}
+        return pd.DataFrame()
 
 
     def get_bit_size_zip_folder(self) -> dict:

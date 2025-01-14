@@ -270,7 +270,7 @@ class SessionMetadata:
         return creators, contributors
     
 
-    def __build_communities(self) -> dict | None:
+    def __build_communities(self) -> list | None:
         communities = [{'identifier': name} for name in self.metadata_json[COMMUNITIES_KEY]]
         return None if len(communities) == 0 else communities
     

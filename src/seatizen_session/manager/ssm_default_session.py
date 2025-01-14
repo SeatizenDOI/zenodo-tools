@@ -222,39 +222,6 @@ class DefaultSession(BaseSessionManager):
         metadata_df.dropna(how='all', axis=1, inplace=True)
         isGeoreferenced = "GPSLongitude" in metadata_df and "GPSLatitude" in metadata_df
         return nb_frames, isGeoreferenced
-
-
-    def get_jacques_csv(self) -> pd.DataFrame:
-        " Return jacques model data from csv."
-        IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
-        if not Path.exists(IA_path) or not IA_path.is_dir(): return {}
-
-        jacques_name = ""
-        for file in IA_path.iterdir():
-            if JACQUES_MODEL_NAME in file.name:
-                jacques_name = file
-                break
-        
-        if jacques_name == "":
-            print("[WARNING] Cannot find jacques predictions file.")
-            return {}
-
-        jacques_csv = pd.read_csv(jacques_name)
-        if len(jacques_csv) == 0: return {}
-
-        return jacques_csv
-
-
-    def get_jacques_stat(self) -> tuple[float, float]:
-        """ Return proportion of useful/useless. """
-        
-        jacques_csv = self.get_jacques_csv()
-        if len(jacques_csv) == 0: return 0, 0
-        
-        useful = round(len(jacques_csv[jacques_csv["Useless"] == 0]) * 100 / len(jacques_csv), 2)
-        useless = round(len(jacques_csv[jacques_csv["Useless"] == 1]) * 100 / len(jacques_csv), 2)
-        
-        return useful, useless
     
 
     def get_echo_sounder_name(self) -> str:
@@ -275,29 +242,4 @@ class DefaultSession(BaseSessionManager):
 
         with open(prog_path, "r") as f:
             prog_config = json.load(f)
-        return prog_config
-    
-
-    def get_useful_frames_name(self) -> list[str]:
-        """ Return a list of frames path predicted useful by jacques. """
-        useful_frames = []
-        try_ia = False
-        # Get frame predictions.
-        df_predictions_gps = self.get_predictions_gps()
-        if len(df_predictions_gps) == 0: 
-            print(f"Predictions GPS empty for session {self.session_name}\n")
-            try_ia = True
-        else:
-            useful_frames = df_predictions_gps["FileName"].to_list() # CSV without useless images
-        
-        if not try_ia: return useful_frames
-
-        print("We didn't find predictions gps, so we try with jacques csv annotations to select useful frames.")
-        # Cannot find predictions_gps, try with jacques annotation_files
-        
-        df_jacques = self.get_jacques_csv()
-        if len(df_jacques) == 0: return useful_frames
-
-        useful_frames = df_jacques[df_jacques["Useless"] == 0]["FileName"].to_list()
-
-        return useful_frames        
+        return prog_config     

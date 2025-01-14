@@ -48,8 +48,8 @@ class UAVSession(BaseSessionManager):
         # Check for video
         metadata_csv = self.get_metadata_csv()
         first_image = metadata_csv.iloc[0]
-        extension = Path(first_image["relative_file_path"]).suffix.lower()
-        size_images = self.get_file_dcim_size(extension)
+        extensions = [Path(first_image["relative_file_path"]).suffix.lower()]
+        size_images = self.get_file_dcim_size(extensions)
         number_images = len(metadata_csv)
         camera = first_image["Make"] + " " + first_image["Model"]
 

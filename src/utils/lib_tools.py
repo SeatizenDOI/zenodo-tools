@@ -9,7 +9,7 @@ class Sources(enum.Enum):
     FOLDER = 1
     SESSION = 2
 
-def get_mode_from_opt(opt) -> Sources:
+def get_mode_from_opt(opt) -> Sources | None:
     """ Retrieve mode from input option """
     mode = None
 
@@ -22,36 +22,37 @@ def get_mode_from_opt(opt) -> Sources:
 
     return mode
 
-def get_src_from_mode(mode: Sources, opt) -> str:
+def get_src_from_mode(mode: Sources, opt) -> Path:
     """ Retrieve src path from mode """
-    src = ""
+    src = Path()
 
     if mode == Sources.CSV_SESSION:
-        src = opt.path_csv_file
+        src = Path(opt.path_csv_file)
     elif mode == Sources.FOLDER:
-        src = opt.path_folder
+        src = Path(opt.path_folder)
     elif mode == Sources.SESSION:
-        src = opt.path_session
+        src = Path(opt.path_session)
 
     return src
 
 def get_list_sessions(opt) -> list[Path]:
     """ Retrieve list of sessions from input """
 
-    list_sessions = []
+    list_sessions: list[Path] = []
 
     mode = get_mode_from_opt(opt)
+    if mode == None: return list_sessions
+
     src = get_src_from_mode(mode, opt)
 
     if mode == Sources.SESSION:
-        list_sessions = [Path(src)]
+        list_sessions = [src]
 
     elif mode == Sources.FOLDER:
-        list_sessions = sorted(list(Path(src).iterdir()))
+        list_sessions = sorted(list(src.iterdir()))
     
     elif mode == Sources.CSV_SESSION:
-        src = Path(src)
-        if Path.exists(src):
+        if src.exists():
             df_ses = pd.read_csv(src)
             list_sessions = [Path(row.root_folder, row.session_name) for row in df_ses.itertuples(index=False)]
 
@@ -88,7 +89,7 @@ def get_custom_folders_to_upload(opt) -> list:
     
     return folder_to_upload
 
-def clean_doi(doi) -> int | None:
+def clean_doi(doi) -> str | None:
     # check for doi is not float nan
     if doi != doi or doi in ["", None, np.nan]: return None
 
@@ -96,9 +97,9 @@ def clean_doi(doi) -> int | None:
     # In case user take the whole url 
     if "zenodo." in doi:
         doi = doi.split("zenodo.")[1]
-    return int(doi)
+    return doi
 
-def get_session_name_doi_from_opt(opt) -> list[tuple[str | None, int | None]]:
+def get_session_name_doi_from_opt(opt) -> list[tuple[str | None, str | None]]:
     """ Return a list who contains tuple (name, doi)"""
 
     def clean_name(name):
@@ -130,12 +131,12 @@ def get_doi_from_custom_frames_csv(opt) -> dict[str, list[str]]:
     """ Extract doi from custom_frames_csv """
 
     csv_path = Path(opt.path_custom_frames_csv)
-    if not Path.exists(csv_path) or not csv_path.is_file(): return []
+    if not Path.exists(csv_path) or not csv_path.is_file(): return {}
     
     df = pd.read_csv(csv_path)
     if "version_doi" not in df or "relative_file_path" not in df:
         print("If you want to download specific frames, you will need to have version_doi column and relative_file_path column.")
-        return []
+        return {}
 
     data = {}
     for doi_unformatted in list(set(df["version_doi"].to_list())):

@@ -11,7 +11,7 @@ class SessionZipper:
         self.zip_name = Path(base_zip_path).stem
         self.zip = ZipFile(self.zip_path, "w")
 
-        self.tot_zip_size, self.nb_zip_file = 0, 1
+        self.tot_zip_size, self.nb_zip_file = 0.0, 1.0
 
 
     def add_file(self, file: Path, output_struc_file: str | Path) -> None:
