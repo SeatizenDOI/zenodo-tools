@@ -1,6 +1,6 @@
 import unittest
 
-from src.seatizen_session.ss_manager import SessionManager
+from src.seatizen_session.manager.ssm_factory_manager import FactorySessionManager
 
 TMP_PATH = "/tmp/00_plancha"
 
@@ -8,7 +8,7 @@ class TestSessionManager(unittest.TestCase):
 
 
     def test_get_frame_parent_folder_1(self):
-        session = SessionManager("20010101_FRA-BREST_ASV-01_01", TMP_PATH)
+        session = FactorySessionManager.get_session_manager("20010101_FRA-BREST_ASV-01_01", TMP_PATH)
         list_frames_parent = [
             "20010101_FRA-BREST_ASV-01_01/PROCESSED_DATA/FRAMES/01.jpg",
             "20010101_FRA-BREST_ASV-01_01/PROCESSED_DATA/FRAMES/02.jpg",
@@ -19,7 +19,7 @@ class TestSessionManager(unittest.TestCase):
         self.assertEqual(session.get_frame_parent_folder(list_frames_parent), common_parent_folder)
     
     def test_get_frame_parent_folder_2(self):
-        session = SessionManager("20010101_FRA-BREST_ASV-01_01", TMP_PATH)
+        session = FactorySessionManager.get_session_manager("20010101_FRA-BREST_ASV-01_01", TMP_PATH)
         list_frames_parent = [
             "20010101_FRA-BREST_ASV-01_01/DCIM/01.jpg",
             "20010101_FRA-BREST_ASV-01_01/DCIM/02.jpg",
@@ -30,7 +30,7 @@ class TestSessionManager(unittest.TestCase):
         self.assertEqual(session.get_frame_parent_folder(list_frames_parent), common_parent_folder)
     
     def test_get_frame_parent_folder_3(self):
-        session = SessionManager("20010101_FRA-BREST_ASV-01_01", TMP_PATH)
+        session = FactorySessionManager.get_session_manager("20010101_FRA-BREST_ASV-01_01", TMP_PATH)
         list_frames_parent = [
             "20010101_FRA-BREST_ASV-01_01/DCIM/GOPRO1/01.jpg",
             "20010101_FRA-BREST_ASV-01_01/DCIM/GOPRO2/02.jpg",
@@ -41,7 +41,7 @@ class TestSessionManager(unittest.TestCase):
         self.assertEqual(session.get_frame_parent_folder(list_frames_parent), common_parent_folder)
     
     def test_get_frame_parent_folder_different_relative_path(self):
-        session = SessionManager("0010101_FRA-BREST_ASV-01_01", TMP_PATH)
+        session = FactorySessionManager.get_session_manager("0010101_FRA-BREST_ASV-01_01", TMP_PATH)
         list_frames_parent = [
             "20010101_FRA-BREST_ASV-01_01/DCIM/GOPRO1/01.jpg",
             "20010101_FRA-BREST_ASV-01_01/DCIM/GOPRO2/02.jpg",
@@ -53,13 +53,13 @@ class TestSessionManager(unittest.TestCase):
         self.assertEqual(session.get_frame_parent_folder(list_frames_parent), common_parent_folder)
     
     def test_get_frame_parent_folder_empty_list(self):
-        session = SessionManager("0010101_FRA-BREST_ASV-01_01", TMP_PATH)
+        session = FactorySessionManager.get_session_manager("0010101_FRA-BREST_ASV-01_01", TMP_PATH)
         list_frames_parent = []
         common_parent_folder = ""
         self.assertEqual(session.get_frame_parent_folder(list_frames_parent), common_parent_folder)
     
     def test_constructor_1(self):
-        session = SessionManager("20010101_FRA-BREST_ASV-01_01", TMP_PATH)
+        session = FactorySessionManager.get_session_manager("20010101_FRA-BREST_ASV-01_01", TMP_PATH)
 
         self.assertEqual(session.place, "Brest")
         self.assertEqual(session.country, "France")
@@ -67,7 +67,7 @@ class TestSessionManager(unittest.TestCase):
         self.assertEqual(session.platform, "ASV")
     
     def test_constructor_2(self):
-        session = SessionManager("15471212_SYC-CAP-HORNE-BLEU_UAV_01", TMP_PATH)
+        session = FactorySessionManager.get_session_manager("15471212_SYC-CAP-HORNE-BLEU_UAV_01", TMP_PATH)
 
         self.assertEqual(session.place, "Cap-Horne-Bleu")
         self.assertEqual(session.country, "Seychelles")

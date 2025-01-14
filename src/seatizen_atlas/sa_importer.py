@@ -17,7 +17,8 @@ from ..zenodo_api.za_tokenless import get_all_versions_from_session_name
 
 from ..utils.constants import TMP_PATH, MULTILABEL_MODEL_NAME
 
-from ..seatizen_session.ss_manager import SessionManager
+from ..seatizen_session.manager.ssm_base_manager import BaseSessionManager
+from ..seatizen_session.manager.ssm_factory_manager import FactorySessionManager
 
 class AtlasImport:
 
@@ -53,7 +54,7 @@ class AtlasImport:
 
         # Get zip size for frames and predictions.
         folders_to_compare = ["PROCESSED_DATA/IA", "METADATA"]
-        session = SessionManager(session_path, TMP_PATH)
+        session = FactorySessionManager.get_session_manager(session_path, TMP_PATH)
         session.prepare_processed_data(folders_to_compare, needFrames=False, with_file_at_root_folder=False)
         filename_with_zipsize = session.get_bit_size_zip_folder()
         session.cleanup()
@@ -117,7 +118,7 @@ class AtlasImport:
         self.multilabel_prediction_importer(session, prediction_version, frame_version)
 
 
-    def frames_importer(self, session: SessionManager, frame_version: VersionDTO, force_frames_insertion: bool) -> None:
+    def frames_importer(self, session: BaseSessionManager, frame_version: VersionDTO, force_frames_insertion: bool) -> None:
         print("\nfunc: Importing frames")
         metadata_csv = session.get_metadata_csv(indexingByFilename=True)
 
@@ -190,7 +191,7 @@ class AtlasImport:
         self.frame_manager.insert(frame_obj_to_add)
 
 
-    def multilabel_prediction_importer(self, session: SessionManager, pred_v: VersionDTO, 
+    def multilabel_prediction_importer(self, session: BaseSessionManager, pred_v: VersionDTO, 
                                        f_ver: VersionDTO) -> None:
         """ Method to import prediction multilabel. """
         print("\nfunc: Importing multilabel predictions")

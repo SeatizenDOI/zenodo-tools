@@ -4,10 +4,13 @@ import traceback
 from pathlib import Path
 
 from src.zenodo_api.za_token import ZenodoAPI
-from src.seatizen_session.ss_manager import SessionManager
+
 from src.seatizen_session.ss_metadata import SessionMetadata
-from src.utils.constants import TMP_PATH, RESTRICTED_FILES
+from src.seatizen_session.manager.ssm_factory_manager import FactorySessionManager
+
+from src.utils.constants import TMP_PATH
 from src.utils.lib_tools import get_list_sessions, get_processed_folders_to_upload, get_custom_folders_to_upload
+
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="zenodo-upload", description="Workflow to upload raw data and processed data with metadata")
@@ -78,9 +81,9 @@ def main(opt):
                 continue
             
             print(f"\n\nWorking with session {session_path.name}")
-            
-            plancha_session = SessionManager(session_path, TMP_PATH)
+            plancha_session = FactorySessionManager.get_session_manager(session_path, TMP_PATH)
             plancha_metadata = SessionMetadata(plancha_session, metadata_json)
+
             zenodoAPI.update_current_session(plancha_session.session_name)
 
             if opt.upload_rawdata:
@@ -95,16 +98,16 @@ def main(opt):
                     if i == 0:
                         zenodoAPI.create_deposit_on_zenodo(folder_to_upload, raw_metadata) # RAW_DATA
                     else:
-                        zenodoAPI.add_new_version_to_deposit(folder_to_upload, raw_metadata, RESTRICTED_FILES) # RAW_DATA_2, RAW_DATA_3, ...
+                        zenodoAPI.add_new_version_to_deposit(folder_to_upload, raw_metadata, plancha_session.get_restricted_files_on_zenodo()) # RAW_DATA_2, RAW_DATA_3, ...
                 plancha_session.cleanup()
             
             if opt.upload_processeddata:
                 folders, needFrames = get_processed_folders_to_upload(opt)
                 plancha_session.prepare_processed_data(folders, needFrames, with_file_at_root_folder=True)
                 processed_metadata = plancha_metadata.build_for_processed_data()
-                zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, RESTRICTED_FILES, dontUploadWhenLastVersionIsProcessedData=True)
+                zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, plancha_session.get_restricted_files_on_zenodo(), dontUploadWhenLastVersionIsProcessedData=True)
                 plancha_session.cleanup()
-            
+
             if opt.update_metadata:
                 if zenodoAPI.deposit_id == None:
                     print("With no id, we cannot update our data, continue")

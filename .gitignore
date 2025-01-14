@@ -7,3 +7,4 @@ csv_inputs
 seatizen_atlas_*
 profiling
 output_csv
+.mypy_cache

@@ -10,11 +10,11 @@ from pathlib import Path
 from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
+from abc import ABC, abstractmethod
 from scipy.spatial import ConvexHull
 from shapely.geometry import LineString, Polygon
-from .ss_zipper import SessionZipper
-from ..utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE, JACQUES_MODEL_NAME, MULTILABEL_MODEL_NAME
-
+from ..ss_zipper import SessionZipper
+from ...utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE, MULTILABEL_MODEL_NAME
 
 class BaseType(Enum):
     RGP = "RGP Station from IGN"
@@ -26,7 +26,7 @@ class DCIMType(Enum):
     VIDEO = "MP4 files"
     IMAGE = "JPG files"
 
-class SessionManager:
+class BaseSessionManager(ABC):
 
     def __init__(self, session_path: str, temp_folder: str) -> None:
         # Basics path.
@@ -41,14 +41,43 @@ class SessionManager:
         self.place, self.date, self.country, self.platform = None, None, None, None
         self.compute_basics_info()
 
+    @abstractmethod
+    def get_raw_access_right(self) -> str: # TODO Better tipying with enum
+        """ Access right to raw data. """
+        pass
+
+    @abstractmethod
+    def get_processed_access_right(self) -> str:
+        """ Access right to processed data. """
+        pass
+
+    @abstractmethod
+    def build_raw_description(self) -> str:
+        """ Description for raw data. """
+        pass
+
+    @abstractmethod
+    def build_processed_description(self) -> str:
+        """ Description for processed data. """
+        pass
+
+    @abstractmethod
+    def zip_raw_data(self) -> None:
+        """ Folder to zip for raw data. """
+        pass
+
+    @abstractmethod
+    def get_restricted_files_on_zenodo(self) -> list[str]:
+        """ Restricted files to not propagate in PROCESSED_DATA version"""
+        pass
+
 
     def prepare_raw_data(self) -> list[Path]:
         """ Zip all file in a tmp folder. """
         self.cleanup()
         print("-- Prepare raw data... ")
-        self.__zip_gps_raw()
-        self.__zip_dcim()
-        self.__zip_raw("SENSORS")
+        
+        self.zip_raw_data()
         
         print("-- Sort and move to sub folder if needed... ")
         return self.move_into_subfolder_if_needed()
@@ -60,10 +89,10 @@ class SessionManager:
         print("-- Prepare processed data... ")
 
         for folder in processed_folder:
-            self.__zip_raw(folder)
+            self._zip_folder(folder)
 
         if needFrames:
-            self.__zip_processed_frames()
+            self._zip_processed_frames()
 
         # Copy all file in root session like pdf or other file.
         if with_file_at_root_folder:
@@ -83,7 +112,7 @@ class SessionManager:
         print("-- Prepare custom data... ")
 
         for folder in folder_to_zip:
-            self.__zip_raw(folder)
+            self._zip_folder(folder)
 
         # Check if tmp folder is > MAX_SIZE_FILE_DEPOSIT to avoid error
         size_gb = round(sum([os.stat(file).st_size for file in self.temp_folder.iterdir()]) / BYTE_TO_GIGA_BYTE, 6)
@@ -91,7 +120,7 @@ class SessionManager:
             raise NameError("The sum total of processed data file sizes is greater than the Zenodo limit.")
 
 
-    def __zip_raw(self, folder_to_zip: str)-> None:
+    def _zip_folder(self, folder_to_zip: str)-> None:
         """ Zip all file in folder. """
         zip_folder = Path(self.temp_folder, folder_to_zip.replace("/", "_"))
         raw_folder = Path(self.session_path, folder_to_zip)
@@ -108,10 +137,17 @@ class SessionManager:
         t_start = datetime.now()
         print(f"Preparing {folder_to_zip} folder")
         shutil.make_archive(zip_folder, "zip", raw_folder)
+
+        # Add photog report in preview files.
+        if "PHOTOGRAMMETRY" in folder_to_zip:
+            photog_report_path = Path(raw_folder, "odm_report", "report.pdf")
+            if photog_report_path.exists():
+                shutil.copy(photog_report_path, Path(self.temp_folder, "000_photogrammetry_report.pdf"))
+
         print(f"Successful zipped {folder_to_zip} folder in {datetime.now() - t_start} sec\n")
 
 
-    def __zip_dcim(self) -> None:
+    def _zip_dcim(self) -> None:
         """ Zip all file in dcim folder. """
         dcim_folder = Path(self.session_path, "DCIM")
         dcim_files = natsorted(list(dcim_folder.iterdir()))
@@ -133,7 +169,7 @@ class SessionManager:
         print(f"Successful zipped DCIM folder in {datetime.now() - t_start} split in {zipper.nb_zip_file} archive\n")
 
 
-    def __zip_processed_frames(self) -> None:
+    def _zip_processed_frames(self) -> None:
         """ Zip frames folder without useless frames """
 
         # Retrieve relative path of frame.
@@ -163,7 +199,7 @@ class SessionManager:
         print(f"Successful zipped FRAMES folder in {datetime.now() - t_start}\n")
 
 
-    def __zip_gps_raw(self) -> None:
+    def _zip_gps_raw(self) -> None:
         """ Zip all file in gps folder. """
         gps_zip_path = Path(self.temp_folder, "GPS.zip")
         gps_base_folder = Path(self.session_path, "GPS/BASE")
@@ -267,103 +303,6 @@ class SessionManager:
         return folders_to_upload
 
 
-    def check_ppk(self) -> bool:
-        """ True or false if session is processed with ppk """
-        gps_device_path = Path(self.session_path, "GPS", "DEVICE")
-        if not Path.exists(gps_device_path) or not gps_device_path.is_dir():
-            return False
-        
-        for file in gps_device_path.iterdir():
-            filename = file.name
-            if "ppk_solution" in filename and ".pos" in filename:
-                return True
-        return False
-
-
-    def read_and_extract_percentage(self, file: Path) -> tuple[float, float, float]:
-        """ Extract and return Q1, Q2, Q5 %"""
-        df = pd.read_csv(file, sep=",")
-        if "fix" not in df or len(df) == 0: return 0, 0, 0
-
-        q1 = round(len(df[df["fix"] == 1]) * 100 / len(df), 2)
-        q2 = round(len(df[df["fix"] == 2]) * 100 / len(df), 2)
-        q5 = round(len(df[df["fix"] == 5]) * 100 / len(df), 2)
-
-        return q1, q2, q5
-
-
-    # Return percentage for Q1, Q2, Q5
-    def get_percentage(self, isPPK: bool) -> tuple[float, float, float]:
-        """ Choose the right file to extract Q1, Q2, Q5"""
-        gps_device_path = Path(self.session_path, "GPS", "DEVICE")
-        if not Path.exists(gps_device_path) or not gps_device_path.is_dir():
-            return 0,0,0
-        
-        for file in gps_device_path.iterdir():
-            if isPPK and "ppk_solution" in file.name and ".txt" in file.name:
-                return self.read_and_extract_percentage(file)
-            elif not isPPK and "_LLH" in file.name and file.is_dir():
-                for subfile in file.iterdir():
-                    if ".txt" in subfile.name:
-                        return self.read_and_extract_percentage(subfile)
-            elif not isPPK and ".txt" in file.name and Path.exists(Path(file.parent, file.name.replace(".txt", ".LLH"))):
-                return self.read_and_extract_percentage(file)
-        
-        return 0, 0, 0
-
-
-    def get_base_type(self) -> BaseType:
-        """ Return the base used """
-        gps_base_path = Path(self.session_path, "GPS", "BASE")
-        if not Path.exists(gps_base_path) or not gps_base_path.is_dir():
-            return BaseType.NONE
-        
-        # Check for merged.o
-        for file in gps_base_path.iterdir():
-            if "merged.o" in file.name:
-                return BaseType.RGP
-        
-        # Check for LLh
-        for file in gps_base_path.iterdir():
-            if "_RINEX" in file.name:
-                return BaseType.REACH
-        
-        return BaseType.NONE
-
-
-    def check_gpx(self) -> bool:
-        """ Return true is gpx file"""
-        gps_device_path = Path(self.session_path, "GPS", "DEVICE")
-        if not Path.exists(gps_device_path) or not gps_device_path.is_dir():
-            return False
-        
-        for file in gps_device_path.iterdir():
-            if ".gpx" in file.name:
-                return True
-        return False
-
-
-    def check_sensor_file(self) -> bool:
-        """ Return true or false if sensor file exist. """
-        sensor_path = Path(self.session_path, "SENSORS")
-        if not Path.exists(sensor_path) or not sensor_path.is_dir():
-            return False
-
-        for file in sensor_path.iterdir():
-            if ".bin" in file.name.lower() or ".log" in file.name.lower():
-                return True
-        return False
-
-
-    def get_bathy_stat(self) -> bool:
-        """ Return true or false if bathy workflow succeed. """
-        bathy_path = Path(self.session_path, "PROCESSED_DATA", "BATHY")
-        if not Path.exists(bathy_path) or not bathy_path.is_dir():
-            return False
-
-        return len(list(bathy_path.iterdir())) > 20 # Assumed if we have less than 20 files, we don't have processed bathy
-
-
     def is_video_or_images(self) -> tuple[DCIMType, float]:
         """ Return media type of raw data. """
         dcim_path = Path(self.session_path, "DCIM")
@@ -381,65 +320,16 @@ class SessionManager:
 
 
     def get_file_dcim_size(self, extension: str) -> float:
-        """ Return Sum of filesize """
+        """ Return Sum of filesize in Gb"""
         dcim_path = Path(self.session_path, "DCIM")
         if not Path.exists(dcim_path) or not dcim_path.is_dir(): return 0
 
         size = 0
         for file in dcim_path.iterdir():
             if file.suffix.lower() in extension:
-                size += round(os.path.getsize(str(file)) / BYTE_TO_GIGA_BYTE, 1)
-        return size
-
-
-    def check_frames(self) -> tuple[int, bool]:
-        """ Check if we have split some frames and if they are georefenreced. """
-        
-        # Get frame relative path.
-        metadata_df = self.get_metadata_csv()
-        if len(metadata_df) == 0: return 0, False
-
-        nb_frames = len(metadata_df)
-        
-        # Drop NA columns, sometimes, GPSLatitude is filled with NA value
-        metadata_df.replace("", float("NaN"), inplace=True)
-        metadata_df.dropna(how='all', axis=1, inplace=True)
-        isGeoreferenced = "GPSLongitude" in metadata_df and "GPSLatitude" in metadata_df
-        return nb_frames, isGeoreferenced
-
-
-    def get_jacques_csv(self) -> pd.DataFrame:
-        " Return jacques model data from csv."
-        IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
-        if not Path.exists(IA_path) or not IA_path.is_dir(): return {}
-
-        jacques_name = ""
-        for file in IA_path.iterdir():
-            if JACQUES_MODEL_NAME in file.name:
-                jacques_name = file
-                break
-        
-        if jacques_name == "":
-            print("[WARNING] Cannot find jacques predictions file.")
-            return {}
-
-        jacques_csv = pd.read_csv(jacques_name)
-        if len(jacques_csv) == 0: return {}
-
-        return jacques_csv
-
-
-    def get_jacques_stat(self) -> tuple[float, float]:
-        """ Return proportion of useful/useless. """
-        
-        jacques_csv = self.get_jacques_csv()
-        if len(jacques_csv) == 0: return 0, 0
-        
-        useful = round(len(jacques_csv[jacques_csv["Useless"] == 0]) * 100 / len(jacques_csv), 2)
-        useless = round(len(jacques_csv[jacques_csv["Useless"] == 1]) * 100 / len(jacques_csv), 2)
-        
-        return useful, useless
-
+                size += os.path.getsize(str(file)) / BYTE_TO_GIGA_BYTE
+        return round(size, 2)
+    
 
     def get_multilabel_csv(self, isScore: bool = False, indexingByFilename: bool = False) -> pd.DataFrame:
         """ Return multilabel model data from csv. """
@@ -469,27 +359,6 @@ class SessionManager:
         multilabel_model_csv = pd.read_csv(multilabel_model_filename, index_col=index_col)
         if len(multilabel_model_csv) == 0: return {}
         return multilabel_model_csv
-
-
-    def get_echo_sounder_name(self) -> str:
-        """ Return echo sounder name based on ASV number. """
-        asv_number = int(self.session_name.split("_")[2].replace("ASV-", ""))
-        if asv_number == 1:
-            return '<a href="https://www.echologger.com/products/single-frequency-echosounder-deep" target="_blank">ETC 400</a>'
-        elif asv_number == 2:
-            return '<a href="https://ceruleansonar.com/products/sounder-s500" target="_blank">S500</a>'
-        else:
-            return ""
-
-
-    def get_prog_json(self) -> dict:
-        """ Return plancha config of the session. """
-        prog_path = Path(self.session_path, "METADATA", "prog_config.json")
-        if not Path.exists(prog_path): return {}
-
-        with open(prog_path, "r") as f:
-            prog_config = json.load(f)
-        return prog_config
 
 
     def get_predictions_gps(self) -> pd.DataFrame:
@@ -534,6 +403,7 @@ class SessionManager:
 
         return frames_path
 
+
     def get_frame_parent_folder(self, list_frames: str) -> str:
         """ Extract common parent name from all relative path. """
 
@@ -552,31 +422,6 @@ class SessionManager:
 
         # Remove first underscore.
         return list_parents[0][1:] if list_parents[0][0] == "/" else list_parents[0]
-    
-
-    def get_useful_frames_name(self) -> list[str]:
-        """ Return a list of frames path predicted useful by jacques. """
-        useful_frames = []
-        try_ia = False
-        # Get frame predictions.
-        df_predictions_gps = self.get_predictions_gps()
-        if len(df_predictions_gps) == 0: 
-            print(f"Predictions GPS empty for session {self.session_name}\n")
-            try_ia = True
-        else:
-            useful_frames = df_predictions_gps["FileName"].to_list() # CSV without useless images
-        
-        if not try_ia: return useful_frames
-
-        print("We didn't find predictions gps, so we try with jacques csv annotations to select useful frames.")
-        # Cannot find predictions_gps, try with jacques annotation_files
-        
-        df_jacques = self.get_jacques_csv()
-        if len(df_jacques) == 0: return useful_frames
-
-        useful_frames = df_jacques[df_jacques["Useless"] == 0]["FileName"].to_list()
-
-        return useful_frames        
     
     
     def get_metadata_csv(self, indexingByFilename: bool = False) -> pd.DataFrame:
@@ -640,7 +485,7 @@ class SessionManager:
 
 
     def get_footprint(self) -> tuple[Polygon | None, LineString | None]:
-        "Return the footprint of the session"
+        """Return the footprint of the session"""
 
         coordinates = self.get_metadata_csv() # With metadata, we get the real footprint of the image acquisition.
         if len(coordinates) == 0 or "GPSLatitude" not in coordinates or "GPSLongitude" not in coordinates: 
@@ -666,4 +511,58 @@ class SessionManager:
 
         # Return a collection of Polygon, LineString
         return polygon, linestring
+    
+    def _compute_odm_parameters_diff_with_default(self) -> dict | None:
+        """ Return orthophoto parameters different from defautl if exist. """
+
+        options = self._get_orthophoto_parameters()
+        if options == None: return None
+
+        # Get default parameters to compare.
+        default_parameters = {}
+        with open(Path(Path.cwd(), "src/seatizen_session/default_odm_parameters.json"), "r") as file:
+            default_parameters = json.load(file)
         
+        # Get the diff between the two dict.
+        diff = {}
+        for key in default_parameters:
+            if key not in options: continue
+            if default_parameters.get(key, None) == options.get(key, None): continue
+            
+            diff[key] = options.get(key, None)
+        return diff
+    
+
+    def _get_orthophoto_parameters(self) -> dict | None:
+        """ Return None if no photog else dict with parameters. """
+        
+        # Load options from log.json generate by ODM.
+        ortho_parameters_path = Path(self.session_path, "PROCESSED_DATA", "PHOTOGRAMMETRY", "log.json")
+        if not ortho_parameters_path.exists() or not ortho_parameters_path.is_file(): return None
+        
+        logs_json = {}
+        with open(ortho_parameters_path, "r") as file:
+            logs_json = json.load(file)
+    
+        if len(logs_json) == 0 or "options" not in logs_json: return None
+        options = logs_json.get("options", {})
+
+        return options
+
+    def _build_photog_description(self) -> str:
+        """ Build Photog description. """
+
+        diff_options = self._compute_odm_parameters_diff_with_default()
+        if diff_options == None: return ""
+
+        return f"""
+            <h2>Photogrammetry</h2>
+
+            OpenDroneMap software was used to create an orthophoto from the raw images. <br>
+            Here is the list of parameters different from the default values for the orthophoto generation. <br>
+            For more details, you can read the log.json file or the 000_photogrammatry_report.pdf report. <br><br>
+
+            <code>
+                {diff_options}
+            </code>
+        """

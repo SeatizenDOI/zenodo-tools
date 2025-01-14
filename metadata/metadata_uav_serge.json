@@ -1,0 +1,54 @@
+{
+    "_NB": "Underwater / Aerial",
+    "image_type": "Aerial",
+    "_NB": "Platform and human readable platform compute from the session name. Add your options, key always in capital",
+    "platform": {
+        "ASV": "Autonomous Surface Vehicle",
+        "UAV": "Unmanned Aerial Vehicle",
+        "SCUBA": "Scuba diving",
+        "MASK": "Mask",
+        "KITE": "Kite surf",
+        "PADDLE": "Paddle"
+    },
+    "project_name": "Plancha",
+    "csv_session_name_name_abbr_path": "./metadata/contributors/suivi_session_uav.csv",
+    "csv_contributors_path": "./metadata/contributors/contributors_uav.csv",
+    "related_identifiers": [
+        {
+            "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",
+            "relation": "isMetadataFor",
+            "resource_type": "dataset"
+        }
+    ],
+    "_NB": "open, restricted",
+    "access_right": "open",
+    "_NB": "Work with open, ",
+    "license": "cc-by-4.0",
+    "_NB": "Add place, human_readable_platform, platform ",
+    "keywords": [
+        "Coral Reef",
+        "Coral Reef Habitat",
+        "Citizen Sciences",
+        "Deep Learning",
+        "Machine Learning",
+        "Computer Vision",
+        "Ecology",
+        "Mapping",
+        "Remote Sensing",
+        "GeoAI",
+        "Indian Ocean",
+        "Global Coral Reef Monitoring Network",
+        "Artificial Intelligence",
+        "Reef Ecosystem"
+    ],
+    "workflow-link": "https://github.com/SeatizenDOI/drone-workflow",
+    "inference-link": "https://github.com/SeatizenDOI/drone-inference",
+    "zenodo-link": "https://github.com/SeatizenDOI/zenodo-tools",
+    "software-link": "https://github.com/SeatizenDOI",
+    "fundings": [
+        "The Plancha project is co-financed by the Prefecture of Reunion as part of a 2019-2022 convergence and transformation contract, measure 3.3.1.1"
+    ],
+    "communities": [
+        
+    ]
+}

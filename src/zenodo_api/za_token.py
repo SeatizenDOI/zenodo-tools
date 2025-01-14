@@ -15,8 +15,8 @@ class ZenodoAPI:
     def __init__(self, session_name: str, config_json: dict) -> None:
         self.session_name = session_name
         self.deposit_id = None
-        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN"]
-        self.ZENODO_LINK = config_json["ZENODO_LINK"]
+        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_DEV_SEATIZEN"]
+        self.ZENODO_LINK = config_json["ZENODO_DEV_LINK"]
         
         self.params = {'access_token': self.ACCESS_TOKEN}
         self.headers = {"Content-Type": "application/json"}
@@ -75,7 +75,7 @@ class ZenodoAPI:
         self.__zenodo_send_metadata(metadata)
         
         # Publish.
-        # self.__zenodo_actions_publish()
+        self.__zenodo_actions_publish()
 
 
     def edit_metadata(self, metadata: dict) -> None:

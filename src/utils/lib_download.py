@@ -2,7 +2,7 @@ import shutil
 import traceback
 from pathlib import Path
 
-from ..seatizen_session.ss_manager import SessionManager
+from src.seatizen_session.manager.ssm_factory_manager import FactorySessionManager
 
 from ..zenodo_api.za_token import ZenodoAPI
 from ..zenodo_api.za_tokenless import get_version_from_doi, download_manager_without_token, get_version_from_session_name
@@ -182,7 +182,7 @@ def download_specific_frames(opt) -> None:
                 print("[WARNING] Cannot find session_name.")
             
             # Get the path between the session_name and the frame name.
-            session_manager = SessionManager(session_name, path_output)
+            session_manager = FactorySessionManager.get_session_manager(session_name, path_output)
             frames_folder = session_manager.get_frame_parent_folder(frames)
             frames_zipped_folder = f'{frames_folder.replace("/", "_")}.zip'
             frames_name = [Path(frame).name for frame in frames]

@@ -2,6 +2,7 @@
 bronx
 darwincore_mapping
 old_code
+.mypy_cache
 
 # Common file.
 __pycache__
