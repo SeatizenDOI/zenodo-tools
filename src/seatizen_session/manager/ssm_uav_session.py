@@ -60,12 +60,12 @@ class UAVSession(BaseSessionManager):
                 <ul>
                     <li> <strong> Camera</strong>: {camera}</li>
                     <li> <strong> Number of images</strong>: {number_images} </li>
-                    <li> <strong> Total size in Gb</strong>: {size_images}</li>
+                    <li> <strong> Total size</strong>: {size_images} Gb</li>
                     <li> <strong> Flight start</strong>: {first_image["DateTimeOriginal"]} </li>
                     <li> <strong> Flight end</strong>: {metadata_csv.iloc[-1]["DateTimeOriginal"]}</li>
                     <li> <strong> Flight duration</strong>: {self.__get_duration(first_image["DateTimeOriginal"], metadata_csv.iloc[-1]["DateTimeOriginal"])}</li>
-                    <li> <strong> Median height</strong>: {median_height}</li>
-                    <li> <strong> Area covered</strong>: {self.__get_area_in_hectare()}</li>
+                    <li> <strong> Median height</strong>: {median_height} m</li>
+                    <li> <strong> Area covered</strong>: {self.__get_area_in_hectare()} a</li>
                 </ul>
             """
 
