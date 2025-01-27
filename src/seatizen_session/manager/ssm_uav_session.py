@@ -1,10 +1,10 @@
+import geopandas as gpd
 from pathlib import Path
 from datetime import datetime
-import pyproj
-import geopandas as gpd
-from .ssm_base_manager import BaseSessionManager
 from shapely.geometry import Polygon
-from shapely.ops import transform
+
+from .ssm_base_manager import BaseSessionManager
+
 class UAVSession(BaseSessionManager):
 
     def __init__(self, session_path, temp_folder):
@@ -42,6 +42,7 @@ class UAVSession(BaseSessionManager):
         self._zip_dcim()
         self._zip_folder("METADATA")
         self._zip_folder("GPS")
+        self.send_specific_file("00_sample_rawdata_overview.png")
     
 
     def __get_survey_information(self) -> str:

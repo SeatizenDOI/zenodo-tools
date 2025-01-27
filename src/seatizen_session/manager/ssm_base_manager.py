@@ -147,6 +147,15 @@ class BaseSessionManager(ABC):
         print(f"Successful zipped {folder_to_zip} folder in {datetime.now() - t_start} sec\n")
 
 
+    def send_specific_file(self, file_to_send: str) -> None:
+        """ Copy specific file to the temp folder. """
+        file = Path(self.session_path, file_to_send)
+
+        if file.exists():
+            print(f"Copying {file} to {self.temp_folder}")
+            shutil.copy(file, Path(self.temp_folder, file.name))
+
+
     def _zip_dcim(self) -> None:
         """ Zip all file in dcim folder. """
         dcim_folder = Path(self.session_path, "DCIM")
