@@ -10,7 +10,7 @@ from .ss_tools import *
 class SessionMetadata:
 
     def __init__(self, plancha_session: BaseSessionManager, metadata_json: dict) -> None:
-        
+
         # JSON DATA.
         self.plancha_session = plancha_session
         self.metadata_json = metadata_json
@@ -138,12 +138,12 @@ class SessionMetadata:
         keywords = self.metadata_json[KEYWORDS_KEY]
         if self.plancha_session.country != None: # Don't add calculate keyword if country is None. Something bad occurs.
             hp = [self.metadata_json[PLATFORM_KEY][self.plancha_session.platform]] if self.plancha_session.platform in self.metadata_json[PLATFORM_KEY] else []
-            keywords +=  [
+            keywords += [
                 self.plancha_session.country, 
                 self.metadata_json[PROJECT_KEY],
                 self.plancha_session.platform
             ] + hp
-        return sorted(keywords)
+        return sorted(list(set(keywords)))
 
 
     def __get_tree(self) -> str:

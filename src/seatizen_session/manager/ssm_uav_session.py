@@ -55,6 +55,8 @@ class UAVSession(BaseSessionManager):
         camera = first_image["Make"] + " " + first_image["Model"]
 
         median_height = metadata_csv["GPSAltitude"].median()
+        flight_start = metadata_csv["DateTimeOriginal"].min()
+        flight_end = metadata_csv["DateTimeOriginal"].max()
    
         return f"""
                 <h2>Survey information</h2>
@@ -62,9 +64,9 @@ class UAVSession(BaseSessionManager):
                     <li> <strong> Camera</strong>: {camera}</li>
                     <li> <strong> Number of images</strong>: {number_images} </li>
                     <li> <strong> Total size</strong>: {size_images} Gb</li>
-                    <li> <strong> Flight start</strong>: {first_image["DateTimeOriginal"]} </li>
-                    <li> <strong> Flight end</strong>: {metadata_csv.iloc[-1]["DateTimeOriginal"]}</li>
-                    <li> <strong> Flight duration</strong>: {self.__get_duration(first_image["DateTimeOriginal"], metadata_csv.iloc[-1]["DateTimeOriginal"])}</li>
+                    <li> <strong> Flight start</strong>: {flight_start} </li>
+                    <li> <strong> Flight end</strong>: {flight_end}</li>
+                    <li> <strong> Flight duration</strong>: {self.__get_duration(flight_start, flight_end)}</li>
                     <li> <strong> Median height</strong>: {median_height} m</li>
                     <li> <strong> Area covered</strong>: {self.__get_area_in_hectare()} a</li>
                 </ul>
