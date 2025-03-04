@@ -4,10 +4,12 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html, State
 
 from src.seatizen_atlas.sa_manager import AtlasManager
-from .zm_exporter_page import ZenodoMonitoringExporter
-from .zm_statistic_page import ZenodoMonitoringStatistic
+
 from .zm_home_page import ZenodoMonitoringHome
+from .zm_exporter_page import ZenodoMonitoringExporter
+from .zm_explorer_page import ZenodoMonitoringExplorer
 from .zm_settings_page import ZenodoMonitoringSettings
+from .zm_statistic_page import ZenodoMonitoringStatistic
 
 
 SIDEBAR_STYLE = {
@@ -43,6 +45,7 @@ class ZenodoMonitoringApp:
         
         # Other pages.
         self.settings = ZenodoMonitoringSettings(self.app)
+        self.explorer = ZenodoMonitoringExplorer(self.app)
         self.exporter = ZenodoMonitoringExporter(self.app, self.settings.settings_data)
         self.statistic = ZenodoMonitoringStatistic(self.app)
         self.home = ZenodoMonitoringHome(self.app)
@@ -62,6 +65,7 @@ class ZenodoMonitoringApp:
             dbc.Nav(
                 [
                     dbc.NavLink("Home", href="/", active="exact"),
+                    dbc.NavLink("Explorer", href="/explorer", active="exact"),
                     dbc.NavLink("Exporter", href="/exporter", active="exact"),
                     dbc.NavLink("Statistic", href="/statistic", active="exact"),
                     dbc.NavLink("Settings", href="/settings", active="exact"),
@@ -82,6 +86,7 @@ class ZenodoMonitoringApp:
         self.home.register_callbacks()
         self.settings.register_callbacks()
         self.exporter.register_callbacks()
+        self.explorer.register_callbacks()
         self.statistic.register_callbacks()
 
         @self.app.callback(Output("page-content", "children"), [Input("url", "pathname")])
@@ -94,6 +99,8 @@ class ZenodoMonitoringApp:
                 return self.statistic.create_layout()
             elif pathname == "/settings":
                 return self.settings.create_layout()
+            elif pathname == "/explorer":
+                return self.explorer.create_layout()
             # If the user tries to reach a different page, return a 404 message
             return html.Div(
                 [
