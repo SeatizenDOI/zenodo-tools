@@ -51,7 +51,7 @@ class ZenodoMonitoringExporter:
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                         ),
                         dl.TileLayer(
-                            url="https://tmsserver.ifremer.re/wmts?request=GetTile&tilematrix={z}&tilerow={x}&tilecol={y}",
+                            url="https://tmsserver.ifremer.re/wmts?request=GetTile&layer=ortho&tilematrix={z}&tilerow={x}&tilecol={y}",
                             attribution='Tiles © Ifremer DOI',
                             maxZoom=26
                         ),
