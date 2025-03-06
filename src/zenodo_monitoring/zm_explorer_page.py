@@ -1,3 +1,6 @@
+import io
+import requests
+from PIL import Image
 import dash_leaflet as dl
 from dash import html, Input, Output
 import dash_bootstrap_components as dbc
@@ -69,9 +72,10 @@ class ZenodoMonitoringExplorer:
                         value=[1, 2],
                         id="maps-options",
                         switch=True,
-                        inline=True
                     ),
-                ])
+                ]),
+                dbc.Col(id="bathy_gradient_fig"),
+                dbc.Col(id="predictions_gradient_fig")
             ], class_name="p-3")
         ])
     
@@ -91,3 +95,23 @@ class ZenodoMonitoringExplorer:
             # op_predictions = 100 if 3 in maps_options else 0
             
             return op_ortho, op_bathy
+
+        @self.app.callback(
+            Output("bathy_gradient_fig", "children"),
+            Input("bathy_map", "opacity")
+        )
+        def bathy_opacity(op):
+
+            if op == 0: return
+
+            r = requests.get("https://tmsserver.ifremer.re/legend?layer=bathy")
+            if r.status_code != 200:
+                return
+
+            imageStream = io.BytesIO(r.content)
+            imageFile = Image.open(imageStream)  
+
+            return [
+                html.H4(children="Bathymetry legend."),
+                html.Img(src=imageFile)
+            ]
