@@ -22,3 +22,4 @@ dependencies:
     - gunicorn==22.0.0
     - dash_extensions==1.0.18
     - polars==1.3.0
+    - pillow==11.0.0
