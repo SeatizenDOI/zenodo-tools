@@ -70,6 +70,7 @@ def get_processed_folders_to_upload(opt) -> tuple[list, bool]:
         elif letter == "b": folder_to_upload.append("PROCESSED_DATA/BATHY")
         elif letter == "i": folder_to_upload.append("PROCESSED_DATA/IA")
         elif letter == "p": folder_to_upload.append("PROCESSED_DATA/PHOTOGRAMMETRY")
+        elif letter == "c": folder_to_upload.append("PROCESSED_DATA/CPCE_ANNOTATION")
     return folder_to_upload, needFrames
 
 def get_custom_folders_to_upload(opt) -> list:
@@ -85,6 +86,7 @@ def get_custom_folders_to_upload(opt) -> list:
         elif letter == "b": folder_to_upload.append("PROCESSED_DATA/BATHY")
         elif letter == "i": folder_to_upload.append("PROCESSED_DATA/IA")
         elif letter == "p": folder_to_upload.append("PROCESSED_DATA/PHOTOGRAMMETRY")
+        elif letter == "c": folder_to_upload.append("PROCESSED_DATA/CPCE_ANNOTATION")
         elif letter == "s": folder_to_upload.append("SENSORS")
     
     return folder_to_upload
