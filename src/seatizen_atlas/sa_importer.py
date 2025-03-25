@@ -158,8 +158,12 @@ class AtlasImport:
                 date, time = row["SubSecDateTimeOriginal"].split(".")[0].split(" ")
                 date = date.replace(":", "-")
                 creation_date = date + " " + time
-            elif "DateTimeOriginal" in row: # UAV
+            elif "DateTimeOriginal" in row: # UAV 
                 date, time = row["DateTimeOriginal"].split(" ")
+                date = date.replace(":", "-")
+                creation_date = date + " " + time
+            elif "DateTime" in row: # UVC
+                date, time = row["DateTime"].split(" ")
                 date = date.replace(":", "-")
                 creation_date = date + " " + time
             elif "GPSDateTime" in row: # 2015 Scuba diving

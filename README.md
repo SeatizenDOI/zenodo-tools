@@ -76,6 +76,13 @@ python zenodo-manager.py -efol -pfol /media/bioeos/E/poulain_syc -ulo -ffi -ne #
 python zenodo-manager.py -ecsv -pcsv ../../Bioeos/OUTPUT_DATA/zenodo_suivi/processed_data_without_2015.csv -ulo -la ../../Bioeos/annotations_some_image/Export_human/ -ne # Add frames and import annotations.
 python zenodo-manager.py -eno -ulo -ssn 1 # Update database data (all class and label).
 python zenodo-manager.py -eno -ulo # Export all files.
+
+# Madagascar update.
+python zenodo-manager.py -eno -ulo -ssn 2 # Update database data (all class and label).
+python zenodo-manager.py -eses -pses /home/bioeos/Documents/Bioeos/aina_dataset/20210308_MDG-Toliara_UVC-01_01 -ulo -ffi -ne
+python zenodo-manager.py -eno -ulo -la 
+
+
 ```
 
 # Qgis command to load data
