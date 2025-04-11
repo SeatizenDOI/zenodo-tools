@@ -11,129 +11,6 @@
         "PADDLE": "Paddle"
     },
     "project_name": "Plancha",
-    "creators": [
-        {
-            "name": "Julien Barde",
-            "affiliation": "IRD",
-            "orcid": "0000-0002-3519-6141"
-        },
-        {
-            "name": "Sylvain Bonhommeau",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0000-0002-0882-5918"
-        },
-        {
-            "name": "Matteo Contini",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0009-0007-8665-6201"
-        },
-        {
-            "name": "Aina Le Don Nomenisoa",
-            "affiliation": "Madagascar National Oceanographic Data Centre"
-        }
-    ],
-    "contributors": [
-        {
-            "name": "Victor Illien",
-            "type": "DataCurator",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0009-0007-2143-8027"
-        },
-        {
-            "name": "Serge Bernard",
-            "type": "Other",
-            "affiliation": "CNRS",
-            "orcid": "0000-0003-1772-0592"
-        },
-        {
-            "name": "Alexandre Boyer",
-            "type": "Other",
-            "affiliation": "IRD",
-            "orcid": "0009-0002-2787-1044"
-        },
-        {
-            "name": "Leanne Carpentier",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": " 0009-0004-1796-3855"
-        },
-        {
-            "name": "Thomas Chevrier",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0009-0006-4108-5698"
-        },
-        {
-            "name": "Justine Talpaert Daudon",
-            "type": "Other",
-            "affiliation": "IRD",
-            "orcid": "0000-0001-9582-451X"
-        },
-        {
-            "name": "Belen De Ana",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France"
-        },
-        {
-            "name": "Denis De Oliveira",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France"
-        },
-        {
-            "name": "Magali Duval",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0000-0002-6425-7724"
-        },
-        {
-            "name": "Pierre Gogendeau",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0000-0003-2440-431X"
-        },
-        {
-            "name": "Alexis Joly",
-            "type": "Other",
-            "affiliation": "INRIA",
-            "orcid": "0000-0002-2161-9940"
-        },
-        {
-            "name": "Mohan Julien",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0000-0003-2808-1095"
-        },
-        {
-            "name": "Arthur Lazennec",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0009-0007-9522-8049"
-        },
-        {
-            "name": "Sylvain Poulain",
-            "type": "Other",
-            "affiliation": "GISCAN",
-            "orcid": "0009-0005-9789-9095"
-        },
-        {
-            "name": "Mervyn Ravitchandirane",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0009-0007-6170-0157"
-        },
-        {
-            "name": "Cam Ly Rintz",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0009-0005-0541-2332"
-        },
-        {
-            "name": "Victor Russias",
-            "type": "Other",
-            "affiliation": "IFREMER, DOI, France",
-            "orcid": "0009-0004-6895-6751"
-        }
-    ],
     "related_identifiers": [
         {
             "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",
@@ -169,5 +46,7 @@
     "software-link": "https://github.com/SeatizenDOI",
     "fundings": [
         "The Plancha project is co-financed by the Prefecture of Reunion as part of a 2019-2022 convergence and transformation contract, measure 3.3.1.1"
-    ]
+    ],
+    "communities": []
+
 }

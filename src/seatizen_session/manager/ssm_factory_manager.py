@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from .ssm_uvc_session import UVCSession
 from .ssm_uav_session import UAVSession
 from .ssm_default_session import DefaultSession
 from .ssm_base_manager import BaseSessionManager
@@ -14,6 +15,8 @@ class FactorySessionManager:
 
         if session_platform == "UAV":
             return UAVSession(session_path, temp_folder)
+        elif session_platform == "UVC":
+            return UVCSession(session_path, temp_folder)
 
         return DefaultSession(session_path, temp_folder)
 

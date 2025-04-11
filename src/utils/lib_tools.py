@@ -70,6 +70,7 @@ def get_processed_folders_to_upload(opt) -> tuple[list, bool]:
         elif letter == "b": folder_to_upload.append("PROCESSED_DATA/BATHY")
         elif letter == "i": folder_to_upload.append("PROCESSED_DATA/IA")
         elif letter == "p": folder_to_upload.append("PROCESSED_DATA/PHOTOGRAMMETRY")
+        elif letter == "c": folder_to_upload.append("PROCESSED_DATA/CPCE_ANNOTATION")
     return folder_to_upload, needFrames
 
 def get_custom_folders_to_upload(opt) -> list:
@@ -85,6 +86,7 @@ def get_custom_folders_to_upload(opt) -> list:
         elif letter == "b": folder_to_upload.append("PROCESSED_DATA/BATHY")
         elif letter == "i": folder_to_upload.append("PROCESSED_DATA/IA")
         elif letter == "p": folder_to_upload.append("PROCESSED_DATA/PHOTOGRAMMETRY")
+        elif letter == "c": folder_to_upload.append("PROCESSED_DATA/CPCE_ANNOTATION")
         elif letter == "s": folder_to_upload.append("SENSORS")
     
     return folder_to_upload
@@ -155,3 +157,17 @@ def md5(fname: Path) -> str:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
+
+
+def haversine(lat1, lon1, lat2, lon2):
+    """ Compute the distance between two points in degrees in meters """
+    R = 6371000  # Eartch radius in meters.
+    phi1 = np.radians(lat1)
+    phi2 = np.radians(lat2)
+    delta_phi = np.radians(lat2 - lat1)
+    delta_lambda = np.radians(lon2 - lon1)
+
+    a = np.sin(delta_phi / 2)**2 + np.cos(phi1) * np.cos(phi2) * np.sin(delta_lambda / 2)**2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+
+    return R * c

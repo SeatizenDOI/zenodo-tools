@@ -25,7 +25,7 @@ class DefaultSession(BaseSessionManager):
 
 
     def build_raw_description(self) -> str:
-        return "Raw Data, soon more information incoming"
+        return ""
 
 
     def build_processed_description(self) -> str:

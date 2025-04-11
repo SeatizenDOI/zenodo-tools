@@ -40,7 +40,14 @@
         "Bathymetry",
         "Global Coral Reef Monitoring Network",
         "Artificial Intelligence",
-        "Reef Ecosystem"
+        "Reef Ecosystem",
+        "Marine Biodiversity",
+        "Marine Conservation",
+        "Coastal Ecosystems",
+        "Environmental Monitoring",
+        "Open Science",
+        "Western Indian Ocean",
+        "UNESCO Marine World Heritage"
     ],
     "workflow-link": "https://github.com/SeatizenDOI/plancha-workflow/releases/tag/v1.0.3",
     "inference-link": "https://github.com/SeatizenDOI/plancha-inference/releases/tag/v1.0.0",
@@ -50,6 +57,6 @@
         "The 4Sea project co-financed by Monaco Explorations (n°2022/11) as part of the Indian Ocean Mission."
     ],
     "communities": [
-        "umr-marbec"
+        "seatizen-data"
     ]
 }

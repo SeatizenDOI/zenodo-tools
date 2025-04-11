@@ -40,7 +40,13 @@
         "Bathymetry",
         "Global Coral Reef Monitoring Network",
         "Artificial Intelligence",
-        "Reef Ecosystem"
+        "Reef Ecosystem",
+        "Marine Biodiversity",
+        "Marine Conservation",
+        "Coastal Ecosystems",
+        "Environmental Monitoring",
+        "Open Science",
+        "Western Indian Ocean"
     ],
     "workflow-link": "https://github.com/SeatizenDOI/plancha-workflow/releases/tag/v1.0.3",
     "inference-link": "https://github.com/SeatizenDOI/plancha-inference/releases/tag/v1.0.0",
@@ -50,6 +56,6 @@
         "The Plancha project is co-financed by the Prefecture of Reunion as part of a 2019-2022 convergence and transformation contract, measure 3.3.1.1"
     ],
     "communities": [
-        "umr-marbec"
+        "seatizen-data"
     ]
 }

@@ -21,6 +21,7 @@ jobs:
         environment-file: zenodo_env.yml
         auto-activate-base: true
     - run: |
+        sudo apt-get install libsqlite3-mod-spatialite
         conda init
         conda activate zenodo_env
         conda info

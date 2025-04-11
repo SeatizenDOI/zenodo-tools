@@ -8,7 +8,7 @@ import shapely
 from shapely import Polygon, Point
 from pyproj import Geod
 
-from src.models.deposit_model import DepositDAO
+from src.models.deposit_model import DepositLinestringDAO
 from src.models.ml_model_model import MultilabelModelDAO, MultilabelClassDAO, MultilabelClassDTO
 from src.models.frame_model import FrameDAO
 from src.models.ml_predictions_model import MultilabelPredictionDAO
@@ -19,6 +19,8 @@ class EnumPred(enum.Enum):
     SCORE = "Score"
     PRED = "Prediction"
 
+PLATFORM_BETTER_WITH_LINESTRING = ["SCUBA", "PADDLE", "UVC"]
+
 class MonitoringData:
     
     def __init__(self, settings_data: SettingsData) -> None:
@@ -28,7 +30,7 @@ class MonitoringData:
         self.platform_type = []
 
         self.settings_data = settings_data
-        self.deposit_manager = DepositDAO()
+        self.deposit_linestrings_manager = DepositLinestringDAO()
         self.ml_model_manager = MultilabelModelDAO()
         self.ml_classes_manager = MultilabelClassDAO()
         self.frame_manager = FrameDAO()
@@ -38,11 +40,11 @@ class MonitoringData:
 
     def generate_date_slider(self):
         """ Build a date slider based on session year. """
-        for deposit in self.deposit_manager.deposits:
-            if deposit.session_date == None: continue
+        for deposit_line in self.deposit_linestrings_manager.deposits_linestring:
+            if deposit_line.deposit.session_date == None: continue
 
             try:
-                deposit_year = int(str(deposit.session_date)[0:4])
+                deposit_year = int(str(deposit_line.deposit.session_date)[0:4])
                 self.min_date = min(deposit_year, self.min_date)
                 self.max_date = max(deposit_year, self.max_date)
             except:
@@ -79,41 +81,47 @@ class MonitoringData:
 
 
         features = []
-        for deposit in self.deposit_manager.deposits:
+        for dl in self.deposit_linestrings_manager.deposits_linestring:
             
-            if deposit.footprint == None: continue
+            if dl.deposit.footprint == None: continue
             
             # Filter by platform.
-            if len(platform_to_include) > 0 and deposit.platform not in platform_to_include: continue
+            if len(platform_to_include) > 0 and dl.deposit.platform not in platform_to_include: continue
             
             # Filter by date
             if d_start != None and d_end != None:
-                d_compare = datetime.strptime(deposit.session_date, "%Y-%m-%d")
+                d_compare = datetime.strptime(dl.deposit.session_date, "%Y-%m-%d")
                 if d_compare < d_start or d_compare > d_end: continue
 
             # Footprint.
-            geojson_polygon = shapely.geometry.mapping(deposit.footprint)
-            
+            geojson_polygon = shapely.geometry.mapping(dl.footprint_linestring if dl.deposit.platform in PLATFORM_BETTER_WITH_LINESTRING else dl.deposit.footprint)
+        
             # Area in squared meters.
             geod = Geod(ellps="WGS84")
-            poly_area, poly_perimeter = geod.geometry_area_perimeter(deposit.footprint)
+            poly_area, poly_perimeter = geod.geometry_area_perimeter(dl.deposit.footprint)
 
             # Add min max depth
             # self.frame_manager.get_min_max_depth_by_deposit(deposit) # Too much time consuming.
             
             # Add predict classes
             # self.ml_classes_manager.get_first_n_class_deposit(self.ml_model_manager.last_model, deposit, 3) # Too much time consuming.
-            
-            
-            features.append({
+
+            tooltip_data = {
                 "type": "Feature",
                 "geometry": geojson_polygon,
-                "platform": deposit.platform,
-                "name": deposit.session_name,
-                "area": f"{round(poly_area , 2)} m²",
-                "date": deposit.session_date,
-                "doi": deposit.doi
-            })
+                "platform": dl.deposit.platform,
+                "name": dl.deposit.session_name,
+                "date": dl.deposit.session_date,
+                "doi": dl.deposit.doi
+            }
+            
+            if dl.deposit.platform in PLATFORM_BETTER_WITH_LINESTRING:
+                tooltip_data["perimeter"] = f"{round(poly_perimeter / 2)} m" # Magic smoke.
+            else:
+                tooltip_data["area"] = f"{round(poly_area , 2)} m²"
+
+
+            features.append(tooltip_data)
 
         geojson_feature_collection = {
             "type": "FeatureCollection",
@@ -149,7 +157,7 @@ class MonitoringData:
             self.classes_map_by_model_id[model.id] = [{'label': 'All class', 'value': -1}] + [{'label': cls.name, 'value': cls.id} for cls in classes]
 
         # Platform type.
-        self.platform_type = list(set([deposit.platform for deposit in self.deposit_manager.deposits]))
+        self.platform_type = list(set([dl.deposit.platform for dl in self.deposit_linestrings_manager.deposits_linestring]))
     
     def get_class_by_model(self, model_id: int, session_id: str):
         # Classic class from db.
