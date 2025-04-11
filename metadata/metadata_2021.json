@@ -40,7 +40,13 @@
         "Bathymetry",
         "Global Coral Reef Monitoring Network",
         "Artificial Intelligence",
-        "Reef Ecosystem"
+        "Reef Ecosystem",
+        "Marine Biodiversity",
+        "Marine Conservation",
+        "Coastal Ecosystems",
+        "Environmental Monitoring",
+        "Open Science",
+        "Western Indian Ocean"
     ],
     "workflow-link": "https://github.com/SeatizenDOI/plancha-workflow/releases/tag/v1.0.3",
     "inference-link": "https://github.com/SeatizenDOI/plancha-inference/tree/2473d8de607b3339cea415c9499d44162b82edc2",
@@ -50,6 +56,6 @@
         "Internal fund by IFREMER."
     ],
     "communities": [
-        "umr-marbec"
+        "seatizen-data"
     ]
 }

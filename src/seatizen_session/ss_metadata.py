@@ -111,7 +111,7 @@ class SessionMetadata:
             {self.plancha_session.get_tree() if hasattr(self.plancha_session, "get_tree") else self.__get_tree()}
 
             <h2> Software </h2>
-            <br> {self.__get_software()}
+            {self.__get_software()}
         """
 
 
