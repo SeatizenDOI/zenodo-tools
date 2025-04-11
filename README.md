@@ -79,8 +79,8 @@ python zenodo-manager.py -eno -ulo # Export all files.
 
 # Madagascar update.
 python zenodo-manager.py -eno -ulo -ssn 2 # Update database data (all class and label).
-python zenodo-manager.py -eses -pses /home/bioeos/Documents/Bioeos/aina_dataset/20210308_MDG-Toliara_UVC-01_01 -ulo -ffi -ne
-python zenodo-manager.py -eno -ulo -la 
+python zenodo-manager.py -efol -pfol /home/bioeos/Documents/Bioeos/aina_dataset -ulo -ffi -ne
+python zenodo-manager.py -eno -ulo -la /home/bioeos/Documents/Bioeos/aina_dataset_annotation/20250410_120000__yves-amoros-mitondrasoa__madagascar_annotation.csv
 
 
 ```
