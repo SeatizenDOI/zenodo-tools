@@ -25,14 +25,20 @@ class ZenodoMonitoringExporter:
     def create_layout(self):
         # Tooltip and colors for each session in leafleft map
         ns = Namespace("PlatformSpace", "PlatformSpaceColor")
-        on_each_feature = assign("""function(feature, layer, context){
-            layer.bindTooltip(`<h6> ${feature.name} </h6><br>
-                               <b>Surface : ${feature.area}</b><br>
-                               <b>Acquisition date : ${feature.date}</b><br>
-                            <b>Platform type : ${feature.platform}</b><br>
-                                 <b>DOI : ${feature.doi}</b
-                                 `)
-        }""")
+        on_each_feature = assign("""
+            function(feature, layer, context){
+                let footprint_data = feature.area ? `<b>Surface : ${feature.area}</b><br>` : ``
+                footprint_data += feature.perimeter ? `<b>Length : ${feature.perimeter}</b><br>` : ``
+                                 
+                layer.bindTooltip(
+                    `<h6> ${feature.name} </h6><br>
+                    ${footprint_data}
+                    <b>Acquisition date : ${feature.date}</b><br>
+                    <b>Platform type : ${feature.platform}</b><br>
+                    <b>DOI : ${feature.doi}</b
+                `)
+            }
+        """)
 
         return dcc.Loading(html.Div([
             dcc.Store(id='local-settings-data', storage_type='local'),
@@ -314,7 +320,7 @@ class ZenodoMonitoringExporter:
     
     def generate_modal_body_text(self, df_data: pl.DataFrame) -> dbc.Row:
         
-        nb_session = len(df_data["pred_doi"].unique()) if "version_doi" in df_data else "Not compute" 
+        nb_session = len(df_data["version_doi"].unique()) if "version_doi" in df_data else "Not compute" 
         nb_frames = len(df_data)
         # TODO add more statistics.
 

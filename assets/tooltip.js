@@ -9,7 +9,8 @@ const color = {
     "ASV": "#AFA4CE",
     "UAV": "#47EAD0",
     "SCUBA": "#FCFE19",
-    "PADDLE": "#FE277E"
+    "PADDLE": "#FE277E",
+    "UVC": "#FF0000"
 }
 
 window.PlatformSpace = Object.assign({}, window.PlatformSpace, {

@@ -1,5 +1,6 @@
 import pandas as pd
 from tqdm import tqdm
+from dateutil import tz
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -155,15 +156,14 @@ class AtlasImport:
             # Datetime formatting
             creation_date = ""
             if "SubSecDateTimeOriginal" in row and "1970" not in row["SubSecDateTimeOriginal"].split(".")[0]: # Plancha with correct datetime
-                date, time = row["SubSecDateTimeOriginal"].split(".")[0].split(" ")
-                date = date.replace(":", "-")
-                creation_date = date + " " + time
+                if "+" in row["SubSecDateTimeOriginal"]:
+                    creation_date = datetime.strptime(row["SubSecDateTimeOriginal"], "%Y:%m:%d %H:%M:%S%z").astimezone(tz.UTC).strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    date, time = row["SubSecDateTimeOriginal"].split(".")[0].split(" ")
+                    date = date.replace(":", "-")
+                    creation_date = date + " " + time
             elif "DateTimeOriginal" in row: # UAV 
                 date, time = row["DateTimeOriginal"].split(" ")
-                date = date.replace(":", "-")
-                creation_date = date + " " + time
-            elif "DateTime" in row: # UVC
-                date, time = row["DateTime"].split(" ")
                 date = date.replace(":", "-")
                 creation_date = date + " " + time
             elif "GPSDateTime" in row: # 2015 Scuba diving
