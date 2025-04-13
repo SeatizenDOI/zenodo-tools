@@ -11,8 +11,8 @@ class ParsingReturnType(enum.Enum):
 class ZenodoErrorHandler:
 
     @staticmethod
-    def parse_errors(response) -> None:
-        print(response)
+    def parse_errors(response: Response) -> None:
+        print(response, response.json())
         raise NameError("Something Failed with Zenodo")
     
     @staticmethod

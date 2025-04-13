@@ -24,7 +24,7 @@ def build_metadata(metadata_json_path: str) -> dict:
     with open(metadata_json_path) as json_file:
         metadata_json = json.load(json_file)
 
-    
+    communities = [{'identifier': name} for name in metadata_json["communities"]]
 
     data = {
         'metadata': {
@@ -37,7 +37,8 @@ def build_metadata(metadata_json_path: str) -> dict:
             'description': get_description(metadata_json["description"]),
             'access_right': 'open',
             'version': metadata_json["version"],
-            'license': metadata_json["license"]
+            'license': metadata_json["license"],
+            'communities': None if len(communities) == 0 else communities
         }
     }
     return data

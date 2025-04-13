@@ -80,3 +80,24 @@ The repository includes:
     <li> <strong>seatizen_atlas.qgz: </strong> a qgis project which formats and highlights the geopackage file to facilitate data visualization. </li><br>
     <li> <strong>darwincore_multilabel_annotations.zip: </strong> a Darwin Core Archive (DwC-A) file listing the subset of all the images that are annotated, along with their annotations. </li><br>
 </ul>
+
+<h2> Scientific Publication </h2>
+
+If you use this dataset in your research, please consider citing the associated paper: <br>
+<br>
+<code>
+@article{Contini2025,<br>
+&nbsp;author = {Matteo Contini and Victor Illien and Mohan Julien and Mervyn Ravitchandirane and Victor Russias and Arthur Lazennec and Thomas Chevrier and Cam Ly Rintz and Léanne Carpentier and Pierre Gogendeau and César Leblanc and Serge Bernard and Alexandre Boyer and Justine Talpaert Daudon and Sylvain Poulain and Julien Barde and Alexis Joly and Sylvain Bonhommeau}, <br>
+&nbsp;doi = {10.1038/s41597-024-04267-z},<br>
+&nbsp;issn = {2052-4463},<br>
+&nbsp;issue = {1},<br>
+&nbsp;journal = {Scientific Data},<br>
+&nbsp;pages = {67},<br>
+&nbsp;title = {Seatizen Atlas: a collaborative dataset of underwater and aerial marine imagery},<br>
+&nbsp;volume = {12},<br>
+&nbsp;url = {https://doi.org/10.1038/s41597-024-04267-z},<br>
+&nbsp;year = {2025},<br>
+}<br>
+</code> <br>
+
+For detailed information about the dataset and experimental results, please refer to the previous paper.
