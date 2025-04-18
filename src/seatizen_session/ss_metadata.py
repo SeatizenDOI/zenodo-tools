@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from datetime import datetime
 
 from .manager.ssm_base_manager import BaseSessionManager
 
@@ -66,7 +67,9 @@ class SessionMetadata:
                 'contributors': self.contributors,
                 'communities': self.communities,
                 'license': self.metadata_json[LICENSE_KEY],
-                'notes': self.__get_fundings()
+                'notes': self.__get_fundings(),
+                'locations': self.__format_locations(),
+                'dates': self.__format_dates()
             }
         }
         return data
@@ -103,7 +106,10 @@ class SessionMetadata:
 
             <br><br>Underwater or aerial images collected by scientists or citizens can have a wide variety of use for science, management, or conservation.
             These images can be annotated and shared to train IA models which can in turn predict the objects on the images.
-            We provide a set of tools (hardware and software) to collect marine data, predict species or habitat, and provide maps.<br>
+            We provide a set of tools (hardware and software) to collect marine data, predict species or habitat, and provide maps.<br><br>
+
+            This dataset is part of larger collection referencing numerous underwater and aerial images <a href="https://doi.org/10.5281/zenodo.11125847" target="_blank">Seatizen Altas</a>. 
+            Methods, tools and scientific objectives are also described in a dedicated data paper.<br>
 
             {self.plancha_session.build_raw_description() if isRaw else self.plancha_session.build_processed_description()}
 
@@ -284,3 +290,37 @@ class SessionMetadata:
         for key_mandatory in ALL_MANDATORY_KEY_METADATA_JSON:
             if key_mandatory not in self.metadata_json:
                 raise KeyError(f"{key_mandatory} is a mandatory field for metadata_json.")
+    
+
+    def __format_locations(self) -> list:
+        """ Format the footprint of the session to give it to the metadata """
+        polygon, _ = self.plancha_session.get_footprint()
+
+        if polygon == None: return []
+        lon1, lat1, lon2, lat2 = polygon.bounds
+
+        return [{
+            "lat": lat1,
+            "lon": lon1,
+            "place": self.plancha_session.place,
+            "description": "This is the top left point of the bounding box."
+        }, {
+            "lat": lat2,
+            "lon": lon2,
+            "place": self.plancha_session.place,
+            "description": "This is the bottom right point of the bounding box."
+        }]
+    
+
+    def __format_dates(self) -> list:
+        """ Format the date of the session. """
+
+        if len(self.plancha_session.date) != 10: return [] # Date are in ISO date string format like "2025-04-12" so the length is fixed.
+        
+        now = datetime.now().strftime("%Y-%m-%d")
+        
+        return [{
+            "start": self.plancha_session.date, # All the data acquisition are max 3 hours longs. We don't care about day overlap.
+            "end": self.plancha_session.date,
+            "type": "Collected"
+        }, { "start": now, "end": now, "type": "Valid" }]
