@@ -6,10 +6,13 @@
     xmlns:stmml="http://www.xml-cml.org/schema/stmml-1.1"
     xsi:schemaLocation="https://eml.ecoinformatics.org/eml-2.2.0 xsd/eml.xsd">
     
+    <resource>
+        <language>english</language>
+    </resource>
+
+
     <dataset>
-        <title>Image annotation in reef coral</title>
-        <introduction> Underwater or aerial images collected by scientists or citizens can have a wide variety of use for science, management, or conservation. 
-        These images can be annotated and shared to train IA models which can in turn predict the objects on the images. </introduction>
+        <title>Image annotation in coral reef habitat</title>
 
         <creator id="https://orcid.org/0009-0007-2143-8027">
             <individualName>
@@ -19,29 +22,54 @@
             <electronicMailAddress>villien@ifremer.fr</electronicMailAddress>
             <userId directory="https://orcid.org">https://orcid.org/0009-0007-2143-8027</userId>
         </creator>
+        <introduction> Underwater or aerial images collected by scientists or citizens can have a wide variety of use for science, management, or conservation. 
+        These images can be annotated and shared to train IA models which can in turn predict the objects on the images. </introduction>
         <contact id="https://orcid.org/0000-0002-0882-5918">
             <individualName>
                 <givenName>BONHOMMEAU</givenName>
                 <surName>Sylvain</surName>
             </individualName>
             <electronicMailAddress>sbonhom@ifremer.fr</electronicMailAddress>
-            <references>https://orcid.org/0000-0002-0882-5918</references>
+            <userId directory="https://orcid.org">https://orcid.org/0000-0002-0882-5918</userId>
         </contact>
-        <keywordSet>
-            <keyword>Coral Reef</keyword>
-            <keyword>Coral Reef Habitat</keyword>
-            <keyword>Citizen Sciences</keyword>
-            <keyword>Deep Learning</keyword>
-            <keyword>Machine Learning</keyword>
-            <keyword>Computer Vision</keyword>
-            <keyword>Ecology</keyword>
-            <keyword>Mapping</keyword>
-            <keyword>Remote Sensing</keyword>
-            <keyword>GeoAI</keyword>
-            <keyword>Indian Ocean</keyword>
-            <keyword>Global Coral Reef Monitoring Network</keyword>
-            <keyword>Artificial Intelligence</keyword>
-            <keyword>Reef Ecosystem</keyword>
-        </keywordSet>
+
+        <literatureCited>
+            <citation>
+                <bibtex>
+                @article{contini2025seatizen,
+  title={Seatizen Atlas: a collaborative dataset of underwater and aerial marine imagery},
+  author={Contini, Matteo and Illien, Victor and Julien, Mohan and Ravitchandirane, Mervyn and Russias, Victor and Lazennec, Arthur and Chevrier, Thomas and Rintz, Cam Ly and Carpentier, L{\'e}anne and Gogendeau, Pierre and others},
+  journal={Scientific Data},
+  volume={12},
+  number={1},
+  pages={67},
+  year={2025},
+  publisher={Nature Publishing Group UK London}
+}
+
+                </bibtex>
+            </citation>
+            <citation>
+                <bibtex>
+           @dataset{matteo_contini_2025_15196438,
+  author       = {Matteo Contini and
+                  Julien Barde and
+                  Sylvain Bonhommeau and
+                  Victor Illien and
+                  Alexis Joly},
+  title        = {Seatizen Atlas},
+  month        = apr,
+  year         = 2025,
+  publisher    = {Zenodo},
+  version      = {v1.2.0},
+  doi          = {10.5281/zenodo.15196438},
+  url          = {https://doi.org/10.5281/zenodo.15196438},
+}
+                </bibtex>
+            </citation>
+
+ 
+        </literatureCited>
+
     </dataset>
 </eml:eml>

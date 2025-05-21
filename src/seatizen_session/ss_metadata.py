@@ -70,6 +70,9 @@ class SessionMetadata:
                 'notes': self.__get_fundings(),
                 'locations': self.__format_locations(),
                 'dates': self.__format_dates()
+                # 'custom': {
+                #     "dwc:order": ["Anthoathecata"]
+                # }
             }
         }
         return data
@@ -324,3 +327,8 @@ class SessionMetadata:
             "end": self.plancha_session.date,
             "type": "Collected"
         }, { "start": now, "end": now, "type": "Valid" }]
+    
+
+    # TODO add species occurences
+        
+    # https://github.com/zenodo/zenodo-rdm/blob/eccfe9364ed9c0442400e833192d0f1705286105/site/zenodo_rdm/custom_fields/domain_fields.py#L53

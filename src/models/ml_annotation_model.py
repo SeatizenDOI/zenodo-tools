@@ -14,7 +14,7 @@ class MultilabelAnnotationSessionDTO():
 
     @property
     def annotation_date_convert(self) -> datetime:
-        return datetime.strptime(self._creation_date, "%Y-%m-%d")
+        return datetime.strptime(self.annotation_date, "%Y-%m-%d")
 
 
 @dataclass
