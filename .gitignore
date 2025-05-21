@@ -8,3 +8,5 @@ seatizen_atlas_*
 profiling
 output_csv
 .mypy_cache
+cache_gbif.json
+parsing_community_data.py
