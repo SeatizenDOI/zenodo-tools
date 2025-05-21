@@ -72,12 +72,13 @@ def main(opt):
     sessions_fail = []
     list_session = get_list_sessions(opt)
     index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_session) else 0
+    sessions = list_session[index_start:]
 
-    for session_path in list_session[index_start:]:
+    for session_path in sessions:
   
         try:
             if not Path.exists(session_path):
-                print(f"Session not found for {session_path.name}")
+                print(f"Session not found for {session_path}")
                 continue
             
             print(f"\n\nWorking with session {session_path.name}")
@@ -167,7 +168,7 @@ def main(opt):
             plancha_session.cleanup()
 
     # Stat
-    print("\nEnd of process. On {} sessions, {} fails. ".format(len(list_session), len(sessions_fail)))
+    print("\nEnd of process. On {} sessions, {} fails. ".format(len(sessions), len(sessions_fail)))
     if (len(sessions_fail)):
         [print("\t* " + session_name) for session_name in sessions_fail]
 
