@@ -78,8 +78,8 @@ class ZenodoMonitoringExporter:
                             dl.FullScreenControl(position="topleft"),
                             dl.MeasureControl(
                                 position="topleft", 
-                                primaryLengthUnit="kilometers", 
-                                primaryAreaUnit="hectares",
+                                primaryLengthUnit="meters", 
+                                primaryAreaUnit="sqmeters",
                                 activeColor="#214097", 
                                 completedColor="#972158"
                             ),

@@ -77,7 +77,9 @@ class ZenodoMonitoringApp:
 
         content = html.Div(id="page-content", style=CONTENT_STYLE)
 
+        return html.Div([dcc.Location(id="url"), sidebar, content])
         return html.Div([dcc.Location(id="url", pathname="/exporter"), sidebar, content])
+
 
     def register_callbacks(self):
         """ Register all callbacks """

@@ -60,6 +60,11 @@ class AtlasExport:
         df_deposits = pl.DataFrame(list_deposit_data, schema=deposit_header, orient="row")
         df_deposits.write_csv(session_doi_file)
 
+        session_doi_file_parquet = Path(self.seatizen_folder_path, "session_doi.parquet")
+        print(f"\n-- Generate {session_doi_file_parquet}")
+        df_deposits.write_parquet(session_doi_file_parquet)
+
+
 
     def metadata_images_csv(self) -> None:
         """ Generate a csv file with all information about frames. """
@@ -104,6 +109,10 @@ class AtlasExport:
         
         df_data = pl.DataFrame(data, schema=df_header, orient="row")
         df_data.write_csv(metadata_images_file)
+
+        metadata_images_file_parquet = Path(self.seatizen_folder_path, "metadata_images.parquet")
+        print(f"\n-- Generate {metadata_images_file_parquet}")
+        df_data.write_parquet(metadata_images_file_parquet)
 
 
     def metadata_multilabel_predictions_csv(self) -> None:
@@ -167,6 +176,10 @@ class AtlasExport:
         df_data = pl.DataFrame(data, schema=df_header, orient="row")
         df_data.write_csv(ml_predictions_file)
 
+        ml_predictions_file_parquet = Path(self.seatizen_folder_path, "metadata_multilabel_predictions.parquet")
+        print(f"\n-- Generate {ml_predictions_file_parquet} with last model add in database.")
+        df_data.write_parquet(ml_predictions_file_parquet)
+
 
     def metadata_multilabel_annotation_csv(self) -> None:
         metadata_annotation_file = Path(self.seatizen_folder_path, "metadata_multilabel_annotation.csv")
@@ -195,6 +208,10 @@ class AtlasExport:
 
         # Write the DataFrame to a CSV file
         df.write_csv(metadata_annotation_file)
+
+        metadata_annotation_file_parquet = Path(self.seatizen_folder_path, "metadata_multilabel_annotation.parquet")
+        print(f"\n-- Generate {metadata_annotation_file_parquet}")
+        df.write_parquet(metadata_annotation_file_parquet)
 
 
     def darwincore_annotation_csv(self) -> None:

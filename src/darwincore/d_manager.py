@@ -98,7 +98,7 @@ class DarwinCoreManager:
                     country = pycountry.countries.get(alpha_3=annotation.frame.version.deposit.alpha3_country_code)
                     precision_gps_in_meters = 10
                     if annotation.frame.gps_fix == 1: # If we are in Q1
-                        precision_gps_in_meters = 0.01 # Precise to centimeter
+                        precision_gps_in_meters = 0.1 # Precise to centimeter
 
                     location_data.append({
                         "eventID": eventID,
