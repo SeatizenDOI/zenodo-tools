@@ -85,7 +85,7 @@ class ZenodoMonitoringExporter:
                         self.monitoring_data.model_dash_format[0]["value"],
                         id='model_select'
                     )
-                ], width=3),
+                ], xs=12, md=4, className="p-3"),
                 # Model class picker.
                 dbc.Col([
                     html.H4(children="Select classes you want to export."),
@@ -95,7 +95,7 @@ class ZenodoMonitoringExporter:
                         multi=True,
                         placeholder="If not filled, no class are selected."
                     ),
-                ]),
+                ], xs=12, md=5, className="p-3"),
                 # Type of prediction.
                 dbc.Col([
                     html.H4(children="Select the type of value.", 
@@ -108,8 +108,8 @@ class ZenodoMonitoringExporter:
                         id="type_pred_select",
                         inline=True
                     ),
-                ], width=3)
-            ], class_name="p-3"),
+                ], xs=12, md=3, className="p-3")
+            ], className="p-3"),
             
             dbc.Row([
                 # Platform selector.
@@ -122,7 +122,7 @@ class ZenodoMonitoringExporter:
                         multi=True, 
                         placeholder="If not filled, all platform are selected."
                     ),
-                ], width=4),
+                ], xs=12, md=4, className="p-3"),
                 dbc.Col([
                     # Frame matadata selector.
                     html.H4(children="Select frame metadata."),
@@ -133,14 +133,14 @@ class ZenodoMonitoringExporter:
                         placeholder="If not filled, all metadata are selected.", 
                         id='frame_select'
                     ),
-                ])
-            ], class_name="p-3"),
+                ],  xs=12, md=8, className="p-3")
+            ], className="p-3"),
             
             dbc.Row([
                 # Date picker.
                 html.H4(children="Select the time period."),
                 self.monitoring_data.generate_date_slider(),
-            ], class_name="p-3"),
+            ], className="p-3"),
             
             dbc.Button(html.Span([
                     "Download your data  ", 

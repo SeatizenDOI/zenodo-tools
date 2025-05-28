@@ -120,7 +120,7 @@ class ZenodoMonitoringExplorer:
                         id="maps-options",
                         switch=True,
                     ),
-                ]),
+                ], className="p-3 p-md-0"),
                 dbc.Col([
                     html.H4(children="Choose the year."),
                     # Orthophoto year radios
@@ -132,7 +132,7 @@ class ZenodoMonitoringExplorer:
                             id="orthophoto-year-radio",
                             inline=True
                         )
-                    ], id="orthophoto-year-container"),
+                    ], id="orthophoto-year-container", className="p-3 p-md-0"),
 
 
                     # Bathymetry year radios
@@ -145,7 +145,7 @@ class ZenodoMonitoringExplorer:
                             id="bathymetry-year-radio",
                             inline=True
                         )
-                    ], id="bathymetry-year-container"),
+                    ], id="bathymetry-year-container", className="p-3 p-md-0"),
 
                     # Prediction year radios
                     html.Div([
@@ -156,7 +156,7 @@ class ZenodoMonitoringExplorer:
                             id="orthophoto-pred-year-radio",
                             inline=True
                         )
-                    ], id="prediction-year-container"),
+                    ], id="prediction-year-container", className="p-3 p-md-0"),
 
                     # eDNA data by year
                     html.Div([
@@ -167,8 +167,8 @@ class ZenodoMonitoringExplorer:
                             id="edna-year-radio",
                             inline=True
                         )
-                    ], id="edna-year-container"),
-                ]),
+                    ], id="edna-year-container", className="p-3 p-md-0"),
+                ], xs=12, md=6, class_name="p-3 p-md-0"),
                 dbc.Col([
                     dcc.Clipboard(id="clipboard-url", style={"display": "None"}),
                     dbc.Button(html.Span([

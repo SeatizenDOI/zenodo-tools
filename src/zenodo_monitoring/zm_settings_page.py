@@ -26,7 +26,7 @@ class ZenodoMonitoringSettings:
                         dbc.Input(id="group_name", type="text", maxlength=40, minlength=1),
                         dbc.FormFeedback("Please fill this input or change name.", type="invalid"),
 
-                    ], width=3),
+                    ], xs=12, md=4),
 
                     # Model picker.
                     dbc.Col([
@@ -36,7 +36,7 @@ class ZenodoMonitoringSettings:
                             self.settings_data.model_dash_format[0]["value"],
                             id='model_select_settings'
                         )
-                    ], width=3),
+                    ],  xs=12, md=4),
 
                     # Model class picker.
                     dbc.Col([
@@ -47,7 +47,7 @@ class ZenodoMonitoringSettings:
                             multi=True,
                             placeholder="If not filled, no class are selected."
                         ),
-                    ]),
+                    ],  xs=12, md=4),
                 ], class_name=["my-3 p-3"]),
                 
                 dbc.Stack([

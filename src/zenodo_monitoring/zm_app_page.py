@@ -12,22 +12,6 @@ from .zm_settings_page import ZenodoMonitoringSettings
 from .zm_statistic_page import ZenodoMonitoringStatistic
 
 
-SIDEBAR_STYLE = {
-    "position": "fixed",
-    "top": 0,
-    "left": 0,
-    "bottom": 0,
-    "width": "16rem",
-    "padding": "2rem 1rem",
-    "background-color": "#f8f9fa",
-}
-
-CONTENT_STYLE = {
-    "margin-left": "18rem",
-    "margin-right": "2rem",
-    "padding": "2rem 1rem",
-}
-
 class ZenodoMonitoringApp:
     def __init__(self, opt):
 
@@ -40,7 +24,8 @@ class ZenodoMonitoringApp:
             meta_tags = [
                 {"name": "Cache-Control", "content": "no-cache, no-store, must-revalidate"},
                 {"name": "Pragma", "content": "no-cache"},
-                {"name": "Expires", "content": "0"}
+                {"name": "Expires", "content": "0"},
+                {"name": "viewport", "content": "width=device-width, initial-scale=1"}
             ]
         )
         self.app.title = "Seatizen monitoring"
@@ -60,27 +45,53 @@ class ZenodoMonitoringApp:
 
     def create_layout(self):
         """ Creater app layout. """
+        sidebar_header = dbc.Row([
+            dbc.Col(html.H2("Seatizen Monitoring", className="display-5")),
+            dbc.Col(
+                html.Button(
+                    # use the Bootstrap navbar-toggler classes to style the toggle
+                    html.Span(className="navbar-toggler-icon"),
+                    className="navbar-toggler",
+                    # the navbar-toggler classes don't set color, so we do it here
+                    style={
+                        "color": "rgba(0,0,0,.5)",
+                        "border-color": "rgba(0,0,0,.1)",
+                    },
+                    id="toggle",
+                ),
+                # the column containing the toggle will be only as wide as the
+                # toggle, resulting in the toggle being right aligned
+                width="auto",
+                # vertically align the toggle in the center
+                align="center",
+            ),
+        ])
         sidebar = html.Div([
             dcc.Store(id='local-session-id', storage_type='local'),
-            html.H2("Seatizen Monitoring", className="display-5"),
-            html.Hr(),
-            html.P(
-                "Simple tool to visualize or export data.", className="lead"
-            ),
-            dbc.Nav(
-                [
-                    dbc.NavLink("Home", href="/home", active="exact"),
-                    dbc.NavLink("Explorer", href="/", active="exact"),
-                    dbc.NavLink("Exporter", href="/exporter", active="exact"),
-                    dbc.NavLink("Statistic", href="/statistic", active="exact"),
-                    dbc.NavLink("Settings", href="/settings", active="exact"),
-                ],
-                vertical=True,
-                pills=True,
-            ),
-        ], style=SIDEBAR_STYLE)
+            sidebar_header,
+            html.Div([
+                html.Hr(),
+                html.P(
+                    "Simple tool to visualize or export data.", className="lead"
+                ),
+            ], id="blurb"),
 
-        content = html.Div(id="page-content", style=CONTENT_STYLE)
+            dbc.Collapse(
+                dbc.Nav(
+                    [
+                        dbc.NavLink("Home", href="/home", active="exact"),
+                        dbc.NavLink("Explorer", href="/", active="exact"),
+                        dbc.NavLink("Exporter", href="/exporter", active="exact"),
+                        dbc.NavLink("Statistic", href="/statistic", active="exact"),
+                        dbc.NavLink("Settings", href="/settings", active="exact"),
+                    ],
+                    vertical=True,
+                    pills=True,
+                ),
+            id="collapse")
+        ], id="sidebar")
+
+        content = html.Div(id="page-content")
 
         return html.Div([dcc.Location(id="url"), sidebar, content])
 
@@ -127,6 +138,17 @@ class ZenodoMonitoringApp:
             if data == None:
                 data = str(uuid.uuid4())
             return data
+        
+        @self.app.callback(
+            Output("collapse", "is_open"),
+            [Input("toggle", "n_clicks")],
+            [State("collapse", "is_open")],
+        )
+        def toggle_collapse(n, is_open):
+            if n:
+                return not is_open
+            return is_open
+
 
     def run(self, debug=False):
         """ Launch app."""
