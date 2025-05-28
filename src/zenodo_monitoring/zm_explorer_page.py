@@ -6,10 +6,11 @@ from urllib.parse import urlencode, parse_qs
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
-from dash_extensions.javascript import assign
-from dash import html, Input, Output, dcc, Dash, State, ctx, no_update
+from dash import html, Input, Output, dcc, Dash, State, no_update
 
 from .zm_edna_data import EDNAData
+from .zm_ortho_asv_footprint import OrthoASVFootprint
+from .zm_utils import ON_EACH_FEATURE_EXPLORER, ON_EACH_FEATURE_EXPLORER_ASV
 
 BATHY_YEAR = [2022, 2023, 2024, 2025]
 ORTHO_YEAR = [2022, 2023, 2024, 2025]
@@ -32,38 +33,9 @@ class ZenodoMonitoringExplorer:
     def __init__(self, app: Dash):
         self.app = app
         self.edna_data = EDNAData()
+        self.ortho_asv_footprint = OrthoASVFootprint()
     
     def create_layout(self):
-  
-        on_each_feature = assign("""
-            function explorer(feature, layer, context) {
-                const popupContent = `
-                    <h6>${feature.place} - ${feature.date}</h6>
-                    <b>Position:</b> ${feature.GPSLatitude}, ${feature.GPSLongitude}<br>
-                    <b>Publication:</b> <a href="${feature.publication_link}" target="_blank"> ${feature.publication_name}</a><br>
-                    <b>Data:</b> <a href="${feature.data_link}" target="_blank"> ${feature.data_name}</a><br>
-                    <b>Description:</b> ${feature.description}<br>
-                    <img src="${feature.thumbnail}" width="600">
-                `;
-
-                layer.bindPopup(popupContent, {
-                    closeOnClick: false,
-                    autoClose: true,
-                    closeButton: true,
-                    maxWidth: 650
-                });
-
-                let popupOpen = false;
-                layer.on('click', function () {
-                    if (popupOpen) {
-                        layer.closeTooltip();
-                    } else {
-                        layer.openTooltip();
-                    }
-                    popupOpen = !popupOpen;
-                });
-            }
-        """)
 
         return html.Div([
             dcc.Location(id="url-explorer", refresh=False),
@@ -113,7 +85,12 @@ class ZenodoMonitoringExplorer:
                             dl.GeoJSON(
                                 data=self.edna_data.get_edna_data(EDNA_YEAR[0]),
                                 id="edna_marker",
-                                onEachFeature=on_each_feature
+                                onEachFeature=ON_EACH_FEATURE_EXPLORER
+                            ),
+                            dl.GeoJSON(
+                                data=self.ortho_asv_footprint.get_data("2023"),
+                                id="ortho_asv_footprint",
+                                onEachFeature=ON_EACH_FEATURE_EXPLORER_ASV
                             ),
                             dl.FeatureGroup(id="feature_group_aled", children= [
                                 dl.FullScreenControl(position="topleft"),
@@ -312,11 +289,15 @@ class ZenodoMonitoringExplorer:
         
         @self.app.callback(
             Output("ortho_map", "url"),
-            Input("orthophoto-year-radio", "value")
+            Output("ortho_asv_footprint", "data"),
+            Input("orthophoto-year-radio", "value"),
+            State("map-explorer", "zoom")
         )
-        def load_url_pred(data):
+        def load_url_pred(data, zoom):
             data = DEFAULT_YEAR if data == None else data
-            return BASE_URL+"/wmts?request=GetTile&layer=ortho&year="+data+"&tilematrix={z}&tilerow={x}&tilecol={y}"
+            new_ortho_url = BASE_URL+"/wmts?request=GetTile&layer=ortho&year="+data+"&tilematrix={z}&tilerow={x}&tilecol={y}"
+
+            return new_ortho_url, self.ortho_asv_footprint.get_data(data, zoom >= 21)
         
         @self.app.callback(
             Output("edna_marker", "data", allow_duplicate=True),
@@ -327,8 +308,7 @@ class ZenodoMonitoringExplorer:
             return self.edna_data.get_edna_data(edna_year)
         
         @self.app.callback(
-            Output("map-explorer", "center"),
-            Output("map-explorer", "zoom"),
+            Output("map-explorer", "viewport"),
             Output("maps-options", "value"),
             Output("orthophoto-year-radio", "value"),
             Output("bathymetry-year-radio", "value"),
@@ -370,8 +350,10 @@ class ZenodoMonitoringExplorer:
             if EDNA_VALUE in params:
                 current_checkbox.append(EDNA_VALUE)
                 edna_year_radio = params.get(EDNA_VALUE)[0]
+            
+            map_move = {"center": [lat, lng], "zoom": int(zoom), "transition":"setView"}
 
-            return [lat, lng], int(zoom), current_checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_year_radio, False
+            return map_move, current_checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_year_radio, False
 
         @self.app.callback(
             Output("url-parameters-cache", "value"),
@@ -400,14 +382,11 @@ class ZenodoMonitoringExplorer:
         )
         def update_url_from_map(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio, cache):
             
-            # Try to prevent update the map default callback 
-            if ctx.triggered[0]["prop_id"][0] == "." or zoom == None or center == DEFAULT_CENTER:
-                raise PreventUpdate
-            
             query = self.format_query_with_parameters(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio)
             # Avoid cyclic update.
             if query == cache: 
                 raise PreventUpdate
+            
             return query, query
 
 
@@ -438,6 +417,16 @@ class ZenodoMonitoringExplorer:
             query = self.format_query_with_parameters(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio)
             
             return f'https://seatizenmonitoring.ifremer.re/{query}', True
+        
+        @self.app.callback(
+            Output("ortho_asv_footprint", "data", allow_duplicate=True),
+            Input("map-explorer", "zoom"),
+            State("orthophoto-year-radio", "value"),
+            prevent_initial_call=True
+        )
+        def update_asv_ortho(zoom, ortho_year):
+            return self.ortho_asv_footprint.get_data(ortho_year, zoom >= 21)
+
         
     
     def format_query_with_parameters(self, center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio) -> str:

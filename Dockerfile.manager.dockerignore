@@ -25,3 +25,4 @@ seatizen_atlas_folder/*
 seatizen_atlas_dataset/*
 zenodo-monitoring.py
 assets
+data/*.csv

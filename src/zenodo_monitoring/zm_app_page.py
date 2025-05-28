@@ -36,7 +36,12 @@ class ZenodoMonitoringApp:
             __name__,
             external_stylesheets=[dbc.themes.SKETCHY, dbc.icons.FONT_AWESOME], 
             assets_folder="../../assets/", 
-            suppress_callback_exceptions=True
+            suppress_callback_exceptions=True,
+            meta_tags = [
+                {"name": "Cache-Control", "content": "no-cache, no-store, must-revalidate"},
+                {"name": "Pragma", "content": "no-cache"},
+                {"name": "Expires", "content": "0"}
+            ]
         )
         self.app.title = "Seatizen monitoring"
 
@@ -105,7 +110,7 @@ class ZenodoMonitoringApp:
             # If the user tries to reach a different page, return a 404 message
             return html.Div(
                 [
-                    html.H1("404: Not found", class_name="text-danger"),
+                    html.H1("404: Not found", className="text-danger"),
                     html.Hr(),
                     html.P(f"The pathname {pathname} was not recognised..."),
                 ],

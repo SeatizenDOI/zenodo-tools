@@ -6,11 +6,12 @@ from datetime import datetime
 
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
-from dash_extensions.javascript import Namespace, assign, arrow_function
+from dash_extensions.javascript import Namespace, arrow_function
 from dash import html, dcc, Input, Output, State, ctx
 
 from .zm_monitoring_data import MonitoringData, EnumPred
 from .zm_settings_data import SettingsData
+from .zm_utils import ON_EACH_FEATURE_EXPORTER
 
 from ..utils.constants import MAX_CSV_FILE_TO_DOWNLOAD
 
@@ -25,20 +26,6 @@ class ZenodoMonitoringExporter:
     def create_layout(self):
         # Tooltip and colors for each session in leafleft map
         ns = Namespace("PlatformSpace", "PlatformSpaceColor")
-        on_each_feature = assign("""
-            function(feature, layer, context){
-                let footprint_data = feature.area ? `<b>Surface : ${feature.area}</b><br>` : ``
-                footprint_data += feature.perimeter ? `<b>Length : ${feature.perimeter}</b><br>` : ``
-                                 
-                layer.bindTooltip(
-                    `<h6> ${feature.name} </h6><br>
-                    ${footprint_data}
-                    <b>Acquisition date : ${feature.date}</b><br>
-                    <b>Platform type : ${feature.platform}</b><br>
-                    <b>DOI : ${feature.doi}</b
-                `)
-            }
-        """)
 
         return dcc.Loading(html.Div([
             dcc.Store(id='local-settings-data', storage_type='local'),
@@ -65,7 +52,7 @@ class ZenodoMonitoringExporter:
                             data=self.monitoring_data.get_footprint_geojson() ,
                             id="session_footprint",
                             style=ns("platformToColorMap"),
-                            onEachFeature=on_each_feature,
+                            onEachFeature=ON_EACH_FEATURE_EXPORTER,
                             hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray=''))
                         ),
                         dl.FeatureGroup(id="feature_group", children=[
