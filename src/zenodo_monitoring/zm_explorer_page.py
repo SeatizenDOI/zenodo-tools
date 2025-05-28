@@ -1,19 +1,22 @@
 import io
 import requests
 from PIL import Image
+from urllib.parse import urlencode, parse_qs
+
 import dash_leaflet as dl
-from dash.exceptions import PreventUpdate
-from dash import html, Input, Output, dcc, Dash, State, ctx, no_update
 import dash_bootstrap_components as dbc
-from urllib.parse import urlencode, parse_qs, urlparse
+from dash.exceptions import PreventUpdate
 from dash_extensions.javascript import assign
+from dash import html, Input, Output, dcc, Dash, State, ctx, no_update
+
+from .zm_edna_data import EDNAData
 
 BATHY_YEAR = [2022, 2023, 2024, 2025]
 ORTHO_YEAR = [2022, 2023, 2024, 2025]
 PRED_YEAR = [2023, 2024, 2025]
+EDNA_YEAR = [2023]
 
 BASE_URL = "https://tmsserver.ifremer.re"
-BASE_URL = "http://localhost:5004"
 
 DEFAULT_CENTER = {'lat': -21.085198, 'lng': 55.222047}
 DEFAULT_ZOOM = 14
@@ -21,16 +24,46 @@ DEFAULT_YEAR = 2023
 ORTHO_VALUE = "ortho"
 BATHY_VALUE = "bathy"
 ORTHO_PRED_VALUE = "pred"
+EDNA_VALUE = "edna"
 
 IMG_SIZE = 512
 
 class ZenodoMonitoringExplorer:
     def __init__(self, app: Dash):
         self.app = app
-
+        self.edna_data = EDNAData()
     
     def create_layout(self):
   
+        on_each_feature = assign("""
+            function explorer(feature, layer, context) {
+                const popupContent = `
+                    <h6>${feature.place} - ${feature.date}</h6>
+                    <b>Position:</b> ${feature.GPSLatitude}, ${feature.GPSLongitude}<br>
+                    <b>Publication:</b> <a href="${feature.publication_link}" target="_blank"> ${feature.publication_name}</a><br>
+                    <b>Data:</b> <a href="${feature.data_link}" target="_blank"> ${feature.data_name}</a><br>
+                    <b>Description:</b> ${feature.description}<br>
+                    <img src="${feature.thumbnail}" width="600">
+                `;
+
+                layer.bindPopup(popupContent, {
+                    closeOnClick: false,
+                    autoClose: true,
+                    closeButton: true,
+                    maxWidth: 650
+                });
+
+                let popupOpen = false;
+                layer.on('click', function () {
+                    if (popupOpen) {
+                        layer.closeTooltip();
+                    } else {
+                        layer.openTooltip();
+                    }
+                    popupOpen = !popupOpen;
+                });
+            }
+        """)
 
         return html.Div([
             dcc.Location(id="url-explorer", refresh=False),
@@ -56,7 +89,7 @@ class ZenodoMonitoringExplorer:
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                             ),
                             dl.TileLayer(
-                                url=BASE_URL+"/wmts?request=GetTile&layer=ortho&year=2023&tilematrix={z}&tilerow={x}&tilecol={y}",
+                                url=BASE_URL+"https://tmsserver.ifremer.re/wmts?request=GetTile&layer=ortho&year=2023&tilematrix={z}&tilerow={x}&tilecol={y}",
                                 attribution='Tiles © Ifremer DOI',
                                 maxZoom=28,
                                 opacity=100,
@@ -76,6 +109,11 @@ class ZenodoMonitoringExplorer:
                                 maxZoom=22,
                                 opacity=0,
                                 id="predictions_map",
+                            ),
+                            dl.GeoJSON(
+                                data=self.edna_data.get_edna_data(EDNA_YEAR[0]),
+                                id="edna_marker",
+                                onEachFeature=on_each_feature
                             ),
                             dl.FeatureGroup(id="feature_group_aled", children= [
                                 dl.FullScreenControl(position="topleft"),
@@ -98,7 +136,8 @@ class ZenodoMonitoringExplorer:
                         options=[
                             {"label": "Orthophoto", "value": ORTHO_VALUE},
                             {"label": "Bathymetry", "value": BATHY_VALUE},
-                            {"label": "Drone segmentation predictions", "value": ORTHO_PRED_VALUE},
+                            {"label": "Habitat map", "value": ORTHO_PRED_VALUE},
+                            {"label": "eDNA", "value": EDNA_VALUE},
                         ],
                         value = [], # Default values are managed in callback
                         id="maps-options",
@@ -133,7 +172,7 @@ class ZenodoMonitoringExplorer:
 
                     # Prediction year radios
                     html.Div([
-                        html.Label("Orthophoto prediction year:  ", className="mx-2"),
+                        html.Label("Habitat year:  ", className="mx-2"),
                         dbc.RadioItems(
                             options=[{"label": str(y), "value": str(y)} for y in PRED_YEAR],
                             value="2023",
@@ -141,6 +180,17 @@ class ZenodoMonitoringExplorer:
                             inline=True
                         )
                     ], id="prediction-year-container"),
+
+                    # eDNA data by year
+                    html.Div([
+                        html.Label("eDNA year:  ", className="mx-2"),
+                        dbc.RadioItems(
+                            options=[{"label": str(y), "value": str(y)} for y in EDNA_YEAR],
+                            value="2023",
+                            id="edna-year-radio",
+                            inline=True
+                        )
+                    ], id="edna-year-container"),
                 ]),
                 dbc.Col([
                     dcc.Clipboard(id="clipboard-url", style={"display": "None"}),
@@ -150,7 +200,7 @@ class ZenodoMonitoringExplorer:
                     ]), 
                     id="btn-share"),
                     dbc.Toast(
-                        [html.P("Your position is in clipboard. You can paste it anywhere.", className="mb-0")],
+                        [html.P("Your position is in the clipboard. You can paste it anywhere.", className="mb-0")],
                         id="btn-share-toast",
                         header="Copy !",
                         icon="info",
@@ -176,20 +226,24 @@ class ZenodoMonitoringExplorer:
                 Output("ortho_map", "opacity"), 
                 Output("bathy_map", "opacity"),
                 Output("predictions_map", "opacity"),
+                Output("edna_marker", "data"),
             ],
             Input("maps-options", "value"),
+            State("edna-year-radio", "value")
         )
-        def on_form_change(maps_options):
+        def on_form_change(maps_options, edna_year):
             op_ortho = 100 if ORTHO_VALUE in maps_options else 0
             op_bathy = 100 if BATHY_VALUE in maps_options else 0
-            op_predictions = 100 if ORTHO_PRED_VALUE in maps_options else 0
-            
-            return op_ortho, op_bathy, op_predictions
+            op_predictions = 100 if ORTHO_PRED_VALUE in maps_options else 0 
+            edna_data = self.edna_data.get_edna_data(edna_year, EDNA_VALUE not in maps_options)
+
+            return op_ortho, op_bathy, op_predictions, edna_data
 
         @self.app.callback(
             Output("orthophoto-year-container", "style"),
             Output("bathymetry-year-container", "style"),
             Output("prediction-year-container", "style"),
+            Output("edna-year-container", "style"),
             Input("maps-options", "value")
         )
         def toggle_radio_visibility(selected_layers):
@@ -197,6 +251,7 @@ class ZenodoMonitoringExplorer:
                 {"display": "inline-flex"} if ORTHO_VALUE in selected_layers else {"display": "none"},
                 {"display": "inline-flex"} if BATHY_VALUE in selected_layers else {"display": "none"},
                 {"display": "inline-flex"} if ORTHO_PRED_VALUE in selected_layers else {"display": "none"},
+                {"display": "inline-flex"} if EDNA_VALUE in selected_layers else {"display": "none"},
             )
 
         @self.app.callback(
@@ -264,12 +319,21 @@ class ZenodoMonitoringExplorer:
             return BASE_URL+"/wmts?request=GetTile&layer=ortho&year="+data+"&tilematrix={z}&tilerow={x}&tilecol={y}"
         
         @self.app.callback(
+            Output("edna_marker", "data", allow_duplicate=True),
+            Input("edna-year-radio", "value"),
+            prevent_initial_call='initial_duplicate'
+        )
+        def load_edna_data(edna_year):
+            return self.edna_data.get_edna_data(edna_year)
+        
+        @self.app.callback(
             Output("map-explorer", "center"),
             Output("map-explorer", "zoom"),
             Output("maps-options", "value"),
             Output("orthophoto-year-radio", "value"),
             Output("bathymetry-year-radio", "value"),
             Output("orthophoto-pred-year-radio", "value"),
+            Output("edna-year-radio", "value"),
             Output("cache-clean", "value", allow_duplicate=True),
             Input("url-parameters-cache", "value"),
             State("url-explorer", "search"),
@@ -277,9 +341,10 @@ class ZenodoMonitoringExplorer:
             State("orthophoto-year-radio", "value"),
             State("bathymetry-year-radio", "value"),
             State("orthophoto-pred-year-radio", "value"),
+            State("edna-year-radio", "value"),
             prevent_initial_call='initial_duplicate'
         )
-        def update_map_from_cache(cache, search, cache_clean, ortho_radio, bathy_radio, ortho_pred_radio):
+        def update_map_from_cache(cache, search, cache_clean, ortho_radio, bathy_radio, ortho_pred_radio, edna_year_radio):
            
             if cache == search and not cache_clean:
                 raise PreventUpdate
@@ -289,7 +354,7 @@ class ZenodoMonitoringExplorer:
             lat = float(params.get("lat", [DEFAULT_CENTER["lat"]])[0])
             lng = float(params.get("lng", [DEFAULT_CENTER["lng"]])[0])
             zoom = int(params.get("zoom", [DEFAULT_ZOOM])[0])
-            current_checkbox = [ORTHO_VALUE] if cache_clean else [] # Default value for checkbox
+            current_checkbox = [ORTHO_VALUE, EDNA_VALUE] if cache_clean else [] # Default value for checkbox
             if ORTHO_VALUE in params:
                 current_checkbox.append(ORTHO_VALUE)
                 ortho_radio = params.get(ORTHO_VALUE)[0]
@@ -302,8 +367,11 @@ class ZenodoMonitoringExplorer:
                 current_checkbox.append(ORTHO_PRED_VALUE)
                 ortho_pred_radio = params.get(ORTHO_PRED_VALUE)[0]
 
+            if EDNA_VALUE in params:
+                current_checkbox.append(EDNA_VALUE)
+                edna_year_radio = params.get(EDNA_VALUE)[0]
 
-            return [lat, lng], int(zoom), current_checkbox, ortho_radio, bathy_radio, ortho_pred_radio, False
+            return [lat, lng], int(zoom), current_checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_year_radio, False
 
         @self.app.callback(
             Output("url-parameters-cache", "value"),
@@ -326,16 +394,17 @@ class ZenodoMonitoringExplorer:
             Input("orthophoto-year-radio", "value"),
             Input("bathymetry-year-radio", "value"),
             Input("orthophoto-pred-year-radio", "value"),
+            Input("edna-year-radio", "value"),
             State("url-parameters-cache", "value"),
             prevent_initial_call="True"
         )
-        def update_url_from_map(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, cache):
+        def update_url_from_map(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio, cache):
             
             # Try to prevent update the map default callback 
             if ctx.triggered[0]["prop_id"][0] == "." or zoom == None or center == DEFAULT_CENTER:
                 raise PreventUpdate
             
-            query = self.format_query_with_parameters(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio)
+            query = self.format_query_with_parameters(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio)
             # Avoid cyclic update.
             if query == cache: 
                 raise PreventUpdate
@@ -360,17 +429,18 @@ class ZenodoMonitoringExplorer:
             State("orthophoto-year-radio", "value"),
             State("bathymetry-year-radio", "value"),
             State("orthophoto-pred-year-radio", "value"),
+            State("edna-year-radio", "value"),
             prevent_initial_call=True
         )
-        def share_url(click, center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio):
+        def share_url(click, center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio):
             if click == 0: return no_update, False
 
-            query = self.format_query_with_parameters(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio)
+            query = self.format_query_with_parameters(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio)
             
             return f'https://seatizenmonitoring.ifremer.re/explorer{query}', True
         
     
-    def format_query_with_parameters(self, center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio) -> str:
+    def format_query_with_parameters(self, center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio) -> str:
         
         if isinstance(center, list):
             center = {"lat": center[0], "lng": center[1]}
@@ -385,5 +455,8 @@ class ZenodoMonitoringExplorer:
         
         if ORTHO_PRED_VALUE in checkbox:
             base_query[ORTHO_PRED_VALUE] = ortho_pred_radio
+        
+        if EDNA_VALUE in checkbox:
+            base_query[EDNA_VALUE] = edna_radio
         
         return f"?{urlencode(base_query)}"
