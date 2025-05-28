@@ -17,7 +17,7 @@ class ZenodoMonitoringStatistic:
 
     
     def create_layout(self):
-        return dbc.Spinner(html.Div([
+        return dcc.Loading(html.Div([
 
                 dbc.Row([
                     dbc.Col([
@@ -42,7 +42,7 @@ class ZenodoMonitoringStatistic:
                         self.__get_basic_stat(),
                     ], width=4)
                 ])
-            ]), fullscreen=True)
+            ]))
     
     def register_callbacks(self):
         pass

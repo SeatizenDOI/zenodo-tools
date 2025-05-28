@@ -437,7 +437,7 @@ class ZenodoMonitoringExplorer:
 
             query = self.format_query_with_parameters(center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio)
             
-            return f'https://seatizenmonitoring.ifremer.re/explorer{query}', True
+            return f'https://seatizenmonitoring.ifremer.re/{query}', True
         
     
     def format_query_with_parameters(self, center, zoom, checkbox, ortho_radio, bathy_radio, ortho_pred_radio, edna_radio) -> str:

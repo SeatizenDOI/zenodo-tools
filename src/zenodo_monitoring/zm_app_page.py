@@ -64,8 +64,8 @@ class ZenodoMonitoringApp:
             ),
             dbc.Nav(
                 [
-                    dbc.NavLink("Home", href="/", active="exact"),
-                    dbc.NavLink("Explorer", href="/explorer", active="exact"),
+                    dbc.NavLink("Home", href="/home", active="exact"),
+                    dbc.NavLink("Explorer", href="/", active="exact"),
                     dbc.NavLink("Exporter", href="/exporter", active="exact"),
                     dbc.NavLink("Statistic", href="/statistic", active="exact"),
                     dbc.NavLink("Settings", href="/settings", active="exact"),
@@ -77,7 +77,7 @@ class ZenodoMonitoringApp:
 
         content = html.Div(id="page-content", style=CONTENT_STYLE)
 
-        return html.Div([dcc.Location(id="url", pathname="/explorer"), sidebar, content])
+        return html.Div([dcc.Location(id="url"), sidebar, content])
 
 
     def register_callbacks(self):
@@ -92,7 +92,7 @@ class ZenodoMonitoringApp:
 
         @self.app.callback(Output("page-content", "children"), [Input("url", "pathname")])
         def render_page_content(pathname):
-            if pathname == "/":
+            if pathname == "/home":
                 return self.home.create_layout()
             elif pathname == "/exporter":
                 return self.exporter.create_layout()
@@ -100,7 +100,7 @@ class ZenodoMonitoringApp:
                 return self.statistic.create_layout()
             elif pathname == "/settings":
                 return self.settings.create_layout()
-            elif pathname == "/explorer":
+            elif pathname == "/":
                 return self.explorer.create_layout()
             # If the user tries to reach a different page, return a 404 message
             return html.Div(
