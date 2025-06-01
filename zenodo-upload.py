@@ -35,6 +35,13 @@ def parse_args():
     parser.add_argument("-uc", "--upload-custom", default="", help="Upload custom data. Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA, d: DCIM, s: SENSORS, p: PHOTOGRAMMETRY, c: CPCE_ANNOTATION")
     parser.add_argument("-umc", "--update-metadata-custom", action="store_true", help="Update custom metadata from a session => last version")
 
+    # Metadata.
+    parser.add_argument(
+        "-iso19115", "--generate_iso19115", action="store_true", 
+        help="Generate an iso 19115 metadata file for a processed version."
+    )
+
+
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
     parser.add_argument("-cd", "--clean_draft", action="store_true", help="Clean all draft with no version published")
@@ -103,11 +110,29 @@ def main(opt):
                 plancha_session.cleanup()
             
             if opt.upload_processeddata:
+                # Extract folder to zip from opt.
                 folders, needFrames = get_processed_folders_to_upload(opt)
-                plancha_session.prepare_processed_data(folders, needFrames, with_file_at_root_folder=True)
+
+                # Generate metadata from the session.
                 processed_metadata = plancha_metadata.build_for_processed_data()
-                zenodoAPI.add_new_version_to_deposit(plancha_session.temp_folder, processed_metadata, plancha_session.get_restricted_files_on_zenodo(), dontUploadWhenLastVersionIsProcessedData=True)
-                plancha_session.cleanup()
+                
+                # Generate iso 19115 if needed.
+                if opt.generate_iso19115:
+                    plancha_session.generate_metadata_iso19115(processed_metadata, zenodoAPI.get_conceptrecid_specific_deposit())
+                continue
+                # # Prepare, zip and move folder/file in tmp folder.
+                # plancha_session.prepare_processed_data(folders, needFrames, with_file_at_root_folder=True)
+
+                # # Create the new deposit on zenodo, send the files and write the metadata.
+                # zenodoAPI.add_new_version_to_deposit(
+                #     plancha_session.temp_folder, 
+                #     processed_metadata, 
+                #     plancha_session.get_restricted_files_on_zenodo(), 
+                #     dontUploadWhenLastVersionIsProcessedData=True
+                # )
+
+                # # Remove the tmp folder.
+                # plancha_session.cleanup()
 
             if opt.update_metadata:
                 if zenodoAPI.deposit_id == None:

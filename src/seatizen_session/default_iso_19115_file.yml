@@ -1,0 +1,108 @@
+# https://geopython.github.io/pygeometa/reference/mcf/
+mcf:
+    version: 1.0
+
+metadata:
+    identifier: 
+    language: en
+    charset: utf8
+    hierarchylevel: collectionSession
+    datestamp: $date$
+
+spatial:
+    datatype: textTable
+    geomtype: point
+
+identification:
+    doi:
+    language: eng
+    charset: utf8
+    title:
+        en:
+    abstract:
+        en:
+    topiccategory:
+        - geoscientificInformation
+        - environment
+        - location
+    fees: None
+    accessconstraints: otherRestrictions
+    rights:
+        en: Copyright (c) $year$ Ifremer DOI
+    url:
+    status: onGoing
+    maintenancefrequency: asNeeded
+
+    dates:
+        publication: $datetime$
+    
+    extents:
+        spatial:
+            - bbox:
+              crs: 4326
+        # Change to the duration of the session. #https://tc39.es/proposal-temporal/docs/duration.html
+        temporal:
+            - begin: 1950-07-31
+              end: now
+              resolution: P1Y
+
+    keywords:
+        default:
+            keywords:
+                en: 
+
+    license:
+        name: CC BY 4.0
+        url: https://creativecommons.org/licenses/by/4.0
+
+content_info:
+    type: image
+    dimensions:
+        - name: depth
+          units: meters
+          min: 0.2
+          max: 50.0
+
+contact:
+    pointOfContact: &contact_poc
+        organization: Ifremer
+        url: https://annuaire.ifremer.fr/cv/17230/
+        individualname: Sylvain Bonhommeau
+        positionname: Researcher
+        phone: "+262262420340"
+        fax: "+262262433684"
+        address: 31 rue Jean Bertho
+        city: Le Port
+        administrativearea: La Réunion
+        postalcode: "97490"
+        country: France
+        email: seatizen.ifremer@gmail.com
+        contactinstructions: email
+
+    distributor: *contact_poc
+
+
+distribution:
+    wms:
+        url: https://seatizenmonitoring.ifremer.re/
+        type: WWW:LINK
+        rel: alternate
+        name: seatizen monitoring
+        description:
+            en: Web vizualizer to explore and download metadata associate to each session.
+        function: information
+
+dataquality:
+    scope:
+        level: dataset
+    lineage:
+        statement: The dataset was acquired and produced to feed the SeatizenAtlas database.
+
+# platform metadata, applicable to iso19139-2 output
+# acquisition:
+#     platforms:
+#         - identifier:
+#           description:
+#           instruments:
+#               - identifier:
+#                 type: 

@@ -3,6 +3,7 @@ import hashlib
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from datetime import datetime
 
 class Sources(enum.Enum):
     CSV_SESSION = 0
@@ -171,3 +172,43 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
 
     return R * c
+
+# https://docs.digi.com/resources/documentation/digidocs/90001488-13/reference/r_iso_8601_duration_format.htm
+def compute_duration_iso8601(start_date: datetime, stop_date: datetime) -> str:
+    """ Compute duration and return it in iso8601 format like P3DT4H"""
+
+    elapsed_time = stop_date - start_date
+    seconds_elapsed = elapsed_time.seconds
+
+    hours = seconds_elapsed // 3600
+    minutes = (seconds_elapsed % 3600) // 60
+    seconds = seconds_elapsed % 60 
+
+    string_iso8601 = ""
+    if elapsed_time.days > 0:
+        string_iso8601 = f"P{elapsed_time.days}DT{hours}H{minutes}M{seconds}S"
+    else:
+        string_iso8601 = f"PT{hours}H{minutes}M{seconds}S"
+
+    return string_iso8601
+
+
+def compute_duration(start_date: datetime, stop_date: datetime) -> str:
+    """ Compute the duration and return in format like 1 day 00h 32min 15sec """
+
+    elapsed_time = stop_date - start_date
+    seconds_elapsed = elapsed_time.seconds
+
+    hours = seconds_elapsed // 3600
+    minutes = (seconds_elapsed % 3600) // 60
+    seconds = seconds_elapsed % 60
+
+    datestring = ""
+    if elapsed_time.days == 1:
+        datestring += f"{elapsed_time.days} day "
+    elif elapsed_time > 1:
+        datestring += f"{elapsed_time.days} days "
+    
+    datestring += f"{hours}h {minutes}min {seconds}sec"
+
+    return datestring

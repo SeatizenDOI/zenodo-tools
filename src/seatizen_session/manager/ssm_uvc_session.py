@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import datetime
 
 from .ssm_base_manager import BaseSessionManager
-from ...utils.lib_tools import haversine
+from ...utils.lib_tools import haversine, compute_duration
 
 class UVCSession(BaseSessionManager):
 
@@ -39,6 +39,15 @@ class UVCSession(BaseSessionManager):
         """
     
 
+    def set_start_stop_mission_str(self) -> None:
+
+        metadata_csv = self.get_metadata_csv()
+        datetime_key = "DateTimeOriginal" if "DateTimeOriginal" in metadata_csv else "SubSecDateTimeOriginal"
+
+        self.mission_start_str = metadata_csv[datetime_key].min().split("+")[0]
+        self.mission_stop_str = metadata_csv[datetime_key].max().split("+")[0]
+
+
     def zip_raw_data(self) -> None:
         self._zip_dcim()
     
@@ -68,10 +77,6 @@ class UVCSession(BaseSessionManager):
         camera = "Not enough information in metadata to get camera information."
         if "Make" in first_image and "Model" in first_image:
             camera = first_image["Make"] + " " + first_image["Model"]
-
-        datetime_key = "DateTimeOriginal" if "DateTimeOriginal" in metadata_csv else "SubSecDateTimeOriginal"
-        flight_start = metadata_csv[datetime_key].min().split("+")[0]
-        flight_end = metadata_csv[datetime_key].max().split("+")[0]
    
         return f"""
                 <h2>Survey information</h2>
@@ -79,25 +84,13 @@ class UVCSession(BaseSessionManager):
                     <li> <strong> Camera</strong>: {camera}</li>
                     <li> <strong> Number of images</strong>: {number_images} </li>
                     <li> <strong> Total size</strong>: {size_images} Gb</li>
-                    <li> <strong> Mission start</strong>: {flight_start} </li>
-                    <li> <strong> Mission end</strong>: {flight_end}</li>
-                    <li> <strong> Mission duration</strong>: {self.__get_duration(flight_start, flight_end)}</li>
+                    <li> <strong> Mission start</strong>: {self.mission_start_str} </li>
+                    <li> <strong> Mission end</strong>: {self.mission_stop_str}</li>
+                    <li> <strong> Mission duration</strong>: {compute_duration(self.mission_start_date, self.mission_stop_date)}</li>
                     <li> <strong> Total distance</strong>: {self.__get_total_distance(metadata_csv)} m</li>
                 </ul>
             """
 
-    def __get_duration(self, start_str: str, end_str: str) -> str:
-        """ Compute and format duration. """
-        start = datetime.strptime(start_str, "%Y:%m:%d %H:%M:%S")
-        end = datetime.strptime(end_str, "%Y:%m:%d %H:%M:%S")
-
-        total_seconds = int((end-start).total_seconds())
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        seconds = total_seconds % 60
-
-        # Format the output
-        return f"{hours}h {minutes}min {seconds}sec"
 
     def __get_total_distance(self, df: pd.DataFrame) -> float:
 
@@ -114,6 +107,7 @@ class UVCSession(BaseSessionManager):
 
         return round(df['Distance_m'].sum())
     
+
     def __get_gps_text(self) -> str:
         return f"""
             <h2> GPS information: </h2>

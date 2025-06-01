@@ -5,6 +5,8 @@ from shapely.geometry import Polygon
 
 from .ssm_base_manager import BaseSessionManager
 
+from ...utils.lib_tools import compute_duration
+
 class UAVSession(BaseSessionManager):
 
     def __init__(self, session_path, temp_folder):
@@ -37,6 +39,13 @@ class UAVSession(BaseSessionManager):
 
         """
     
+    def set_start_stop_mission_str(self) -> None:
+
+        metadata_csv = self.get_metadata_csv()
+
+        self.mission_start_str = metadata_csv["DateTimeOriginal"].min()
+        self.mission_stop_str = metadata_csv["DateTimeOriginal"].max()
+    
 
     def zip_raw_data(self) -> None:
         self._zip_dcim()
@@ -55,8 +64,6 @@ class UAVSession(BaseSessionManager):
         camera = first_image["Make"] + " " + first_image["Model"]
 
         median_height = metadata_csv["GPSAltitude"].median()
-        flight_start = metadata_csv["DateTimeOriginal"].min()
-        flight_end = metadata_csv["DateTimeOriginal"].max()
    
         return f"""
                 <h2>Survey information</h2>
@@ -64,9 +71,9 @@ class UAVSession(BaseSessionManager):
                     <li> <strong> Camera</strong>: {camera}</li>
                     <li> <strong> Number of images</strong>: {number_images} </li>
                     <li> <strong> Total size</strong>: {size_images} Gb</li>
-                    <li> <strong> Flight start</strong>: {flight_start} </li>
-                    <li> <strong> Flight end</strong>: {flight_end}</li>
-                    <li> <strong> Flight duration</strong>: {self.__get_duration(flight_start, flight_end)}</li>
+                    <li> <strong> Flight start</strong>: {self.mission_start_str} </li>
+                    <li> <strong> Flight end</strong>: {self.mission_stop_str}</li>
+                    <li> <strong> Flight duration</strong>: {compute_duration(self.mission_start_date, self.mission_stop_date)}</li>
                     <li> <strong> Median height</strong>: {median_height} m</li>
                     <li> <strong> Area covered</strong>: {self.__get_area_in_hectare()} a</li>
                 </ul>
@@ -83,16 +90,3 @@ class UAVSession(BaseSessionManager):
         survey_area = round(Polygon(gdfutm.geometry.to_list()).convex_hull.area / 10000, 2) # Area in Hectare.
 
         return survey_area
-    
-    def __get_duration(self, start_str: str, end_str: str) -> str:
-        """ Compute and format duration. """
-        start = datetime.strptime(start_str, "%Y:%m:%d %H:%M:%S")
-        end = datetime.strptime(end_str, "%Y:%m:%d %H:%M:%S")
-
-        total_seconds = int((end-start).total_seconds())
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        seconds = total_seconds % 60
-
-        # Format the output
-        return f"{hours}h {minutes}min {seconds}sec"

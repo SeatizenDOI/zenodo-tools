@@ -13,12 +13,18 @@ from natsort import natsorted
 from abc import ABC, abstractmethod
 from scipy.spatial import ConvexHull
 from shapely.geometry import LineString, Polygon
+
+from pygeometa.core import read_mcf, validate_mcf
+from pygeometa.schemas.iso19139 import ISO19139OutputSchema 
+
 from ..ss_zipper import SessionZipper
+from ...utils.lib_tools import compute_duration_iso8601
 from ...utils.constants import MAXIMAL_DEPOSIT_FILE_SIZE, IMG_EXTENSION, BYTE_TO_GIGA_BYTE, MULTILABEL_MODEL_NAME, JACQUES_MODEL_NAME
 
 class BaseType(Enum):
     RGP = "RGP Station from IGN"
-    REACH = "Emlid Reach RS2+"
+    REACH_RS2 = "Emlid Reach RS2+"
+    REACH_RS3 = "Emlid Reach RS3"
     NONE = "No Base"
 
 class DCIMType(Enum):
@@ -39,6 +45,8 @@ class BaseSessionManager(ABC):
         
         # Compute informations.
         self.place, self.date, self.country, self.platform = "", "", "", ""
+        self.mission_start_str, self.mission_stop_str = "", ""
+        
         self.compute_basics_info()
 
     @abstractmethod
@@ -71,6 +79,19 @@ class BaseSessionManager(ABC):
         """ Restricted files to not propagate in PROCESSED_DATA version"""
         pass
 
+    @abstractmethod
+    def set_start_stop_mission_str(self) -> None:
+        """ Set mission start and stop as str in format %Y:%m:%d %H:%M:%S. """
+        pass
+
+    @property
+    def mission_start_date(self) -> datetime:
+        return datetime.strptime(self.mission_start_str, "%Y:%m:%d %H:%M:%S")
+    
+    @property
+    def mission_stop_date(self) -> datetime:
+        return datetime.strptime(self.mission_stop_str, "%Y:%m:%d %H:%M:%S")
+    
 
     def prepare_raw_data(self) -> list[Path]:
         """ Zip all file in a tmp folder. """
@@ -83,7 +104,7 @@ class BaseSessionManager(ABC):
         return self.move_into_subfolder_if_needed()
         
     
-    def prepare_processed_data(self, processed_folder: list, needFrames=False, with_file_at_root_folder=False) -> None:
+    def prepare_processed_data(self, processed_folder: list, needFrames: bool = False, with_file_at_root_folder: bool = False) -> None:
         """ Zip all processed data in tmp folder. """
         self.cleanup()
         print("-- Prepare processed data... ")
@@ -264,7 +285,7 @@ class BaseSessionManager(ABC):
         self.__set_place()
         self.__set_date()
         self.__set_platform()
-
+        self.set_start_stop_mission_str()
 
     def cleanup(self) -> None:
         """ Remove all generated zipped file. """
@@ -632,3 +653,48 @@ class BaseSessionManager(ABC):
                 {diff_options}
             </code>
         """
+    
+    # https://geopython.github.io/pygeometa/reference/mcf/
+    def generate_metadata_iso19115(self, metadata: dict, conceptrecid: int) -> None:
+        """ Generate an ISO 19115 metadata file. """
+
+        try:
+            # Path of the default file.
+            iso_path = Path("src/seatizen_session/default_iso_19115_file.yml")
+            if not iso_path.exists():
+                raise FileNotFoundError(f"Cannot find default iso 19115 file at {iso_path}")
+
+            mcf_dict = read_mcf(iso_path)
+
+            # Change the metadata.
+            mcf_dict["metadata"]["identifier"] = self.session_name
+
+            # Change identification.
+            polygon, _ = self.get_footprint()
+            mcf_dict["identification"]["doi"] = conceptrecid
+            mcf_dict["identification"]["title"]["en"] = metadata["metadata"]["title"]
+            mcf_dict["identification"]["abstract"]["en"] = metadata["metadata"]["description"]
+            mcf_dict["identification"]["url"] = f"https://doi.org/10.5281/zenodo.{conceptrecid}"
+            
+            mcf_dict["identification"]["extents"]["spatial"][0]["bbox"] = polygon.bounds if polygon else []
+            mcf_dict["identification"]["extents"]["temporal"][0]["begin"] = self.mission_start_str
+            mcf_dict["identification"]["extents"]["temporal"][0]["resolution"] = compute_duration_iso8601(self.mission_start_date, self.mission_stop_date)
+            
+            mcf_dict["identification"]["keywords"]["default"]["keywords"]["en"] = metadata["metadata"]["keywords"]
+
+            # TODO add other contact
+            # TODO add other platform for ISO19139_2OutputSchema
+            validate_mcf(mcf_dict)
+
+            # Transform the dict into a string chain.
+            iso_os = ISO19139OutputSchema()
+            xml_string = iso_os.write(mcf_dict)
+            
+            # Export the data at the root of the session.
+            iso19115_filepath = Path(self.session_path, f"{self.session_name}_iso_19115.xml")
+            with open(iso19115_filepath, "w") as f:
+                f.write(xml_string)
+        
+        except Exception as e:
+            print(f"Cannot produce iso 19115 file due to {e}")
+            return

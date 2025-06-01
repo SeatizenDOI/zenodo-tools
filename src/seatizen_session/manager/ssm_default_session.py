@@ -2,6 +2,7 @@ import json
 import pandas as pd
 pd.set_option("display.precision", 12)
 from pathlib import Path
+from datetime import datetime
 
 from ...utils.constants import MULTILABEL_AUTHOR, JACQUES_MODEL_NAME, MULTILABEL_MODEL_NAME
 from .ssm_base_manager import BaseType, DCIMType, BaseSessionManager
@@ -31,20 +32,29 @@ class DefaultSession(BaseSessionManager):
     def build_processed_description(self) -> str:
         
         return f"""
-                {self.__get_image_acquistion_text()}
+                {self.__get_image_acquisition_text()}
                                        
                 {self.__get_gps_text()}
                     
                 {self.__get_bathymetry_text()}
             """
-    
+
+
+    def set_start_stop_mission_str(self) -> None:
+
+        metadata_csv = self.get_metadata_csv()
+
+        self.mission_start_str = metadata_csv["SubSecDateTimeOriginal"].min().split(".")[0]
+        self.mission_stop_str = metadata_csv["SubSecDateTimeOriginal"].max().split(".")[0]
+
+
     def zip_raw_data(self) -> None:
         self._zip_gps_raw()
         self._zip_dcim()
         self._zip_folder("SENSORS")
 
 
-    def __get_image_acquistion_text(self) -> str:
+    def __get_image_acquisition_text(self) -> str:
         # Check for video
         isVideo, size_media = self.is_video_or_images()
         if isVideo == DCIMType.NONE: return ""
@@ -167,10 +177,15 @@ class DefaultSession(BaseSessionManager):
             if "merged.o" in file.name:
                 return BaseType.RGP
         
+        # Check for RS3
+        for file in gps_base_path.iterdir():
+            if "RS3" in file.name:
+                return BaseType.REACH_RS3
+            
         # Check for LLh
         for file in gps_base_path.iterdir():
             if "_RINEX" in file.name:
-                return BaseType.REACH
+                return BaseType.REACH_RS2
         
         return BaseType.NONE
 
