@@ -15,7 +15,7 @@ from scipy.spatial import ConvexHull
 from shapely.geometry import LineString, Polygon
 
 from pygeometa.core import read_mcf, validate_mcf
-from pygeometa.schemas.iso19139 import ISO19139OutputSchema 
+from pygeometa.schemas.iso19139_2 import ISO19139_2OutputSchema 
 
 from ..ss_zipper import SessionZipper
 from ...utils.lib_tools import compute_duration_iso8601
@@ -657,7 +657,7 @@ class BaseSessionManager(ABC):
     # https://geopython.github.io/pygeometa/reference/mcf/
     def generate_metadata_iso19115(self, metadata: dict, conceptrecid: int) -> None:
         """ Generate an ISO 19115 metadata file. """
-
+        print("func: Generate the iso19115 file.")
         try:
             # Path of the default file.
             iso_path = Path("src/seatizen_session/default_iso_19115_file.yml")
@@ -682,12 +682,50 @@ class BaseSessionManager(ABC):
             
             mcf_dict["identification"]["keywords"]["default"]["keywords"]["en"] = metadata["metadata"]["keywords"]
 
-            # TODO add other contact
-            # TODO add other platform for ISO19139_2OutputSchema
+            # Add all contributors
+            for i, creator in enumerate(metadata["metadata"]["creators"]):
+                mcf_dict["contact"][f"creators_{i}'"] = {
+                    "organization": creator["affiliation"],
+                    "url": f'https://orcid.org/{creator["orcid"]}' if "orcid" in creator else "",
+                    "individualname": creator["name"],
+                    "positionname": "", "phone": "", "fax": "", "address": "", "city": "", 
+                    "administrativearea": "", "postalcode": "", "country": "", "email": ""
+                }
+
+            counter = {}
+            for contributor in metadata["metadata"]["contributors"]:
+                if contributor["type"] not in counter:
+                    counter[contributor["type"]] = 0
+                counter[contributor["type"]] += 1
+
+                mcf_dict["contact"][f'{contributor["type"]}_{counter[contributor["type"]]}'] = {
+                    "organization": contributor["affiliation"],
+                    "url": f'https://orcid.org/{contributor["orcid"]}' if "orcid" in contributor else "",
+                    "individualname": contributor["name"],
+                    "positionname": "", "phone": "", "fax": "", "address": "", "city": "", 
+                    "administrativearea": "", "postalcode": "", "country": "", "email": ""
+                }
+
+            
+            # Add platform.
+            platform_description = {
+                "ASV": "Autonomous Surface Vehicle",
+                "UAV": "Unmanned Aerial Vehicle",
+                "SCUBA": "Scuba diving",
+                "MASK": "Mask",
+                "KITE": "Kite surf",
+                "PADDLE": "Paddle",
+                "UVC": "Underwater Vision Census"
+            }
+            mcf_dict["acquisition"]["platforms"][0]["identifier"] = self.platform
+            mcf_dict["acquisition"]["platforms"][0]["description"] = platform_description[self.platform]
+            mcf_dict["acquisition"]["platforms"][0]["instruments"] = []
+
+            # Validate if the iso19115 file is correct.
             validate_mcf(mcf_dict)
 
             # Transform the dict into a string chain.
-            iso_os = ISO19139OutputSchema()
+            iso_os = ISO19139_2OutputSchema()
             xml_string = iso_os.write(mcf_dict)
             
             # Export the data at the root of the session.
@@ -696,5 +734,6 @@ class BaseSessionManager(ABC):
                 f.write(xml_string)
         
         except Exception as e:
-            print(f"Cannot produce iso 19115 file due to {e}")
+            print(e)
+            print(f"Cannot produce iso 19115 file.")
             return

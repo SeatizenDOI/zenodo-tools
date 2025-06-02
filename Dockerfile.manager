@@ -29,7 +29,8 @@ RUN apt-get update && \
     gunicorn==22.0.0 \
     dash_extensions==2.0.4 \
     polars==1.3.0 \
-    pillow==11.0.0
+    pillow==11.0.0 \
+    pygeometa==0.16.1
 
 # Change with our user.
 USER seatizen

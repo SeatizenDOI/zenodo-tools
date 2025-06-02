@@ -119,20 +119,20 @@ def main(opt):
                 # Generate iso 19115 if needed.
                 if opt.generate_iso19115:
                     plancha_session.generate_metadata_iso19115(processed_metadata, zenodoAPI.get_conceptrecid_specific_deposit())
-                continue
-                # # Prepare, zip and move folder/file in tmp folder.
-                # plancha_session.prepare_processed_data(folders, needFrames, with_file_at_root_folder=True)
 
-                # # Create the new deposit on zenodo, send the files and write the metadata.
-                # zenodoAPI.add_new_version_to_deposit(
-                #     plancha_session.temp_folder, 
-                #     processed_metadata, 
-                #     plancha_session.get_restricted_files_on_zenodo(), 
-                #     dontUploadWhenLastVersionIsProcessedData=True
-                # )
+                # Prepare, zip and move folder/file in tmp folder.
+                plancha_session.prepare_processed_data(folders, needFrames, with_file_at_root_folder=True)
 
-                # # Remove the tmp folder.
-                # plancha_session.cleanup()
+                # Create the new deposit on zenodo, send the files and write the metadata.
+                zenodoAPI.add_new_version_to_deposit(
+                    plancha_session.temp_folder, 
+                    processed_metadata, 
+                    plancha_session.get_restricted_files_on_zenodo(), 
+                    dontUploadWhenLastVersionIsProcessedData=True
+                )
+
+                # Remove the tmp folder.
+                plancha_session.cleanup()
 
             if opt.update_metadata:
                 if zenodoAPI.deposit_id == None:

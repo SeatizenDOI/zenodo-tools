@@ -206,7 +206,7 @@ def compute_duration(start_date: datetime, stop_date: datetime) -> str:
     datestring = ""
     if elapsed_time.days == 1:
         datestring += f"{elapsed_time.days} day "
-    elif elapsed_time > 1:
+    elif elapsed_time.days > 1:
         datestring += f"{elapsed_time.days} days "
     
     datestring += f"{hours}h {minutes}min {seconds}sec"

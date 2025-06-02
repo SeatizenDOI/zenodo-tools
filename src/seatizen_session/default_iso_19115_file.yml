@@ -99,10 +99,10 @@ dataquality:
         statement: The dataset was acquired and produced to feed the SeatizenAtlas database.
 
 # platform metadata, applicable to iso19139-2 output
-# acquisition:
-#     platforms:
-#         - identifier:
-#           description:
-#           instruments:
-#               - identifier:
-#                 type: 
+acquisition:
+    platforms:
+        - identifier:
+          description:
+          instruments:
+            - identifier: ""
+            - type: ""
