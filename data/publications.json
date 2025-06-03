@@ -1,0 +1,27 @@
+[
+    {
+        "category": "Data Descriptor",
+        "citation": "Contini, M., Illien, V., Julien, M. et al. Seatizen Atlas: a collaborative dataset of underwater and aerial marine imagery. Sci Data 12, 67 (2025).",
+        "doi": "https://doi.org/10.1038/s41597-024-04267-z"
+    },
+    {
+        "category": "Data Descriptor",
+        "citation": "Gogendeau, P. et al. An autonomous surface vehicle for acoustic tracking, bathymetric and photogrammetric surveys, 2025.",
+        "doi": "https://doi.org/10.1016/j.oceaneng.2025.121201"
+    },
+    {
+        "category": "eDNA",
+        "citation": "Cowart DA, Chevrier T, Nieblas A-E, Chanut J, Bernard S and Bonhommeau S (2024) Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey. Front. Mar. Sci. 11:1423676",
+        "doi": "https://doi.org/10.3389/fmars.2024.1423676"
+    },
+    {
+        "category": "Artificial Intelligence",
+        "citation": "Contini, Matteo, et al. From underwater to drone: A novel multi-scale knowledge distillation approach for coral reef monitoring. Ecological Informatics (2025): 103149.",
+        "doi": "https://doi.org/10.1016/j.ecoinf.2025.103149"
+    },
+    {
+        "category": "Artificial Intelligence",
+        "citation": "Talpaert Daudon, Justine, et al. Geoai for marine ecosystem monitoring: A complete workflow to generate maps from ai model predictions. The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences. Vol. 48. Copernicus GmbH, 2023.",
+        "doi": "https://doi.org/10.5194/isprs-archives-XLVIII-4-W7-2023-223-2023"
+    }
+]

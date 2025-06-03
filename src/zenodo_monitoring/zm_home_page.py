@@ -19,7 +19,7 @@ class ZenodoMonitoringHome:
                         "updated to list a significant number of images. Most of images are geolocated, and some of them are also annotated with 51"
                         "distinct classes (e.g. corals, associated fauna, and habitats) to train AI models. The quality of these photos which are taken by"
                         "action cameras along the trajectories of different platforms, is highly heterogeneous (due to varying speed, depth, lighting,"
-                        "turbidity, and perspectives) and well reflects the challenges of underwater image recognition. Data discovery and access rely"
+                        "turbidity, and perspectives) and well reflects the challenges of underwater image recognition. Data discovery and access rely "
                         "on DOI assignement while data interoperability and reuse is ensured by complying with widely used community standards."
                     ),
                 ], align="center")
@@ -65,7 +65,7 @@ class ZenodoMonitoringHome:
                         dbc.Button("Visit our website", color="primary", href="https://ocean-indien.ifremer.fr/"),
                     ]),
                 ], style={"width": "25rem"})
-            ], justify="around", class_name="mt-5 pt-5"),
+            ], justify="around", className="mt-5 pt-5"),
         ])
     
     def register_callbacks(self):

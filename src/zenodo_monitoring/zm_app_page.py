@@ -10,7 +10,7 @@ from .zm_exporter_page import ZenodoMonitoringExporter
 from .zm_explorer_page import ZenodoMonitoringExplorer
 from .zm_settings_page import ZenodoMonitoringSettings
 from .zm_statistic_page import ZenodoMonitoringStatistic
-
+from .zm_publication_page import ZenodoMonitoringPublication
 
 class ZenodoMonitoringApp:
     def __init__(self, opt):
@@ -38,6 +38,7 @@ class ZenodoMonitoringApp:
         self.explorer = ZenodoMonitoringExplorer(self.app)
         self.exporter = ZenodoMonitoringExporter(self.app, self.settings.settings_data)
         self.statistic = ZenodoMonitoringStatistic(self.app)
+        self.publication = ZenodoMonitoringPublication(self.app)
         self.home = ZenodoMonitoringHome(self.app)
 
         self.app.layout = self.create_layout()
@@ -84,6 +85,7 @@ class ZenodoMonitoringApp:
                         dbc.NavLink("Exporter", href="/exporter", active="exact"),
                         dbc.NavLink("Statistic", href="/statistic", active="exact"),
                         dbc.NavLink("Settings", href="/settings", active="exact"),
+                        dbc.NavLink("Publications", href="/publications", active="exact"),
                     ],
                     vertical=True,
                     pills=True,
@@ -105,6 +107,7 @@ class ZenodoMonitoringApp:
         self.exporter.register_callbacks()
         self.explorer.register_callbacks()
         self.statistic.register_callbacks()
+        self.publication.register_callbacks()
 
         @self.app.callback(Output("page-content", "children"), [Input("url", "pathname")])
         def render_page_content(pathname):
@@ -118,6 +121,8 @@ class ZenodoMonitoringApp:
                 return self.settings.create_layout()
             elif pathname == "/":
                 return self.explorer.create_layout()
+            elif pathname == "/publications":
+                return self.publication.create_layout()
             # If the user tries to reach a different page, return a 404 message
             return html.Div(
                 [
