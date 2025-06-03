@@ -42,10 +42,11 @@ class UAVSession(BaseSessionManager):
     def set_start_stop_mission_str(self) -> None:
 
         metadata_csv = self.get_metadata_csv()
-
+        if metadata_csv.empty: return
+        
         self.mission_start_str = metadata_csv["DateTimeOriginal"].min()
         self.mission_stop_str = metadata_csv["DateTimeOriginal"].max()
-    
+        
 
     def zip_raw_data(self) -> None:
         self._zip_dcim()

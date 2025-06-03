@@ -42,6 +42,8 @@ class UVCSession(BaseSessionManager):
     def set_start_stop_mission_str(self) -> None:
 
         metadata_csv = self.get_metadata_csv()
+        if metadata_csv.empty: return 
+        
         datetime_key = "DateTimeOriginal" if "DateTimeOriginal" in metadata_csv else "SubSecDateTimeOriginal"
 
         self.mission_start_str = metadata_csv[datetime_key].min().split("+")[0]

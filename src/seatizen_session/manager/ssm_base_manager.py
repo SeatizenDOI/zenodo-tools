@@ -83,7 +83,9 @@ class BaseSessionManager(ABC):
     def set_start_stop_mission_str(self) -> None:
         """ Set mission start and stop as str in format %Y:%m:%d %H:%M:%S. """
         pass
-
+    
+    # !WARNING mission_start_str and mission_stop_str can be not set (metadata file not found) but no error is raised. 
+    # !If you call this property, you will get an error but that was a choice.
     @property
     def mission_start_date(self) -> datetime:
         return datetime.strptime(self.mission_start_str, "%Y:%m:%d %H:%M:%S")

@@ -43,6 +43,7 @@ class DefaultSession(BaseSessionManager):
     def set_start_stop_mission_str(self) -> None:
 
         metadata_csv = self.get_metadata_csv()
+        if metadata_csv.empty: return
 
         self.mission_start_str = metadata_csv["SubSecDateTimeOriginal"].min().split(".")[0]
         self.mission_stop_str = metadata_csv["SubSecDateTimeOriginal"].max().split(".")[0]
