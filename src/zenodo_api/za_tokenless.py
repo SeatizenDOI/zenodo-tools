@@ -120,8 +120,58 @@ def get_all_versions_from_session_name(session_name: str) -> list:
 
     except:
         # TODO Implement retry
-        print(r.status_code, r)
+        print(r.status_code, r.headers, r)
         print(f"Cannot get version for {session_name}.")
         input("Something failed do you want to continue ?: ")
     
     return version_json
+
+
+def extract_session_name(datas: list[dict]) -> str | None:
+    """Extract seatizen session name from the identifier.""" 
+    session_name = None
+    for identifier in datas:
+        a = identifier.get("identifier", "None")
+        if "urn" not in a: continue
+        a = a.replace("urn:", "")
+        splitted_a = a.split("_")
+
+        # The first char is date.
+        if len(splitted_a[0]) != 8: continue
+
+        # TODO find how to better discriminate
+        session_name = a
+        break
+    return session_name
+
+
+def get_session_in_communities(url: str) -> list:
+    """ Retrieve all seatizen sessions from a community. """
+
+    next_url = url
+    list_session = []
+
+    while next_url != None:
+        print(f"Parsing {next_url}")
+        r = requests.get(next_url)
+
+        if not r.ok:
+            raise NameError(f"Cannot fetch url {next_url}, we get error {r.status_code}")
+
+
+        data = r.json()
+        for session in data["hits"]["hits"]:
+            # Get conceptrecid.
+            conceptrecid = session.get("conceptrecid", None)
+            if conceptrecid == None: continue
+            
+            # Get session_name.
+            list_identifier_dict = session["metadata"].get("related_identifiers", []) + session["metadata"].get("alternate_identifiers", [])
+            session_name = extract_session_name(list_identifier_dict)
+            if session_name == None: continue
+        
+            list_session.append((conceptrecid, session_name))
+
+        next_url = data["links"].get("next", None)
+    
+    return list_session  

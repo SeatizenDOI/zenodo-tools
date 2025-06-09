@@ -20,11 +20,10 @@ docker build -f Dockerfile.manager -t zenodo-manager:latest .
 
 Run command :
 ```bash
-docker run -it --user 1000 --rm \
+docker run --user 1000 --rm \
   -v ./seatizen_atlas_folder/:/home/seatizen/app/seatizen_atlas_folder \
-  -v ./plancha_test:/home/seatizen/plancha \
-  -v ./inputs:/home/seatizen/app/csv_inputs \
- --name zenodo-manager seatizendoi/zenodo-manager:latest bash
+  -v ./config.json:/home/seatizen/app/config.json \
+ --name zenodo-manager zenodo-manager:latest python zenodo-auto-update.py
 ```
 
 ## zenodo-monitoring

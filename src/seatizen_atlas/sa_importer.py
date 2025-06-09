@@ -21,6 +21,8 @@ from ..utils.constants import TMP_PATH, MULTILABEL_MODEL_NAME
 from ..seatizen_session.manager.ssm_base_manager import BaseSessionManager
 from ..seatizen_session.manager.ssm_factory_manager import FactorySessionManager
 
+from .sa_tools import load_and_build_parser_old_new_multilabel_class
+
 class AtlasImport:
 
     def __init__(self, seatizen_atlas_gpkg: Path) -> None:
@@ -205,6 +207,8 @@ class AtlasImport:
 
         ml_model = self.ml_model_manager.get_model_by_name(MULTILABEL_MODEL_NAME)
 
+        matching_old_new_multilabel_label = load_and_build_parser_old_new_multilabel_class()
+
         predictions_obj_to_add = []
         for frame_name in tqdm(session.get_useful_frames_name()):
             frame = self.frame_manager.get_frame_by_filename_and_version(frame_name, f_ver)
@@ -219,16 +223,21 @@ class AtlasImport:
 
             row = scores_csv.loc[frame_name]
             
-            for cls_name in scores_csv_header:
-                
-                ml_class = self.ml_classes_manager.get_class_by_name_and_model(cls_name, ml_model)
+            for csv_cls_name in scores_csv_header:
+
+                db_cls_name = csv_cls_name
+                if csv_cls_name in matching_old_new_multilabel_label:
+                    db_cls_name = matching_old_new_multilabel_label[csv_cls_name]
+
+                ml_class = self.ml_classes_manager.get_class_by_name_and_model(db_cls_name, ml_model)
 
                 predictions_obj_to_add.append(MultilabelPredictionDTO(
-                    score=row[cls_name],
+                    score=row[csv_cls_name],
                     frame=frame,
                     ml_class=ml_class,
                     version=pred_v
                 ))
+
         self.prediction_manager.insert(predictions_obj_to_add)
     
 

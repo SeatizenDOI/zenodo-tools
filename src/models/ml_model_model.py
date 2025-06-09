@@ -181,7 +181,7 @@ class MultilabelClassDAO(AbstractBaseDAO):
         result = self.sql_connector.execute_query(query, params)
 
         if len(result) == 0:
-            raise NameError("[ERROR] No multilabel class found for this name.")
+            raise NameError(f"[ERROR] No multilabel class found for this name: {class_name}.")
         
         id, name, threshold, ml_label_id = result[0]
 

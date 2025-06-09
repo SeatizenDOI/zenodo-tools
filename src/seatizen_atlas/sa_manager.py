@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 from .sa_importer import AtlasImport
@@ -51,16 +52,18 @@ class AtlasManager:
 
             # Extract data.
             filesize = -1
+            file_to_download = []
             for file in version_json["files"]:
                 if file["key"] == SEATIZEN_ATLAS_GPKG:
                     filesize = file["size"]
+                    file_to_download = [file]
 
             # Verify if local gpkg is the same as online gpkg.
             if filesize != -1 and (not Path.exists(self.seatizen_atlas_gpkg) or not self.seatizen_atlas_gpkg.is_file() or self.seatizen_atlas_gpkg.stat().st_size != filesize):                
                 print("Download seatizen atlas files from zenodo.")
                 
                 # Download data.
-                download_manager_without_token(version_json["files"], self.seatizen_folder_path, ".", version_json["id"])
+                download_manager_without_token(file_to_download, self.seatizen_folder_path, ".", version_json["id"])
 
         # Try to figure out if we have a gpkg file.
         if not Path.exists(self.seatizen_atlas_gpkg) or not self.seatizen_atlas_gpkg.is_file():
@@ -84,17 +87,11 @@ class AtlasManager:
 
 
     def clean_seatizen_folder(self) -> None:
-        for file in self.seatizen_folder_path.iterdir():
-            try:
-
-                if file.is_dir():
-                    for subfile in file.iterdir():
-                        subfile.unlink()
-                    file.rmdir()
-                else:
-                    file.unlink()
-            except:
-                print(f"[WARNING] Something happen when trying to delete {file}")
+        try:
+            shutil.rmtree(self.seatizen_folder_path)
+            self.seatizen_folder_path.mkdir(parents=True)
+        except:
+            print(f"[WARNING] Something happen when trying to delete {self.seatizen_folder_path}")
 
 
     def load_annotation_files(self, opt_annotation_path: str, opt_annotation_type: str) -> None:

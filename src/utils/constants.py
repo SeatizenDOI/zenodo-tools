@@ -16,6 +16,8 @@ NB_VERSION_TO_FETCH = 100 # Keep low because zenodo tiemout after 30 sec.
 
 # Zenodo for download without token
 ZENODO_LINK_WITHOUT_TOKEN = "https://zenodo.org/api/records"
+ZENODO_LINK_WITHOUT_TOKEN_COMMUNITIES = "https://zenodo.org/api/communities"
+
 
 # IA model. The values are the name of the predictions files in PROCESSED_DATA/IA without the session_name
 JACQUES_MODEL_NAME = "jacques-v0.1.0_model-20240513_v20.0"

@@ -339,13 +339,13 @@ class BaseSessionManager(ABC):
         IA_path = Path(self.session_path, "PROCESSED_DATA", "IA")
         if not IA_path.exists() or not IA_path.is_dir(): return pd.DataFrame()
 
-        jacques_name = Path()
+        jacques_name = None
         for file in IA_path.iterdir():
             if JACQUES_MODEL_NAME in file.name:
                 jacques_name = file
                 break
         
-        if jacques_name == "":
+        if jacques_name == None:
             print("[WARNING] Cannot find jacques predictions file.")
             return pd.DataFrame()
 

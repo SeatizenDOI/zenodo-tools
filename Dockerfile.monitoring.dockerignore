@@ -20,8 +20,7 @@ img
 
 # Specific file.
 csv_inputs
-seatizen_atlas_folder/*
-seatizen_atlas_dataset/*
+seatizen_atlas_*
 zenodo-download.py
 zenodo-manager.py
 zenodo-upload.py

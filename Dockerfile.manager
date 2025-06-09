@@ -1,6 +1,9 @@
 # Use an official Python runtime as a parent image
 FROM python:3.11.9-slim
 
+RUN groupadd --gid 1000 seatizen && \
+    useradd --uid 1000 --gid seatizen --create-home seatizen
+
 # Add local directory and change permission.
 ADD --chown=seatizen . /home/seatizen/app/
 

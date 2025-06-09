@@ -20,9 +20,8 @@ img
 Dockerfile.*
 
 # Specific file.
-csv_inputs/*
-seatizen_atlas_folder/*
-seatizen_atlas_dataset/*
+csv_inputs
+seatizen_atlas_*
 zenodo-monitoring.py
 assets
 data/*.csv
