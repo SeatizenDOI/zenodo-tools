@@ -1,0 +1,61 @@
+---
+import 'choices.js/public/assets/styles/choices.min.css'
+
+const { id_drop } = Astro.props
+---
+
+<dropdown-layer data-id={id_drop}>
+  <select id={id_drop} multiple>
+    <optgroup label="Orthophoto">
+      <option value="ortho_2022">Orthophoto 2022</option>
+      <option value="ortho_2023">Orthophoto 2023</option>
+      <option value="ortho_2024">Orthophoto 2024</option>
+      <option value="ortho_2025">Orthophoto 2025</option>
+    </optgroup>
+    <optgroup label="Bathymetry">
+      <option value="bathy_2022">Bathymetry 2022</option>
+      <option value="bathy_2023">Bathymetry 2023</option>
+      <option value="bathy_2024">Bathymetry 2024</option>
+      <option value="bathy_2025">Bathymetry 2025</option>
+    </optgroup>
+    <optgroup label="Map Habitat">
+      <option value="predictions_2023">Map Habitat 2023</option>
+      <option value="predictions_2024">Map Habitat 2024</option>
+      <option value="predictions_2025">Map Habitat 2025</option>
+    </optgroup>
+  </select>
+</dropdown-layer>
+
+
+<!-- Initialize Choices.js on the client -->
+<script >
+  import Choices from 'choices.js';
+
+  class DropdownLayer extends HTMLElement {
+    constructor() {
+      super()
+      console.log(this.dataset)
+      const el = document.getElementById(this.dataset.id ?? "")! as HTMLSelectElement;
+      const choices = new Choices(el, {
+          removeItemButton: true,
+          placeholderValue: 'Select which map to show',
+          noResultsText: 'No results found',
+          noChoicesText: 'No choices to choose from',
+          loadingText: 'Loading...',
+          shouldSort: false,
+    
+      });
+    
+      el.addEventListener('change', () => {
+    
+        // @ts-ignore getValues always an array
+        const selected = choices.getValue().map(opt => opt.value);
+        console.log(selected)
+        
+    
+      });
+    }
+  }
+  window.customElements.define("dropdown-layer", DropdownLayer);
+
+</script>

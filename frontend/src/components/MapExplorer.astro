@@ -1,0 +1,57 @@
+---
+
+---
+
+<leaflet-explorer>
+    <div style="height: 60vh; z-index: 0;" id="map-explorer"></div>
+</leaflet-explorer>
+
+<script>
+  import L from "leaflet"
+  import "leaflet/dist/leaflet.css"
+  import "leaflet-fullscreen";
+  import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
+
+    import "leaflet-splitmap";
+  
+  class LeafletExplorer extends HTMLElement {
+
+      is_split: boolean;
+        map: L.Map;
+        splitControl: any;
+        backgound_map: L.TileLayer;
+
+      constructor() {
+          super()
+        this.is_split = true; 
+    // @ts-ignore (no correct types)
+      this.map = L.map("map-explorer", { fullscreenControl: true}).setView([-21.085198, 55.222047], 13);
+
+      this.backgound_map = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+        attribution:
+            '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+        }
+    ).addTo(this.map);
+    
+    // @ts-ignore (no correct types)
+
+        this.splitControl = L.control.splitMap(this.backgound_map, []).addTo(this.map);
+
+    }
+
+    toggleSplitMap() {
+
+        if (this.is_split) {
+            this.map.removeControl(this.splitControl);
+        } else {
+             // @ts-ignore (no correct types)    
+            this.splitControl =  L.control.splitMap(this.backgound_map, []).addTo(this.map);
+        }
+        this.is_split = !this.is_split;
+    }
+  }
+
+  window.customElements.define("leaflet-explorer", LeafletExplorer);
+</script>
