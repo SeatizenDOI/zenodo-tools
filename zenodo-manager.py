@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument("-at", "--annotation_type", default="multilabel", help="Annotation type to parse. Default multilabel")
 
     # Seatizen Atlas path.
-    parser.add_argument("-psa", "--path_seatizen_atlas_folder", default="./seatizen_atlas_folder2", help="Folder to store data")
+    parser.add_argument("-psa", "--path_seatizen_atlas_folder", default="./seatizen_atlas_folder", help="Folder to store data")
     parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata_seatizen_atlas.json", help="Path to metadata file")
 
     # Optional arguments.

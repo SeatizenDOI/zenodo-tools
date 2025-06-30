@@ -53,6 +53,8 @@ To ensure a consistent environment for all users, this project uses a Conda envi
 ```bash
 sudo apt-get install libsqlite3-mod-spatialite
 ```
+On my machine mod_spatialite is in `/usr/lib/x86_64-linux-gnu/mod_spatialite.so`
+
 
 6. **Troubleshooting:** If `sqlite3.OperationalError: /home/bioeos/miniconda3/envs/zenodo_env/bin/../lib/libstdc++.so.6: version 'GLIBCXX_3.4.32' not found (required by /usr/lib/x86_64-linux-gnu/libproj.so.25)`
 
@@ -82,6 +84,10 @@ python zenodo-manager.py -eno -ulo -ssn 2 # Update database data (all class and 
 python zenodo-manager.py -efol -pfol /home/bioeos/Documents/Bioeos/aina_dataset -ulo -ffi -ne
 python zenodo-manager.py -eno -ulo -la /home/bioeos/Documents/Bioeos/aina_dataset_annotation/20250410_120000__yves-amoros-mitondrasoa__madagascar_annotation.csv
 
+python zenodo-manager.py -eno -ssn 3 # Update the database to apply style on specific table.
+python zenodo-manager.py -efol -pfol /media/bioeos/F/202504_plancha_session -ulo -ne
+python zenodo-manager.py -efol -pfol /media/bioeos/F/202505_plancha_session -ulo
+python zenodo-manager.py -eno -cp -ne
 
 ```
 

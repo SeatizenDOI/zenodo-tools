@@ -52,6 +52,17 @@ class DarwinCoreManager:
         dois_session = set()
         for sa in annotationSessions:
 
+            # TODO Change the way to manage write but for now its okey
+            if "amoros" in sa.author_name:
+                sampling_proto = "https://doi.org/10.4314/wiojms.v23i2.4" 
+                institution_id = "https://ror.org/03g407536" 
+                rightHolders = "IHCM"
+            else:
+                sampling_proto = "https://doi.org/10.1038/s41597-024-04267-z"
+                institution_id = "https://ror.org/044jxhp58"
+                rightHolders = "Ifremer"
+            
+            
             record_data.append({
                 "recordID": sa.id, 
                 "type": "StillImage",
@@ -61,15 +72,15 @@ class DarwinCoreManager:
                 "modified": sa.annotation_date,
                 "language": "en",
                 "licence": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
-                "rightsHolder": "Ifremer",
+                "rightsHolder": rightHolders,
                 "accessRights": "not-for-profit use only",
-                "institutionID": "https://ror.org/044jxhp58",
+                "institutionID": institution_id,
             })
 
             print(f"-- Launching {sa.dataset_name}")
             event_cached = set()
             for annotation in tqdm(self.ml_annotation_manager.get_annotations_from_anno_ses(sa)):
-                if annotation.value not in [1]: continue
+                if annotation.value not in [1, 0]: continue # Not presence or absence
                 label = annotation.ml_label.name
                 if label not in mapping_label_by_taxonid: continue
 
@@ -80,7 +91,7 @@ class DarwinCoreManager:
                     year, month, day = eventDate.split("-")
 
                 dois_session.add(annotation.frame.version.doi)
-                eventID = f"{annotation.frame.filename}_{annotation.frame.gps_datetime}"
+                eventID = f"{annotation.frame.filename.split('.')[0]}_{annotation.frame.gps_datetime.replace(' ', '_')}"
                 if eventID not in event_cached:
                     event_data.append({
                         "eventID": eventID,
@@ -91,14 +102,14 @@ class DarwinCoreManager:
                         "month": month,
                         "day": day,
                         "habitat": "coral_reef",
-                        "samplingProtocol": "https://doi.org/10.1038/s41597-024-04267-z"
+                        "samplingProtocol": sampling_proto
                     })
                     event_cached.add(eventID)
 
                     country = pycountry.countries.get(alpha_3=annotation.frame.version.deposit.alpha3_country_code)
                     precision_gps_in_meters = 10
                     if annotation.frame.gps_fix == 1: # If we are in Q1
-                        precision_gps_in_meters = 0.1 # Precise to centimeter
+                        precision_gps_in_meters = 0.1 # Precise to 10 centimeters
 
                     location_data.append({
                         "eventID": eventID,
@@ -110,22 +121,19 @@ class DarwinCoreManager:
                         "countryCode": annotation.frame.version.deposit.alpha3_country_code,
                         "geodeticDatum": "EPSG:4326",
                         "coordinateUncertaintyInMeters": precision_gps_in_meters,
-                        "footprintWKT": annotation.frame.version.deposit.wkt_footprint,
-                        "footprintSRS": "EPSG:4326",
                         "georeferencedDate": f"{annotation.frame.gps_datetime.replace(' ', 'T')}Z",
                     })
-
+                media = f"https://doi.org/10.5281/zenodo.{annotation.frame.version.doi}/{'_'.join(annotation.frame.relative_path.split('/')[1:-1])}.zip"
+                media += f" | {annotation.frame.relative_path}"
                 occurrence_data.append({
                     "eventID": eventID,
                     "occurenceID": annotation.id,
                     "taxonID": mapping_label_by_taxonid[label],
                     "recordNumber": sa.id,
                     "occurrenceStatus": "present" if annotation.value == 1 else "absent",
-                    "recordedBy": "Me",
-                    "associatedMedia": "Incoming"
+                    "recordedBy": ' '.join([a.capitalize() for a in sa.author_name.split('-')]),
+                    "associatedMedia": media
                 })
-                
-
 
         # If no data, no export.
         if len(record_data) == 0:
@@ -243,6 +251,7 @@ class DarwinCoreManager:
         print()
         return gbif_map_by_label
     
+
     def create_taxon_csv(self) -> dict:
 
         t_start = datetime.now()

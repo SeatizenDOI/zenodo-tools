@@ -10,16 +10,16 @@
         <files>
             <location>event.csv</location>
         </files>
-        <id index="0"/>
+        <id index="1"/>
         <field index="1" term="http://rs.tdwg.org/dwc/terms/eventID"/>
-        <field index="4" term="http://rs.tdwg.org/dwc/terms/eventType"/>
-        <field index="2" term="http://rs.tdwg.org/dwc/terms/eventDate"/>
-        <field index="5" term="http://rs.tdwg.org/dwc/terms/eventTime"/>
-        <field index="6" term="http://rs.tdwg.org/dwc/terms/year"/>
-        <field index="7" term="http://rs.tdwg.org/dwc/terms/month"/>
-        <field index="8" term="http://rs.tdwg.org/dwc/terms/day"/>
-        <field index="9" term="http://rs.tdwg.org/dwc/terms/habitat"/>
-        <field index="3" term="http://rs.tdwg.org/dwc/terms/samplingProtocol"/>
+        <field index="2" term="http://rs.tdwg.org/dwc/terms/eventType"/>
+        <field index="3" term="http://rs.tdwg.org/dwc/terms/eventDate"/>
+        <field index="4" term="http://rs.tdwg.org/dwc/terms/eventTime"/>
+        <field index="5" term="http://rs.tdwg.org/dwc/terms/year"/>
+        <field index="6" term="http://rs.tdwg.org/dwc/terms/month"/>
+        <field index="7" term="http://rs.tdwg.org/dwc/terms/day"/>
+        <field index="8" term="http://rs.tdwg.org/dwc/terms/habitat"/>
+        <field index="9" term="http://rs.tdwg.org/dwc/terms/samplingProtocol"/>
     </core>
 
     <!-- Extension: occurrence.csv -->
@@ -31,10 +31,10 @@
         <coreid index="0"/>
         <field index="1" term="http://rs.tdwg.org/dwc/terms/occurrenceID"/>
         <field index="2" term="http://rs.tdwg.org/dwc/terms/taxonID"/>
-        <field index="2" term="http://rs.tdwg.org/dwc/terms/recordNumber"/>
-        <field index="6" term="http://rs.tdwg.org/dwc/terms/occurrenceStatus"/>
-        <field index="7" term="http://rs.tdwg.org/dwc/terms/recordedBy"/>
-        <field index="8" term="http://rs.tdwg.org/dwc/terms/associatedMedia"/>
+        <field index="3" term="http://rs.tdwg.org/dwc/terms/recordNumber"/>
+        <field index="4" term="http://rs.tdwg.org/dwc/terms/occurrenceStatus"/>
+        <field index="5" term="http://rs.tdwg.org/dwc/terms/recordedBy"/>
+        <field index="6" term="http://rs.tdwg.org/dwc/terms/associatedMedia"/>
     </extension>
 
     <!-- Extension: record-level.csv -->
@@ -71,9 +71,7 @@
         <field index="6" term="http://rs.tdwg.org/dwc/terms/countryCode"/>
         <field index="7" term="http://rs.tdwg.org/dwc/terms/geodeticDatum"/>
         <field index="8" term="http://rs.tdwg.org/dwc/terms/coordinateUncertaintyInMeters"/>
-        <field index="9" term="http://rs.tdwg.org/dwc/terms/footprintWKT"/>
-        <field index="10" term="http://rs.tdwg.org/dwc/terms/footprintSRS"/>
-        <field index="11" term="http://rs.tdwg.org/dwc/terms/georeferencedDate"/>
+        <field index="9" term="http://rs.tdwg.org/dwc/terms/georeferencedDate"/>
     </extension>
 
     <!-- Extension: taxon.csv -->

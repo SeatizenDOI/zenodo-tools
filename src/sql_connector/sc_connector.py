@@ -106,7 +106,9 @@ class SQLiteConnector:
 
         if not script_path.exists or not script_path.is_file():
             raise NameError(f"File {script_path} not found")
-    
+        
+        print(f"Currently apply the script {script_path.name} into the database.")
+
         with open(script_path, 'r') as file:
             sql_script = file.read()
         

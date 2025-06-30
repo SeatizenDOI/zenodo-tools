@@ -13,15 +13,15 @@
 
 <pre>
 @article{contini2025seatizen,<br>
-&nbsp&nbsp  title={Seatizen Atlas: a collaborative dataset of underwater and aerial marine imagery},<br>
-&nbsp&nbsp  author={Contini, Matteo and Illien, Victor and Julien, Mohan and Ravitchandirane, Mervyn and Russias, Victor <br>
-&nbsp&nbsp  and Lazennec, Arthur and Chevrier, Thomas and Rintz, Cam Ly and Carpentier, L{\'e}anne and Gogendeau, Pierre and others}, <br>
-&nbsp&nbsp  journal={Scientific Data}, <br>
-&nbsp&nbsp  volume={12}, <br>
-&nbsp&nbsp  number={1}, <br>
-&nbsp&nbsp  pages={67}, <br>
-&nbsp&nbsp  year={2025}, <br>
-&nbsp&nbsp  publisher={Nature Publishing Group UK London} <br>
+    title={Seatizen Atlas: a collaborative dataset of underwater and aerial marine imagery},<br>
+    author={Contini, Matteo and Illien, Victor and Julien, Mohan and Ravitchandirane, Mervyn and Russias, Victor <br>
+    and Lazennec, Arthur and Chevrier, Thomas and Rintz, Cam Ly and Carpentier, L{\'e}anne and Gogendeau, Pierre and others}, <br>
+    journal={Scientific Data}, <br>
+    volume={12}, <br>
+    number={1}, <br>
+    pages={67}, <br>
+    year={2025}, <br>
+    publisher={Nature Publishing Group UK London} <br>
 }  <br>
 </pre><br>
 For detailed information about the dataset and experimental results, please refer to the previous paper.

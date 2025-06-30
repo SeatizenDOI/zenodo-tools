@@ -61,7 +61,7 @@ class ZenodoMonitoringExplorer:
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                             ),
                             dl.TileLayer(
-                                url=BASE_URL+"https://tmsserver.ifremer.re/wmts?request=GetTile&layer=ortho&year=2023&tilematrix={z}&tilerow={x}&tilecol={y}",
+                                url=BASE_URL+"/wmts?request=GetTile&layer=ortho&year=2023&tilematrix={z}&tilerow={x}&tilecol={y}",
                                 attribution='Tiles © Ifremer DOI',
                                 maxZoom=28,
                                 opacity=100,

@@ -149,6 +149,7 @@ class AtlasManager:
             if file.suffix != ".sql": continue
 
             start_number = file.name.split("_")[0]
-            if start_number != sql_script_number.rjust(2, '0'): continue
 
+            if not start_number.isnumeric() or int(start_number) != int(sql_script_number): continue
+            
             self.sql_connector.apply_script(file)
