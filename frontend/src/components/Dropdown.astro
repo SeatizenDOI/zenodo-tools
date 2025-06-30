@@ -1,7 +1,7 @@
 ---
-import 'choices.js/public/assets/styles/choices.min.css'
+import "choices.js/public/assets/styles/choices.min.css";
 
-const { id_drop } = Astro.props
+const { id_drop } = Astro.props;
 ---
 
 <dropdown-layer data-id={id_drop}>
@@ -26,36 +26,37 @@ const { id_drop } = Astro.props
   </select>
 </dropdown-layer>
 
-
-<!-- Initialize Choices.js on the client -->
-<script >
-  import Choices from 'choices.js';
+<script>
+  import Choices from "choices.js";
 
   class DropdownLayer extends HTMLElement {
     constructor() {
-      super()
-      console.log(this.dataset)
-      const el = document.getElementById(this.dataset.id ?? "")! as HTMLSelectElement;
-      const choices = new Choices(el, {
-          removeItemButton: true,
-          placeholderValue: 'Select which map to show',
-          noResultsText: 'No results found',
-          noChoicesText: 'No choices to choose from',
-          loadingText: 'Loading...',
-          shouldSort: false,
-    
+      super();
+
+      const dropdown_element = document.getElementById(
+        this.dataset.id ?? ""
+      )! as HTMLSelectElement;
+
+      const choices = new Choices(dropdown_element, {
+        removeItemButton: true,
+        placeholderValue: "Select which map to show",
+        noResultsText: "No results found",
+        noChoicesText: "No choices to choose from",
+        loadingText: "Loading...",
+        shouldSort: false,
       });
-    
-      el.addEventListener('change', () => {
-    
+
+      dropdown_element.addEventListener("change", () => {
         // @ts-ignore getValues always an array
-        const selected = choices.getValue().map(opt => opt.value);
-        console.log(selected)
-        
-    
+        const selected = choices.getValue().map((opt) => opt.value);
+
+        const explorer = document.querySelector("leaflet-explorer");
+        if (explorer) {
+          // @ts-ignore (no correct types)
+          explorer.update_layers(this.dataset.id ?? "", selected);
+        }
       });
     }
   }
   window.customElements.define("dropdown-layer", DropdownLayer);
-
 </script>

@@ -3,53 +3,98 @@
 ---
 
 <leaflet-explorer>
-    <div style="height: 60vh; z-index: 0;" id="map-explorer"></div>
+  <div style="height: 60vh; z-index: 0;" id="map-explorer"></div>
 </leaflet-explorer>
 
 <script>
-  import L from "leaflet"
-  import "leaflet/dist/leaflet.css"
+  import L from "leaflet";
+  import "leaflet/dist/leaflet.css";
   import "leaflet-fullscreen";
   import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
 
-    import "leaflet-splitmap";
-  
+  import "leaflet-splitmap";
+
   class LeafletExplorer extends HTMLElement {
+    is_split: boolean;
+    map: L.Map;
+    splitControl: any;
+    background_map: L.TileLayer;
+    background_map2: L.TileLayer;
+    right_side: L.TileLayer[];
+    left_side: L.TileLayer[];
+    saved_layers: Record<string, L.TileLayer>;
 
-      is_split: boolean;
-        map: L.Map;
-        splitControl: any;
-        backgound_map: L.TileLayer;
+    constructor() {
+      super();
 
-      constructor() {
-          super()
-        this.is_split = true; 
-    // @ts-ignore (no correct types)
-      this.map = L.map("map-explorer", { fullscreenControl: true}).setView([-21.085198, 55.222047], 13);
+      this.is_split = true;
+      this.right_side = [];
+      this.left_side = [];
+      this.saved_layers = {};
 
-      this.backgound_map = L.tileLayer(
+      // @ts-ignore (no correct types)
+      this.map = L.map("map-explorer", { fullscreenControl: true }).setView(
+        [-21.085198, 55.222047],
+        13
+      );
+
+      this.background_map = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         {
-        attribution:
-            '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+          attribution: "Tiles © Esri",
         }
-    ).addTo(this.map);
-    
-    // @ts-ignore (no correct types)
+      ).addTo(this.map);
 
-        this.splitControl = L.control.splitMap(this.backgound_map, []).addTo(this.map);
+      this.background_map2 = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}{r}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        }
+      ).addTo(this.map);
 
+      this.splitControl = L.control // @ts-ignore (no correct types)
+        .splitMap(this.left_side, this.right_side)
+        .addTo(this.map);
     }
 
-    toggleSplitMap() {
+    // Show or hide the split pan.
+    toggle_split_map() {
+      if (this.is_split) {
+        this.map.removeControl(this.splitControl);
+      } else {
+        this.splitControl = L.control // @ts-ignore (no correct types)
+          .splitMap(this.left_side, this.right_side)
+          .addTo(this.map);
+      }
+      this.is_split = !this.is_split;
+    }
 
-        if (this.is_split) {
-            this.map.removeControl(this.splitControl);
+    // Add layers
+    update_layers(side_id: string, layers_code: string[]) {
+      if (side_id.includes("left")) {
+        this.left_side = [];
+      } else {
+        this.right_side = [];
+      }
+
+      for (const code of layers_code) {
+        const ly = code.split("_");
+
+        const url = `https://tmsserver.ifremer.re/wmts?request=GetTile&layer=${ly[0]}&year=${ly[1]}&tilematrix={z}&tilerow={x}&tilecol={y}`;
+
+        const tile = L.tileLayer(url, {
+          attribution: "&copy; Ifremer DOI",
+        }).addTo(this.map);
+
+        if (side_id.includes("left")) {
+          this.left_side.push(tile);
         } else {
-             // @ts-ignore (no correct types)    
-            this.splitControl =  L.control.splitMap(this.backgound_map, []).addTo(this.map);
+          this.right_side.push(tile);
         }
-        this.is_split = !this.is_split;
+
+        console.log(code, url, side_id, side_id.includes("left"));
+      }
     }
   }
 
