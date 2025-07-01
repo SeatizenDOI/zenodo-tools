@@ -9,26 +9,17 @@ const metaTitle = "Map Leaflet";
 <Layout>
   <MapExplorer />
 
-  <Dropdown id_drop="left_layers" />
-  <Dropdown id_drop="right_layers" />
-
-  <div style="margin-top: 1em;">
-    <button id="btn-bathy">Toggle Bathymetry</button>
+  <div class="dropdown-menu">
+    <Dropdown id_drop="left_layers" />
+    <Dropdown id_drop="right_layers" />
   </div>
-
-  <!-- JS to control the map -->
-  <script type="module">
-    // Wait for the custom element to be upgraded (just in case)
-    customElements.whenDefined("leaflet-explorer").then(() => {
-      const explorer = document.querySelector("leaflet-explorer");
-
-      document.getElementById("btn-bathy").addEventListener("click", () => {
-        if (explorer) {
-          explorer.toggle_split_map();
-        } else {
-          console.warn("leaflet-explorer not found");
-        }
-      });
-    });
-  </script>
 </Layout>
+
+<style>
+  .dropdown-menu {
+    display: flex;
+    flex-direction: row;
+    margin: 1em;
+    justify-content: space-evenly;
+  }
+</style>
