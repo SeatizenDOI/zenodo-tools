@@ -27,16 +27,22 @@
       this.right_side = {};
       this.left_side = {};
 
+      const url = new URL(window.location.href);
+      const lat = Number(url.searchParams.get("lat") ?? -21.085198);
+      const lng = Number(url.searchParams.get("lng") ?? 55.222047);
+      const zoom = Number(url.searchParams.get("zoom") ?? 13);
+
       this.map = L.map("map-explorer", {
         // @ts-ignore (no correct types)
         fullscreenControl: true,
         minZoom: 5,
-      }).setView([-21.085198, 55.222047], 13);
+      }).setView([lat, lng], zoom);
 
       const background_map = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         {
           attribution: "Tiles © Esri",
+          opacity: 0.75,
         }
       ).addTo(this.map);
 
@@ -51,6 +57,21 @@
       this.splitControl = L.control // @ts-ignore (no correct types)
         .splitMap(Object.values(this.left_side), Object.values(this.right_side))
         .addTo(this.map);
+
+      this.map.on("moveend", (e) => {
+        const url = new URL(window.location.href);
+        url.searchParams.set(
+          "lat",
+          this.map.getCenter()["lat"].toFixed(6).toString()
+        );
+        url.searchParams.set(
+          "lng",
+          this.map.getCenter()["lng"].toFixed(6).toString()
+        );
+        url.searchParams.set("zoom", this.map.getZoom().toString());
+
+        window.history.replaceState({}, "", url);
+      });
     }
 
     // Show or hide the split pan.
