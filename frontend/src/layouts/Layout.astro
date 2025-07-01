@@ -1,25 +1,34 @@
 ---
-const metaTitle = 'Alde'
+export interface Props {
+  title: string;
+}
+
+import { siteTitle, homeSlogan } from "../config";
+const { title } = Astro.props;
+
+const path = Astro.url.pathname;
+const titleText =
+  path === "/" ? `${siteTitle} - ${homeSlogan}` : `${title} - ${siteTitle}`;
 ---
 
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>{metaTitle}</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{titleText}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
 </html>
 
 <style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
+  html,
+  body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
 </style>
