@@ -1,82 +1,82 @@
 [
-  {
-    "place": "Saint-Leu",
-    "GPSLatitude": "-21.170677",
-    "GPSLongitude": "55.285242",
-    "date": "2023-01-05",
-    "description": "3 filters, 6 liters each",
-    "thumbnail": "/edna/saintleu_2023.png",
-    "publication": {
-      "link": "https://doi.org/10.3389/fmars.2024.1423676",
-      "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
+    {
+        "place": "Saint-Leu",
+        "GPSLatitude": "-21.170677",
+        "GPSLongitude": "55.285242",
+        "date": "2023-01-05",
+        "description": "3 filters, 6 liters each",
+        "thumbnail": "/edna/saintleu_2023.png",
+        "publication": {
+            "link": "https://doi.org/10.3389/fmars.2024.1423676",
+            "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
+        },
+        "data": {
+            "link": "https://doi.org/10.5281/zenodo.8410269",
+            "name": "FastQ files store on Zenodo"
+        }
     },
-    "data": {
-      "link": "https://doi.org/10.5281/zenodo.8410269",
-      "name": "FastQ files store on Zenodo"
-    }
-  },
-  {
-    "place": "Étang-Salé",
-    "GPSLatitude": "-21.2695",
-    "GPSLongitude": "55.3329",
-    "date": "2023-02-13",
-    "description": "3 filters, 6 liters each",
-    "thumbnail": "/edna/etang_sale_2023.png",
-    "publication": {
-      "link": "https://doi.org/10.3389/fmars.2024.1423676",
-      "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
+    {
+        "place": "Étang-Salé",
+        "GPSLatitude": "-21.2695",
+        "GPSLongitude": "55.3329",
+        "date": "2023-02-13",
+        "description": "3 filters, 6 liters each",
+        "thumbnail": "/edna/etang_sale_2023.png",
+        "publication": {
+            "link": "https://doi.org/10.3389/fmars.2024.1423676",
+            "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
+        },
+        "data": {
+            "link": "https://doi.org/10.5281/zenodo.8410269",
+            "name": "FastQ files store on Zenodo"
+        }
     },
-    "data": {
-      "link": "https://doi.org/10.5281/zenodo.8410269",
-      "name": "FastQ files store on Zenodo"
-    }
-  },
-  {
-    "place": "Planch'Alizé",
-    "GPSLatitude": "-21.09505861",
-    "GPSLongitude": "55.23348013",
-    "date": "2023-02-10",
-    "description": "3 filters, 6 liters each",
-    "thumbnail": "/edna/planch_alizee_2023.png",
-    "publication": {
-      "link": "https://doi.org/10.3389/fmars.2024.1423676",
-      "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
+    {
+        "place": "Planch'Alizé",
+        "GPSLatitude": "-21.09505861",
+        "GPSLongitude": "55.23348013",
+        "date": "2023-02-10",
+        "description": "3 filters, 6 liters each",
+        "thumbnail": "/edna/planch_alizee_2023.png",
+        "publication": {
+            "link": "https://doi.org/10.3389/fmars.2024.1423676",
+            "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
+        },
+        "data": {
+            "link": "https://doi.org/10.5281/zenodo.8410269",
+            "name": "FastQ files store on Zenodo"
+        }
     },
-    "data": {
-      "link": "https://doi.org/10.5281/zenodo.8410269",
-      "name": "FastQ files store on Zenodo"
-    }
-  },
-  {
-    "place": "Saint-Pierre",
-    "GPSLatitude": "-21.3406",
-    "GPSLongitude": "55.4587",
-    "date": "2023-02-28",
-    "description": "3 filters, 6 liters each",
-    "thumbnail": "/edna/stpierre_2023.png",
-    "publication": {
-      "link": "https://doi.org/10.3389/fmars.2024.1423676",
-      "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
+    {
+        "place": "Saint-Pierre",
+        "GPSLatitude": "-21.3406",
+        "GPSLongitude": "55.4587",
+        "date": "2023-02-28",
+        "description": "3 filters, 6 liters each",
+        "thumbnail": "/edna/stpierre_2023.png",
+        "publication": {
+            "link": "https://doi.org/10.3389/fmars.2024.1423676",
+            "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
+        },
+        "data": {
+            "link": "https://doi.org/10.5281/zenodo.8410269",
+            "name": "FastQ files store on Zenodo"
+        }
     },
-    "data": {
-      "link": "https://doi.org/10.5281/zenodo.8410269",
-      "name": "FastQ files store on Zenodo"
+    {
+        "place": "Toboggan",
+        "GPSLatitude": "-21.0807355",
+        "GPSLongitude": "55.2209996",
+        "date": "2023-02-03",
+        "description": "3 filters, 6 liters each",
+        "thumbnail": "/edna/toboggan_2023.png",
+        "publication": {
+            "link": "https://doi.org/10.3389/fmars.2024.1423676",
+            "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
+        },
+        "data": {
+            "link": "https://doi.org/10.5281/zenodo.8410269",
+            "name": "FastQ files store on Zenodo"
+        }
     }
-  },
-  {
-    "place": "Toboggan",
-    "GPSLatitude": "-21.0807355",
-    "GPSLongitude": "55.2209996",
-    "date": "2023-02-03",
-    "description": "3 filters, 6 liters each",
-    "thumbnail": "/edna/toboggan_2023.png",
-    "publication": {
-      "link": "https://doi.org/10.3389/fmars.2024.1423676",
-      "name": "Detecting local variations across metazoan communities in back-reef depressions of Reunion Island (Mascarene Archipelago) through environmental DNA survey"
-    },
-    "data": {
-      "link": "https://doi.org/10.5281/zenodo.8410269",
-      "name": "FastQ files store on Zenodo"
-    }
-  }
 ]

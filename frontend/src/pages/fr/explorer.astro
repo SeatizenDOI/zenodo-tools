@@ -5,19 +5,19 @@ import MapExplorer from "@components/MapExplorer.astro";
 ---
 
 <Layout title="Explorer | Seatizen Monitoring">
-  <MapExplorer />
+    <MapExplorer />
 
-  <div class="dropdown-menu">
-    <Dropdown id_drop="left_layers" />
-    <Dropdown id_drop="right_layers" />
-  </div>
+    <div class="dropdown-menu">
+        <Dropdown id_drop="left_layers" />
+        <Dropdown id_drop="right_layers" />
+    </div>
 </Layout>
 
 <style>
-  .dropdown-menu {
-    display: flex;
-    flex-direction: row;
-    margin: 1em;
-    justify-content: space-evenly;
-  }
+    .dropdown-menu {
+        display: flex;
+        flex-direction: row;
+        margin: 1em;
+        justify-content: space-evenly;
+    }
 </style>
