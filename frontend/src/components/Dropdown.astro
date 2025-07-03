@@ -46,6 +46,23 @@ const { id_drop } = Astro.props;
                 shouldSort: false,
             });
 
+            const side_onload = this.dataset.id?.includes("left") ? "left" : "right";
+
+            const url = new URL(window.location.href);
+            const side_data = String(url.searchParams.get(side_onload) ?? "");
+
+            let current_char = "";
+            for (const c of side_data) {
+                if (+isNaN(Number(c))) {
+                    current_char = c;
+                } else {
+                }
+
+                console.log(c);
+            }
+
+            console.log(side_data);
+
             dropdown_element.addEventListener("change", () => {
                 // @ts-ignore getValues always an array
                 const selected = choices.getValue().map((opt) => opt.value);
@@ -55,6 +72,29 @@ const { id_drop } = Astro.props;
                     // @ts-ignore (no correct types)
                     explorer.update_layers(this.dataset.id ?? "", selected);
                 }
+                const side = this.dataset.id?.includes("left") ? "left" : "right";
+
+                let a: Record<string, string> = {};
+                for (const code of selected) {
+                    const ly = code.split("_");
+                    const layer_type = String(ly[0][0]);
+                    const year = ly[1].slice(2, 4);
+                    if (!(layer_type in a)) {
+                        a[layer_type] = "";
+                    }
+                    a[layer_type] += year;
+                }
+                let final = "";
+                for (const [k, v] of Object.entries(a)) {
+                    final += k + v;
+                }
+                const url = new URL(window.location.href);
+                if (final == "") {
+                    url.searchParams.delete(side);
+                } else {
+                    url.searchParams.set(side, final);
+                }
+                window.history.replaceState({}, "", url);
             });
         }
     }

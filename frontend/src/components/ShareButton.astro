@@ -1,0 +1,53 @@
+---
+
+---
+
+<style>
+    .share-btn {
+        padding: 0.5rem 1rem;
+        background-color: #0070f3;
+        color: white;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        border: none;
+        font-weight: bold;
+    }
+
+    .toast {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        background: #323232;
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        z-index: 1000;
+    }
+
+    .toast.show {
+        opacity: 1;
+    }
+</style>
+
+<button class="share-btn" onclick="copyUrl()">🔗 Share</button>
+
+<div id="share-toast" class="toast">URL copied to clipboard!</div>
+
+<script type="module">
+    function copyUrl() {
+        navigator.clipboard
+            .writeText(window.location.href)
+            .then(() => {
+                const toast = document.getElementById("share-toast");
+                toast.classList.add("show");
+                setTimeout(() => {
+                    toast.classList.remove("show");
+                }, 2000);
+            })
+            .catch((err) => {
+                console.error("Failed to copy:", err);
+            });
+    }
+</script>

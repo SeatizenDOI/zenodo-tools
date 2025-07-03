@@ -6,7 +6,7 @@ import "leaflet-splitmap";
 
 import { type EdnaDataType, DEFAULT_COORDS } from "./definition";
 
-class LeafletExplorer extends HTMLElement {
+class ZmExplorer extends HTMLElement {
     is_split: boolean;
     map: L.Map;
     splitControl: any;
@@ -180,4 +180,4 @@ class LeafletExplorer extends HTMLElement {
     }
 }
 
-window.customElements.define("leaflet-explorer", LeafletExplorer);
+window.customElements.define("zm-explorer", ZmExplorer);

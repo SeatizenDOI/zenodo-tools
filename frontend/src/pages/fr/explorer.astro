@@ -2,6 +2,7 @@
 import Dropdown from "@components/Dropdown.astro";
 import Layout from "@layouts/Layout.astro";
 import MapExplorer from "@components/MapExplorer.astro";
+import ShareButton from "@components/ShareButton.astro";
 ---
 
 <Layout title="Explorer | Seatizen Monitoring">
@@ -11,6 +12,8 @@ import MapExplorer from "@components/MapExplorer.astro";
         <Dropdown id_drop="left_layers" />
         <Dropdown id_drop="right_layers" />
     </div>
+
+    <ShareButton />
 </Layout>
 
 <style>
