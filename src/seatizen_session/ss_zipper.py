@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from ..utils.constants import MAXIMAL_ZIP_SIZE, BYTE_TO_GIGA_BYTE
 
@@ -9,7 +9,7 @@ class SessionZipper:
     def __init__(self, base_zip_path: Path) -> None:
         self.zip_path = base_zip_path
         self.zip_name = Path(base_zip_path).stem
-        self.zip = ZipFile(self.zip_path, "w")
+        self.zip = ZipFile(self.zip_path, "w", compression=ZIP_DEFLATED)
 
         self.tot_zip_size, self.nb_zip_file = 0.0, 1
 

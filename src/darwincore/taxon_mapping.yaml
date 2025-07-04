@@ -1,5 +1,5 @@
 DARWINCORE_GBIF_FIELDS_MAPPING:
-  scientifiNameID : 'taxonID'
+  scientificNameID : 'taxonID'
   scientificName : 'scientificName'
   taxonRank: 'rank'
   kingdom : 'kingdom'
