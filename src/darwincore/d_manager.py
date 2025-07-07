@@ -216,7 +216,7 @@ class DarwinCoreManager:
 
         Path(self.archive_name.parent).mkdir(exist_ok=True, parents=True)
 
-        with zipfile.ZipFile(self.archive_name, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+        with zipfile.ZipFile(self.archive_name, 'w') as archive:
             for f in self.list_filepath_to_zip:
                 archive.write(f, f.name)
             archive.write(self.meta_path, self.meta_path.name)

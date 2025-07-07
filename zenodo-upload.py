@@ -95,44 +95,44 @@ def main(opt):
             zenodoAPI.update_current_session(plancha_session.session_name)
 
             if opt.upload_rawdata:
-                # if zenodoAPI.deposit_id != None:
-                #     print(f"We already have a deposit with the same urn: https://zenodo.org/records/{zenodoAPI.deposit_id}")
-                #     continue
+                if zenodoAPI.deposit_id != None:
+                    print(f"We already have a deposit with the same urn: https://zenodo.org/records/{zenodoAPI.deposit_id}")
+                    continue
                     
                 folders_to_upload = plancha_session.prepare_raw_data()
-                # raw_metadata = plancha_metadata.build_for_raw()
+                raw_metadata = plancha_metadata.build_for_raw()
 
-                # for i, folder_to_upload in enumerate(folders_to_upload):
-                #     if i == 0:
-                #         zenodoAPI.create_deposit_on_zenodo(folder_to_upload, raw_metadata) # RAW_DATA
-                #     else:
-                #         zenodoAPI.add_new_version_to_deposit(folder_to_upload, raw_metadata, plancha_session.get_restricted_files_on_zenodo()) # RAW_DATA_2, RAW_DATA_3, ...
-                # plancha_session.cleanup()
+                for i, folder_to_upload in enumerate(folders_to_upload):
+                    if i == 0:
+                        zenodoAPI.create_deposit_on_zenodo(folder_to_upload, raw_metadata) # RAW_DATA
+                    else:
+                        zenodoAPI.add_new_version_to_deposit(folder_to_upload, raw_metadata, plancha_session.get_restricted_files_on_zenodo()) # RAW_DATA_2, RAW_DATA_3, ...
+                plancha_session.cleanup()
             
             if opt.upload_processeddata:
                 # Extract folder to zip from opt.
                 folders, needFrames = get_processed_folders_to_upload(opt)
 
-                # # Generate metadata from the session.
-                # processed_metadata = plancha_metadata.build_for_processed_data()
+                # Generate metadata from the session.
+                processed_metadata = plancha_metadata.build_for_processed_data()
                 
-                # # Generate iso 19115 if needed.
-                # if opt.generate_iso19115:
-                #     plancha_session.generate_metadata_iso19115(processed_metadata, zenodoAPI.get_conceptrecid_specific_deposit())
+                # Generate iso 19115 if needed.
+                if opt.generate_iso19115:
+                    plancha_session.generate_metadata_iso19115(processed_metadata, zenodoAPI.get_conceptrecid_specific_deposit())
 
                 # Prepare, zip and move folder/file in tmp folder.
                 plancha_session.prepare_processed_data(folders, needFrames, with_file_at_root_folder=True)
 
-                # # Create the new deposit on zenodo, send the files and write the metadata.
-                # zenodoAPI.add_new_version_to_deposit(
-                #     plancha_session.temp_folder, 
-                #     processed_metadata, 
-                #     plancha_session.get_restricted_files_on_zenodo(), 
-                #     dontUploadWhenLastVersionIsProcessedData=True
-                # )
+                # Create the new deposit on zenodo, send the files and write the metadata.
+                zenodoAPI.add_new_version_to_deposit(
+                    plancha_session.temp_folder, 
+                    processed_metadata, 
+                    plancha_session.get_restricted_files_on_zenodo(), 
+                    dontUploadWhenLastVersionIsProcessedData=True
+                )
 
-                # # Remove the tmp folder.
-                # plancha_session.cleanup()
+                # Remove the tmp folder.
+                plancha_session.cleanup()
 
             if opt.update_metadata:
                 if zenodoAPI.deposit_id == None:
@@ -190,7 +190,7 @@ def main(opt):
             sessions_fail.append(session_path.name)
 
             # Avoid tmp folder over charge
-            # plancha_session.cleanup()
+            plancha_session.cleanup()
 
     # Stat
     print("\nEnd of process. On {} sessions, {} fails. ".format(len(sessions), len(sessions_fail)))

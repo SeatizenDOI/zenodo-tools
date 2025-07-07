@@ -7,11 +7,11 @@ pd.set_option("display.precision", 12)
 from tqdm import tqdm
 from enum import Enum
 from pathlib import Path
+from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
 from abc import ABC, abstractmethod
 from scipy.spatial import ConvexHull
-from zipfile import ZipFile, ZIP_DEFLATED
 from shapely.geometry import LineString, Polygon
 
 from pygeometa.core import read_mcf, validate_mcf
@@ -223,7 +223,7 @@ class BaseSessionManager(ABC):
         
         t_start = datetime.now()
         print(f"Preparing FRAMES folder")
-        with ZipFile(frames_zip_path, "w", compression=ZIP_DEFLATED) as zip_object:
+        with ZipFile(frames_zip_path, "w") as zip_object:
             for file in tqdm(frames_list):
                 file = Path(file)
                 if file.name in useful_frames:
@@ -246,7 +246,7 @@ class BaseSessionManager(ABC):
             return
         
         t_start = datetime.now()
-        with ZipFile(gps_zip_path, "w", compression=ZIP_DEFLATED) as zip_object:
+        with ZipFile(gps_zip_path, "w") as zip_object:
             # Device folder
             for file in devices_file:
                 if file.suffix not in [".zip", ".gpx"]: continue
@@ -731,7 +731,7 @@ class BaseSessionManager(ABC):
             xml_string = iso_os.write(mcf_dict)
             
             # Export the data at the root of the session.
-            iso19115_filepath = Path(self.session_path, f"{self.session_name}_iso_19115.xml")
+            iso19115_filepath = Path(self.session_path, "METADATA", f"{self.session_name}_iso_19115.xml")
             with open(iso19115_filepath, "w") as f:
                 f.write(xml_string)
         
