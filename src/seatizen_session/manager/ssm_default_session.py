@@ -86,6 +86,13 @@ class DefaultSession(BaseSessionManager):
         # Find if we do ppk
         isPPK = self.check_ppk() 
         q1, q2, q5 = self.get_percentage(isPPK)
+
+        if (q1 + q2 + q5) == 0:
+            return """
+                <h2> GPS information: </h2>
+
+                No GPS.
+            """
         basetype = self.get_base_type() if isPPK else BaseType.NONE
         isGPX = self.check_gpx() # LLH from reach or LLH generated from gpx file (Garmin watch)
 

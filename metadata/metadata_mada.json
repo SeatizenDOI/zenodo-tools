@@ -11,6 +11,8 @@
         "PADDLE": "Paddle"
     },
     "project_name": "Plancha",
+    "csv_session_name_name_abbr_path": "./metadata/contributors/suivi_session.csv",
+    "csv_contributors_path": "./metadata/contributors/contributors.csv",
     "related_identifiers": [
         {
             "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",
@@ -38,15 +40,21 @@
         "Bathymetry",
         "Global Coral Reef Monitoring Network",
         "Artificial Intelligence",
-        "Reef Ecosystem"
+        "Reef Ecosystem",
+        "Marine Biodiversity",
+        "Marine Conservation",
+        "Coastal Ecosystems",
+        "Environmental Monitoring",
+        "Open Science",
+        "Western Indian Ocean"
     ],
-    "workflow-link": "https://github.com/SeatizenDOI/plancha-workflow/releases/tag/v1.0.3",
-    "inference-link": "https://github.com/SeatizenDOI/plancha-inference/releases/tag/v1.0.0",
+    "workflow-link": "https://doi.org/10.5281/zenodo.15853010",
+    "inference-link": "https://doi.org/10.5281/zenodo.15228535",
     "zenodo-link": "https://github.com/SeatizenDOI/zenodo-tools",
     "software-link": "https://github.com/SeatizenDOI",
     "fundings": [
         "The Plancha project is co-financed by the Prefecture of Reunion as part of a 2019-2022 convergence and transformation contract, measure 3.3.1.1"
     ],
-    "communities": []
+    "communities": ["seatizen-data"]
 
 }

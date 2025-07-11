@@ -66,6 +66,7 @@ def get_processed_folders_to_upload(opt) -> tuple[list, bool]:
     folder_to_upload, needFrames = [], False
     for letter in opt.upload_processeddata:
         if letter == "f": needFrames = True
+        elif letter == "d": folder_to_upload.append("DCIM")
         elif letter == "m": folder_to_upload.append("METADATA")
         elif letter == "g": folder_to_upload.append("GPS")
         elif letter == "b": folder_to_upload.append("PROCESSED_DATA/BATHY")
