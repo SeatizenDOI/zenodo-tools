@@ -9,7 +9,6 @@ DARWINCORE_GBIF_FIELDS_MAPPING:
   family : 'family'
   genus : 'genus'
   species : 'species'
-  namePublishedIn: 'publishedIn'
   scientificNameAuthorship : 'authorship'
   taxonomicStatus : 'taxonomicStatus'
 

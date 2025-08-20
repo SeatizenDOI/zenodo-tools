@@ -321,3 +321,14 @@ class FrameDAO(AbstractBaseDAO):
         return round(v_min, 2), round(v_max, 2)
 
         
+    def update_field(self, frame_id: int, field_name: str, field_value: str) -> None:
+        """ Perform Update statement for a specific field. """
+
+        query = f"""
+            UPDATE {self.table_name}
+            SET {field_name} = ?
+            WHERE id = ?
+        """
+
+        params = (field_value, frame_id, )
+        self.sql_connector.execute_query(query, params)

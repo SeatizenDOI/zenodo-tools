@@ -48,7 +48,7 @@ class DarwinCoreManager:
         mapping_label_by_taxonid = self.create_taxon_csv()
       
 
-        event_data, location_data, record_data, occurrence_data = [], [], [], []
+        event_data, record_data, occurrence_data = [], [], []
         dois_session = set()
         for sa in annotationSessions:
 
@@ -84,45 +84,39 @@ class DarwinCoreManager:
                 label = annotation.ml_label.name
                 if label not in mapping_label_by_taxonid: continue
 
-                eventDate, eventTime, year, month, day = "", "", "", "", ""
+                eventDate, eventTime = "", ""
                 if annotation.frame.gps_datetime is not None:
                     eventDate, eventTime = annotation.frame.gps_datetime.split(" ")
                     eventTime = eventTime + "Z"
-                    year, month, day = eventDate.split("-")
 
                 dois_session.add(annotation.frame.version.doi)
                 eventID = f"{annotation.frame.filename.split('.')[0]}_{annotation.frame.gps_datetime.replace(' ', '_')}"
+
                 if eventID not in event_cached:
+                    lon, lat = annotation.frame.version.deposit.centroid
+                    country = pycountry.countries.get(alpha_3=annotation.frame.version.deposit.alpha3_country_code)
+                    
+                    precision_gps_in_meters = 10
+                    if annotation.frame.gps_fix == 1: # If we are in Q1
+                        precision_gps_in_meters = 0.1 # Precise to 10 centimeters
                     event_data.append({
+                        "parentID": annotation.frame.version.deposit.session_name,
                         "eventID": eventID,
                         "eventType": "Observation",
                         "eventDate": eventDate,
                         "eventTime": eventTime,
-                        "year": year,
-                        "month": month,
-                        "day": day,
                         "habitat": "coral_reef",
-                        "samplingProtocol": sampling_proto
-                    })
-                    event_cached.add(eventID)
-
-                    country = pycountry.countries.get(alpha_3=annotation.frame.version.deposit.alpha3_country_code)
-                    precision_gps_in_meters = 10
-                    if annotation.frame.gps_fix == 1: # If we are in Q1
-                        precision_gps_in_meters = 0.1 # Precise to 10 centimeters
-
-                    location_data.append({
-                        "eventID": eventID,
-                        "locationID": eventID,
-                        "decimalLatitude": annotation.frame.gps_latitude,
-                        "decimalLongitude": annotation.frame.gps_longitude,
+                        "samplingProtocol": sampling_proto, 
+                        "footprintWKT": annotation.frame.version.deposit.wkt_footprint,
+                        "decimalLatitude": lat,
+                        "decimalLongitude": lon,
                         "country": country.name,
-                        "waterBody": "Indian Ocean",
                         "countryCode": annotation.frame.version.deposit.alpha3_country_code,
                         "geodeticDatum": "EPSG:4326",
                         "coordinateUncertaintyInMeters": precision_gps_in_meters,
-                        "georeferencedDate": f"{annotation.frame.gps_datetime.replace(' ', 'T')}Z",
                     })
+                    event_cached.add(eventID)
+                
                 media = f"https://doi.org/10.5281/zenodo.{annotation.frame.version.doi}/{'_'.join(annotation.frame.relative_path.split('/')[1:-1])}.zip"
                 media += f" | {annotation.frame.relative_path}"
                 occurrence_data.append({
@@ -131,7 +125,7 @@ class DarwinCoreManager:
                     "taxonID": mapping_label_by_taxonid[label],
                     "recordNumber": sa.id,
                     "occurrenceStatus": "present" if annotation.value == 1 else "absent",
-                    "recordedBy": ' '.join([a.capitalize() for a in sa.author_name.split('-')]),
+                    "recordedBy": ' | '.join([a.capitalize() for a in sa.author_name.split('-')]),
                     "associatedMedia": media
                 })
 
@@ -140,19 +134,17 @@ class DarwinCoreManager:
             print("No annotations to export to darwincore format.")
             return
 
-        # Save header data to csv.
-        event_path = Path(self.tmp_folder, "event.csv")
-        occurrence_path = Path(self.tmp_folder, "occurrence.csv")
-        location_path = Path(self.tmp_folder, "location.csv")
-        record_path = Path(self.tmp_folder, "record-level.csv")
+        # Save header data to txt instead of CSV (GBIF constraint).
+        event_path = Path(self.tmp_folder, "event.txt")
+        occurrence_path = Path(self.tmp_folder, "occurrence.txt")
+        record_path = Path(self.tmp_folder, "record-level.txt")
 
 
         pd.DataFrame(event_data, columns=list(event_data[0])).to_csv(event_path, index=False)
         pd.DataFrame(occurrence_data, columns=list(occurrence_data[0])).to_csv(occurrence_path, index=False)
-        pd.DataFrame(location_data, columns=list(location_data[0])).to_csv(location_path, index=False)
         pd.DataFrame(record_data, columns=list(record_data[0])).to_csv(record_path, index=False)
 
-        self.list_filepath_to_zip += [event_path, occurrence_path, location_path, record_path]
+        self.list_filepath_to_zip += [event_path, occurrence_path, record_path]
 
         # Create metadata files
         self.create_eml_xml(list(dois_session))
@@ -216,7 +208,7 @@ class DarwinCoreManager:
 
         Path(self.archive_name.parent).mkdir(exist_ok=True, parents=True)
 
-        with zipfile.ZipFile(self.archive_name, 'w') as archive:
+        with zipfile.ZipFile(self.archive_name, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
             for f in self.list_filepath_to_zip:
                 archive.write(f, f.name)
             archive.write(self.meta_path, self.meta_path.name)
@@ -284,7 +276,7 @@ class DarwinCoreManager:
 
             taxon_data.append(row)
         
-        taxon_path = Path(self.tmp_folder, f"taxon.csv")
+        taxon_path = Path(self.tmp_folder, f"taxon.txt") # GBIF want txt extension instead of csv
         self.list_filepath_to_zip.append(taxon_path)
 
         df_taxon = pd.DataFrame(taxon_data, columns=list(taxon_data[0]))

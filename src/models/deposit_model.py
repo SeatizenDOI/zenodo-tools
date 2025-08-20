@@ -21,6 +21,11 @@ class DepositDTO():
     def wkt_footprint(self) -> str | None:
         if self.footprint != None:
             return self.footprint.wkt
+    
+    @property
+    def centroid(self) -> tuple[float | None, float | None]:
+        if self.footprint == None: return None, None
+        return self.footprint.centroid.x, self.footprint.centroid.y
 
 @dataclass
 class DepositLinestringDTO():
