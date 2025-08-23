@@ -4,7 +4,7 @@ import "choices.js/public/assets/styles/choices.min.css";
 const { id_drop } = Astro.props;
 ---
 
-<dropdown-layer data-id={id_drop}>
+<dropdown-explorer data-id={id_drop}>
     <select id={id_drop} multiple>
         <optgroup label="Orthophoto">
             <option value="ortho_2022">Orthophoto 2022</option>
@@ -24,12 +24,13 @@ const { id_drop } = Astro.props;
             <option value="predictions_2025">Map Habitat 2025</option>
         </optgroup>
     </select>
-</dropdown-layer>
+</dropdown-explorer>
 
 <script>
     import Choices from "choices.js";
+    import { ZmExplorerAttribute } from "@lib/ZmExplorer";
 
-    class DropdownLayer extends HTMLElement {
+    class DropdownExplorer extends HTMLElement {
         constructor() {
             super();
 
@@ -67,7 +68,8 @@ const { id_drop } = Astro.props;
                 // @ts-ignore getValues always an array
                 const selected = choices.getValue().map((opt) => opt.value);
 
-                const explorer = document.querySelector("leaflet-explorer");
+                const explorer = document.querySelector(ZmExplorerAttribute);
+                console.log(explorer);
                 if (explorer) {
                     // @ts-ignore (no correct types)
                     explorer.update_layers(this.dataset.id ?? "", selected);
@@ -98,11 +100,11 @@ const { id_drop } = Astro.props;
             });
         }
     }
-    window.customElements.define("dropdown-layer", DropdownLayer);
+    window.customElements.define("dropdown-explorer", DropdownExplorer);
 </script>
 
 <style>
-    dropdown-layer {
+    dropdown-explorer {
         width: 45%;
     }
 </style>
