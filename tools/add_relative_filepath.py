@@ -1,6 +1,6 @@
 from pathlib import Path
 import json
-
+from tqdm import tqdm
 
 from src.seatizen_atlas.sa_manager import AtlasManager
 from src.models.frame_model import FrameDAO, FrameDTO
@@ -16,13 +16,13 @@ def main():
         with open(config_path) as json_file:
             config_json = json.load(json_file)
 
-    seatizenManager = AtlasManager(config_json, "seatizen_atlas_folder1", True, False)
+    seatizenManager = AtlasManager(config_json, "seatizen_atlas_folder", True, False)
 
 
     frame_manager = FrameDAO()
-
-    print(len(frame_manager.frames))
-    for frame in frame_manager.frames:
+    frames = frame_manager.frames
+    
+    for frame in tqdm(frames):
         if frame.relative_path is not None: continue
 
         field_value = f"{frame.version.deposit.session_name}/DCIM/{frame.original_filename}"

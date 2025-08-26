@@ -35,8 +35,8 @@ def main(opt):
         with open(config_path) as json_file:
             config_json = json.load(json_file)
 
-
-    seatizenManager = AtlasManager(config_json, opt.path_seatizen_atlas_folder, False, False)
+    # Change from local if you perform it twice
+    seatizenManager = AtlasManager(config_json, opt.path_seatizen_atlas_folder, from_local=True, force_regenerate=False) 
     deposit_manager = DepositDAO()
     version_manager = VersionDAO()
     all_deposit_key = [deposit.doi for deposit in list(deposit_manager.deposits)]
@@ -74,6 +74,8 @@ def main(opt):
 
                 else:
                     print("Session not in db, we try to import it.")
+                    session_path = None
+                    
                     # As we working with new version, we always want the last data, so we start with the old one to erase the old data with new data. 
                     for version in sorted(versions_for_conceptrecid, key=lambda d: d["id"]):
                         list_files_to_download = []
@@ -85,6 +87,10 @@ def main(opt):
                         # We download only the needed data.
                         session_path = Path(TMP_PATH, "auto_update", session_name)
                         download_manager_without_token(list_files_to_download, session_path.parent, session_name, version["id"])
+
+                    if not session_path: 
+                        print("[WARNING] We don't found METADATA.zip or PROCESSED_DATA.zip to download, no data to import in DB, we continue.")
+                        continue # We didn't found files to download. 
 
                     # Actually for UAV, we don't have jacques predictions. We need to force frame insertion inside db.
                     force_frame_insertion = "UAV" in session_name
@@ -110,10 +116,10 @@ def main(opt):
         [print("\t* " + session_name) for session_name in sessions_fail]
     
     # Export all value we wants.
-    seatizenManager.export_csv()
+    # seatizenManager.export_csv()
     
     # Upload all data.
-    seatizenManager.publish(opt.path_metadata_json) # TODO AUto-update the version of the package
+    # seatizenManager.publish(opt.path_metadata_json) # TODO AUto-update the version of the package
 
     # Close database connection.
     seatizenManager.sql_connector.close()
