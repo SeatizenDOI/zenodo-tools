@@ -132,7 +132,7 @@ def main(opt):
                     plancha_session.temp_folder, 
                     processed_metadata, 
                     restricted_files= [] if opt.pd_dont_keep_files_from_previous_version else plancha_session.get_restricted_files_on_zenodo(), 
-                    dontUploadWhenLastVersionIsProcessedData=opt.confirm_upload_multiple_processed_version
+                    dontUploadWhenLastVersionIsProcessedData=not(opt.confirm_upload_multiple_processed_version)
                 )
 
                 # Remove the tmp folder.
