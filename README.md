@@ -89,6 +89,9 @@ python zenodo-manager.py -efol -pfol /media/bioeos/F/202504_plancha_session -ulo
 python zenodo-manager.py -efol -pfol /media/bioeos/F/202505_plancha_session -ulo
 python zenodo-manager.py -eno -cp -ne
 
+python zenodo-manager.py -eno -ssn 4 # Extralinestring for deposit
+
+
 ```
 
 # Qgis command to load data

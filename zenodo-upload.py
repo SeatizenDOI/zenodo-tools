@@ -46,7 +46,8 @@ def parse_args():
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
     parser.add_argument("-cd", "--clean_draft", action="store_true", help="Clean all draft with no version published")
     parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata.json", help="Path to metadata json file")
-    
+    parser.add_argument("--confirm_upload_multiple_processed_version", action="store_true", help="Confirm to upload a new processed version")
+    parser.add_argument("--pd_dont_keep_files_from_previous_version", action="store_true", help="Processed data - Don't keep files from previous version")
 
     return parser.parse_args()
 
@@ -127,8 +128,8 @@ def main(opt):
                 zenodoAPI.add_new_version_to_deposit(
                     plancha_session.temp_folder, 
                     processed_metadata, 
-                    plancha_session.get_restricted_files_on_zenodo(), 
-                    dontUploadWhenLastVersionIsProcessedData=True
+                    restricted_files= [] if opt.pd_dont_keep_files_from_previous_version else plancha_session.get_restricted_files_on_zenodo(), 
+                    dontUploadWhenLastVersionIsProcessedData=opt.confirm_upload_multiple_processed_version
                 )
 
                 # Remove the tmp folder.
