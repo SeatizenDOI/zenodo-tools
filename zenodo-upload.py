@@ -44,11 +44,11 @@ def parse_args():
 
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
+    parser.add_argument("-ip", "--index_position", default="-1", help="if != -1, take only session at selected index")
     parser.add_argument("-cd", "--clean_draft", action="store_true", help="Clean all draft with no version published")
     parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata.json", help="Path to metadata json file")
     parser.add_argument("--confirm_upload_multiple_processed_version", action="store_true", help="Confirm to upload a new processed version")
     parser.add_argument("--pd_dont_keep_files_from_previous_version", action="store_true", help="Processed data - Don't keep files from previous version")
-
     return parser.parse_args()
 
 def main(opt):
@@ -80,7 +80,10 @@ def main(opt):
     sessions_fail = []
     list_session = get_list_sessions(opt)
     index_start = int(opt.index_start) if opt.index_start.isnumeric() and int(opt.index_start) < len(list_session) else 0
-    sessions = list_session[index_start:]
+    index_position = int(opt.index_position)-1 if opt.index_position.isnumeric() and \
+                                            int(opt.index_position) > 0 and \
+                                            int(opt.index_position) <= len(list_session) else -1
+    sessions = list_session[index_start:] if index_position == -1 else [list_session[index_position]]
 
     for session_path in sessions:
   
