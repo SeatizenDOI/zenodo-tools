@@ -37,6 +37,8 @@ class DefaultSession(BaseSessionManager):
                 {self.__get_gps_text()}
                     
                 {self.__get_bathymetry_text()}
+
+                {self._build_photog_description()}
             """
 
 

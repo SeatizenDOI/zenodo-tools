@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument("-ur", "--upload-rawdata", action="store_true", help="Upload raw data from a session")
     parser.add_argument("-up", "--upload-processeddata", default="", help="Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA, p: PHOTOGRAMMETRY, c: CPCE_ANNOTATION | Ex: '-up fi' for upload frames and ia ")
     parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session") # ! Caution could be dangerous when we get multiple processed version
+    parser.add_argument("-umlv", "--update-metadata-last-version", action="store_true", help="Update metadata from a session for the last version") 
     
     parser.add_argument("-uc", "--upload-custom", default="", help="Upload custom data. Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA, d: DCIM, s: SENSORS, p: PHOTOGRAMMETRY, c: CPCE_ANNOTATION")
     parser.add_argument("-umc", "--update-metadata-custom", action="store_true", help="Update custom metadata from a session => last version")
@@ -49,6 +50,7 @@ def parse_args():
     parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata.json", help="Path to metadata json file")
     parser.add_argument("--confirm_upload_multiple_processed_version", action="store_true", help="Confirm to upload a new processed version")
     parser.add_argument("--pd_dont_keep_files_from_previous_version", action="store_true", help="Processed data - Don't keep files from previous version")
+    
     return parser.parse_args()
 
 def main(opt):
@@ -127,16 +129,57 @@ def main(opt):
                 # Prepare, zip and move folder/file in tmp folder.
                 plancha_session.prepare_processed_data(folders, needFrames, with_file_at_root_folder=True)
 
+                # Remove all processed files.
+                files_to_not_keep = plancha_session.get_restricted_files_on_zenodo()
+                if opt.pd_dont_keep_files_from_previous_version:
+                    files_to_not_keep = ["METADATA", "GPS", "IA", "PHOTOGRAMMETRY", "BATHY", "FRAMES", "SENSORS"]
+
                 # Create the new deposit on zenodo, send the files and write the metadata.
                 zenodoAPI.add_new_version_to_deposit(
                     plancha_session.temp_folder, 
                     processed_metadata, 
-                    restricted_files= [] if opt.pd_dont_keep_files_from_previous_version else plancha_session.get_restricted_files_on_zenodo(), 
+                    restricted_files = files_to_not_keep , 
                     dontUploadWhenLastVersionIsProcessedData=not(opt.confirm_upload_multiple_processed_version)
                 )
 
                 # Remove the tmp folder.
                 plancha_session.cleanup()
+
+            if opt.update_metadata_last_version:
+
+                if zenodoAPI.deposit_id == None:
+                    print("With no id, we cannot update our data, continue")
+                    continue
+                
+                # Get all ids. Doesn't deal with custom version.
+                raw_data_ids, processed_data_ids, _ = zenodoAPI.get_all_version_ids_for_deposit(zenodoAPI.get_conceptrecid_specific_deposit())
+
+                # Get the last one if exist. Normally max is the last.
+                last_raw_data_id =  max(raw_data_ids) if len(raw_data_ids) > 0 else -1
+                last_processed_data_id = max(processed_data_ids) if len(processed_data_ids) > 0 else -1
+
+                if last_raw_data_id == -1 and last_processed_data_id == -1:
+                    print(f"No version to update for session {session_path.name}")
+
+                elif last_raw_data_id > last_processed_data_id: # Last version is raw data.
+                    # Update metadata for raw data
+                    print("-- Editing raw data version")
+                    raw_metadata = plancha_metadata.build_for_raw()
+                    print(f"Working with id {last_raw_data_id}")
+                    zenodoAPI.deposit_id = last_raw_data_id
+                    zenodoAPI.edit_metadata(raw_metadata)
+
+                elif last_processed_data_id > last_raw_data_id: # Last version is processed data.
+                    # Update metadata for processed data
+                    print("-- Editing processed data version")
+                    processed_metadata = plancha_metadata.build_for_processed_data()
+                    print(f"Working with id {last_processed_data_id}")
+                    zenodoAPI.deposit_id = last_processed_data_id
+                    zenodoAPI.edit_metadata(processed_metadata)
+
+                else :
+                    raise NameError("Failed to update last version metadata")
+
 
             if opt.update_metadata:
                 if zenodoAPI.deposit_id == None:
