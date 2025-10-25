@@ -29,7 +29,7 @@ def parse_args():
 
     # Data type to upload or update.
     parser.add_argument("-ur", "--upload-rawdata", action="store_true", help="Upload raw data from a session")
-    parser.add_argument("-up", "--upload-processeddata", default="", help="Specify folder to upload f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA, p: PHOTOGRAMMETRY, c: CPCE_ANNOTATION | Ex: '-up fi' for upload frames and ia ")
+    parser.add_argument("-up", "--upload-processeddata", default="", help="Specify folder to upload d: DCIM, f: FRAMES, m: METADATA, b: BATHY, g: GPS, i: IA, p: PHOTOGRAMMETRY, c: CPCE_ANNOTATION | Ex: '-up fi' for upload frames and ia ")
     parser.add_argument("-um", "--update-metadata", action="store_true", help="Update metadata from a session") # ! Caution could be dangerous when we get multiple processed version
     parser.add_argument("-umlv", "--update-metadata-last-version", action="store_true", help="Update metadata from a session for the last version") 
     
@@ -42,7 +42,6 @@ def parse_args():
         help="Generate an iso 19115 metadata file for a processed version."
     )
 
-
     # Optional arguments.
     parser.add_argument("-is", "--index_start", default="0", help="Choose from which index to start")
     parser.add_argument("-ip", "--index_position", default="-1", help="if != -1, take only session at selected index")
@@ -50,7 +49,9 @@ def parse_args():
     parser.add_argument("-pmj", "--path_metadata_json", default="./metadata/metadata.json", help="Path to metadata json file")
     parser.add_argument("--confirm_upload_multiple_processed_version", action="store_true", help="Confirm to upload a new processed version")
     parser.add_argument("--pd_dont_keep_files_from_previous_version", action="store_true", help="Processed data - Don't keep files from previous version")
-    
+    parser.add_argument("-sandbox", "--zenodo_sandbox", action="store_true", help="Upload session on zenodo sandbox to test.")
+
+
     return parser.parse_args()
 
 def main(opt):
@@ -71,12 +72,12 @@ def main(opt):
     # Action on zenodo without specific session
     if opt.enable_nothing:
         if opt.clean_draft:
-            zenodoAPI = ZenodoAPI("", config_json)
+            zenodoAPI = ZenodoAPI("", config_json, opt.zenodo_sandbox)
             zenodoAPI.clean_draft_no_version()
         return 
     
     # Zenodo API
-    zenodoAPI = ZenodoAPI("", config_json)
+    zenodoAPI = ZenodoAPI("", config_json, opt.zenodo_sandbox)
 
     # Stat
     sessions_fail = []

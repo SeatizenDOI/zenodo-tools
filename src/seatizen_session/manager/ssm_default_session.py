@@ -46,9 +46,12 @@ class DefaultSession(BaseSessionManager):
 
         metadata_csv = self.get_metadata_csv()
         if metadata_csv.empty: return
+        
+        date_key = "SubSecDateTimeOriginal" if "SubSecDateTimeOriginal" in metadata_csv else "GPSDateTime"
+        metadata_csv = metadata_csv[metadata_csv[date_key].notna()]
 
-        self.mission_start_str = metadata_csv["SubSecDateTimeOriginal"].min().split(".")[0]
-        self.mission_stop_str = metadata_csv["SubSecDateTimeOriginal"].max().split(".")[0]
+        self.mission_start_str = metadata_csv[date_key].min().split(".")[0].replace('-', ':')
+        self.mission_stop_str = metadata_csv[date_key].max().split(".")[0].replace('-', ':')
 
 
     def zip_raw_data(self) -> None:
@@ -88,15 +91,16 @@ class DefaultSession(BaseSessionManager):
         # Find if we do ppk
         isPPK = self.check_ppk() 
         q1, q2, q5 = self.get_percentage(isPPK)
+        isGPX = self.check_gpx() # LLH from reach or LLH generated from gpx file (Garmin watch)
 
         if (q1 + q2 + q5) == 0:
-            return """
+            return f"""
                 <h2> GPS information: </h2>
 
-                No GPS.
+                {"GPX file from Garmin watch." if isGPX else "No GPS."}
             """
+        
         basetype = self.get_base_type() if isPPK else BaseType.NONE
-        isGPX = self.check_gpx() # LLH from reach or LLH generated from gpx file (Garmin watch)
 
         return f"""
             <h2> GPS information: </h2>

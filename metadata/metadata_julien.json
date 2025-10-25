@@ -1,0 +1,61 @@
+{
+    "_NB": "Underwater / Aerial",
+    "image_type": "Underwater",
+    "_NB": "Platform and human readable platform compute from the session name. Add your options, key always in capital",
+    "platform": {
+        "ASV": "Autonomous Surface Vehicle",
+        "UAV": "Unmanned Aerial Vehicle",
+        "SCUBA": "Scuba diving",
+        "MASK": "Mask",
+        "KITE": "Kite surf",
+        "PADDLE": "Paddle",
+        "HIKE": "Hike",
+        "BOAT": "Boat"
+    },
+    "project_name": "Plancha",
+    "csv_session_name_name_abbr_path": "./metadata/contributors/suivi_session_julien.csv",
+    "csv_contributors_path": "./metadata/contributors/contributors_julien.csv",
+    "related_identifiers": [
+        {
+            "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",
+            "relation": "isMetadataFor",
+            "resource_type": "dataset"
+        }
+    ],
+    "_NB": "open, restricted",
+    "access_right": "open",
+    "_NB": "Work with open, ",
+    "license": "cc-by-4.0",
+    "_NB": "Add place, human_readable_platform, platform ",
+    "keywords": [
+        "Coral Reef",
+        "Coral Reef Habitat",
+        "Citizen Sciences",
+        "Deep Learning",
+        "Machine Learning",
+        "Computer Vision",
+        "Ecology",
+        "Mapping",
+        "Remote Sensing",
+        "GeoAI",
+        "Indian Ocean",
+        "Bathymetry",
+        "Global Coral Reef Monitoring Network",
+        "Artificial Intelligence",
+        "Reef Ecosystem",
+        "Marine Biodiversity",
+        "Marine Conservation",
+        "Coastal Ecosystems",
+        "Environmental Monitoring",
+        "Open Science",
+        "Western Indian Ocean"
+    ],
+    "workflow-link": "https://github.com/juldebar/Deep_mapping",
+    "inference-link": "https://doi.org/10.5281/zenodo.15228534",
+    "zenodo-link": "https://github.com/SeatizenDOI/zenodo-tools",
+    "software-link": "https://github.com/SeatizenDOI",
+    "fundings": [],
+    "communities": [
+        "seatizen-data"
+    ]
+}

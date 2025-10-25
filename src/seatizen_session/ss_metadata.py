@@ -135,7 +135,7 @@ class SessionMetadata:
         country = self.plancha_session.country if self.plancha_session.country else "Somewhere"
         date = self.plancha_session.date
         prefix = "an"
-        if self.plancha_session.platform in ["SCUBA"]:
+        if self.plancha_session.platform in ["SCUBA", "HIKE", "BOAT"]:
             prefix = ""
         elif self.plancha_session.platform in ["PADDLE", "KITE", "MASK"]:
             prefix = "a"

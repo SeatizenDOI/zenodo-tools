@@ -12,11 +12,14 @@ from ..utils.constants import NB_VERSION_TO_FETCH
 
 class ZenodoAPI:
     
-    def __init__(self, session_name: str, config_json: dict) -> None:
+    def __init__(self, session_name: str, config_json: dict, isDev: bool = False) -> None:
         self.session_name = session_name
         self.deposit_id = None
-        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN"]
-        self.ZENODO_LINK = config_json["ZENODO_LINK"]
+        self.ACCESS_TOKEN = config_json["ACCESS_TOKEN_DEV"] if isDev else config_json["ACCESS_TOKEN"] 
+        self.ZENODO_LINK = config_json["ZENODO_LINK_DEV"] if isDev else config_json["ZENODO_LINK"]
+
+        if isDev:
+            print("-- Uploading on Zenodo Sandbox --")
         
         self.params = {'access_token': self.ACCESS_TOKEN}
         self.headers = {"Content-Type": "application/json"}

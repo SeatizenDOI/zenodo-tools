@@ -10,6 +10,7 @@ from pathlib import Path
 from zipfile import ZipFile
 from datetime import datetime
 from natsort import natsorted
+from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from scipy.spatial import ConvexHull
 from shapely.geometry import LineString, Polygon
@@ -31,6 +32,11 @@ class DCIMType(Enum):
     NONE = "Nothing"
     VIDEO = "MP4 files"
     IMAGE = "JPG files"
+
+@dataclass
+class FrameInformation:
+    frame_path: Path
+    filename: str
 
 class BaseSessionManager(ABC):
 
@@ -115,7 +121,7 @@ class BaseSessionManager(ABC):
             self._zip_folder(folder)
 
         if needFrames:
-            self._zip_processed_frames()
+            self._zip_processed_frames_or_dcim()
 
         # Copy all file in root session like pdf or other file.
         if with_file_at_root_folder:
@@ -201,7 +207,7 @@ class BaseSessionManager(ABC):
         print(f"Successful zipped DCIM folder in {datetime.now() - t_start} split in {zipper.nb_zip_file} archive\n")
 
 
-    def _zip_processed_frames(self) -> None:
+    def _zip_processed_frames_or_dcim(self) -> None:
         """ Zip frames folder without useless frames """
 
         # Retrieve relative path of frame.
@@ -225,9 +231,8 @@ class BaseSessionManager(ABC):
         print(f"Preparing FRAMES folder")
         with ZipFile(frames_zip_path, "w") as zip_object:
             for file in tqdm(frames_list):
-                file = Path(file)
-                if file.name in useful_frames:
-                    zip_object.write(file, file.relative_to(frames_folder))
+                if file.filename in useful_frames:
+                    zip_object.write(file.frame_path, file.frame_path.relative_to(frames_folder))
         print(f"Successful zipped FRAMES folder in {datetime.now() - t_start}\n")
 
 
@@ -470,13 +475,13 @@ class BaseSessionManager(ABC):
         return predictions_gps
 
 
-    def get_frames_list(self) -> list[Path]:
+    def get_frames_list(self) -> list[FrameInformation]:
         """ Return list of frames from relative path in metadata csv. """
-        frames_path: list[Path] = []
+        frames_info: list[FrameInformation] = []
 
         # Get frame relative path.
         metadata_df = self.get_metadata_csv()
-        if len(metadata_df) == 0: return frames_path
+        if len(metadata_df) == 0: return frames_info
     
         try:
             relative_path_key = [key for key in list(metadata_df) if "relative_file_path" in key][0]
@@ -488,18 +493,18 @@ class BaseSessionManager(ABC):
             path_img = Path(Path(self.session_path).parent, *[x for x in row[relative_path_key].split("/") if x]) # Sometimes relative path start with /
             # Check if it's a file and if ended with image extension
             if path_img.is_file() and path_img.suffix.lower() in IMG_EXTENSION:
-                frames_path.append(path_img)
+                frames_info.append(FrameInformation(path_img, row["FileName"]))
 
-        return frames_path
+        return frames_info
 
 
-    def get_frame_parent_folder(self, list_frames: list) -> str:
+    def get_frame_parent_folder(self, list_frames: list[FrameInformation]) -> str:
         """ Extract common parent name from all relative path. """
 
         if len(list_frames) == 0: return ""
 
         # Remove image name and remove session name to get only intermediate folder.
-        list_parents = list(set([str(Path(frame).parent).split(self.session_path.name)[1] for frame in list_frames]))
+        list_parents = list(set([str(Path(frame.frame_path).parent).split(self.session_path.name)[1] for frame in list_frames]))
 
         # While we don't have a unique intermediate folder we keep reducing path
         avoid_stay_stuck = 0
@@ -717,7 +722,9 @@ class BaseSessionManager(ABC):
                 "MASK": "Mask",
                 "KITE": "Kite surf",
                 "PADDLE": "Paddle",
-                "UVC": "Underwater Vision Census"
+                "UVC": "Underwater Vision Census",
+                "BOAT": "Boat",
+                "HIKE": "Hike"
             }
             mcf_dict["acquisition"]["platforms"][0]["identifier"] = self.platform
             mcf_dict["acquisition"]["platforms"][0]["description"] = platform_description[self.platform]
