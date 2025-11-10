@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 import pycountry
+import numpy as np
 import pandas as pd
 pd.set_option("display.precision", 12)
 from tqdm import tqdm
@@ -590,7 +591,7 @@ class BaseSessionManager(ABC):
 
             return None, None # All coordinates are the same.
         
-        points = [[lat ,lon] for lat, lon in coordinates[['GPSLongitude', 'GPSLatitude']].values if lat != 0.0 and lon != 0.0] # Remove 0, 0 coordinates
+        points = [[lat ,lon] for lat, lon in coordinates[['GPSLongitude', 'GPSLatitude']].values if not np.isnan(lat) and lat != 0.0 and not np.isnan(lon) and lon != 0.0] # Remove 0, 0 coordinates
 
         # Compute the convex hull for the original points
         hull = ConvexHull(points)
@@ -601,7 +602,7 @@ class BaseSessionManager(ABC):
         polygon = Polygon(polylist)
         
         # Compute all the general line.
-        linestring = LineString([[lat ,lon] for i, (lat, lon) in enumerate(coordinates[['GPSLongitude', 'GPSLatitude']].values) if lat != 0.0 and lon != 0.0 and i % 10 != 0])
+        linestring = LineString([[lat ,lon] for i, (lat, lon) in enumerate(coordinates[['GPSLongitude', 'GPSLatitude']].values) if not np.isnan(lat) and lat != 0.0 and not np.isnan(lon) and lon != 0.0 and i % 10 != 0])
 
         # Return a collection of Polygon, LineString
         return polygon, linestring

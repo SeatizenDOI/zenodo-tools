@@ -48,6 +48,8 @@ class DefaultSession(BaseSessionManager):
         if metadata_csv.empty: return
         
         date_key = "SubSecDateTimeOriginal" if "SubSecDateTimeOriginal" in metadata_csv else "GPSDateTime"
+        if metadata_csv[metadata_csv[date_key].notna()].empty:
+            date_key = "DateTimeOriginal"
         metadata_csv = metadata_csv[metadata_csv[date_key].notna()]
 
         self.mission_start_str = metadata_csv[date_key].min().split(".")[0].replace('-', ':')
