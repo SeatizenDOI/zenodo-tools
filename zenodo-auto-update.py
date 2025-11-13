@@ -3,14 +3,19 @@ import shutil
 import argparse
 import traceback
 from pathlib import Path
+from datetime import datetime
 
 from src.seatizen_atlas.sa_manager import AtlasManager
+
+from src.utils.lib_tools import increment_semantic_versioning_at_patch_level, SemanticVersioningLevel
 
 from src.utils.constants import ZENODO_LINK_WITHOUT_TOKEN_COMMUNITIES, TMP_PATH
 
 from src.zenodo_api.za_tokenless import get_session_in_communities, download_manager_without_token, get_all_versions_from_session_name
 
 from src.models.deposit_model import DepositDAO, VersionDAO
+from src.models.etl_runs_model import ETLRunsDAO
+
 
 
 def parse_args():
@@ -39,16 +44,17 @@ def main(opt):
     seatizenManager = AtlasManager(config_json, opt.path_seatizen_atlas_folder, from_local=True, force_regenerate=False) 
     deposit_manager = DepositDAO()
     version_manager = VersionDAO()
+    etl_run_manager = ETLRunsDAO()
+
     all_deposit_key = [deposit.doi for deposit in list(deposit_manager.deposits)]
+    last_etl_run = etl_run_manager.get_last_etl_run()
 
     sessions_fail, cpt_sessions = [], 0
     for communities in opt.fetch_communities:
         url = f"{ZENODO_LINK_WITHOUT_TOKEN_COMMUNITIES}/{communities}/records"
-        print(f"\n\nWorking with communities {communities} using this base url {url}")
+        print(f"\n\nWorking with communities {communities} using this base url {url} and keeping only session after {last_etl_run.last_zenodo_harvest_at}")
 
-        list_session_in_communities = get_session_in_communities(url)
-
-
+        list_session_in_communities = get_session_in_communities(url, last_etl_run.last_zenodo_harvest_at)
         for i, (conceptrecid, session_name) in enumerate(list_session_in_communities):
             cpt_sessions += 1
             try:
@@ -115,11 +121,16 @@ def main(opt):
     if (len(sessions_fail)):
         [print("\t* " + session_name) for session_name in sessions_fail]
     
+    # Update last time harvest.
+    date_now = datetime.now().strftime("%Y-%m-%d")
+    new_version = increment_semantic_versioning_at_patch_level(last_etl_run.last_version_on_zenodo, SemanticVersioningLevel.PATCH)
+    etl_run_manager.update(zenodo_harvest_at=date_now, version=new_version)
+
     # Export all value we wants.
     # seatizenManager.export_csv()
     
     # Upload all data.
-    # seatizenManager.publish(opt.path_metadata_json) # TODO AUto-update the version of the package
+    # seatizenManager.publish(opt.path_metadata_json, new_version)
 
     # Close database connection.
     seatizenManager.sql_connector.close()

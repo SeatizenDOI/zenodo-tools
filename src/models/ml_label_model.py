@@ -14,7 +14,7 @@ class MultilabelLabelDTO():
 
     @property
     def creation_date_convert(self) -> datetime:
-        return datetime.strptime(self._creation_date, "%Y-%m-%d")
+        return datetime.strptime(self.creation_date, "%Y-%m-%d")
     
 
 @dataclass

@@ -109,7 +109,7 @@ class DepositDAO(AbstractBaseDAO):
         return deposit
     
 
-    def __get_all(self) -> list[DepositDTO]:
+    def __get_all(self) -> None:
         """ Retrieve all deposit. """
         query = f""" SELECT doi, session_name, ST_AsText(footprint),
                      have_processed_data, have_raw_data, platform_type, session_date,
@@ -193,7 +193,7 @@ class DepositLinestringDAO(AbstractBaseDAO):
         return deposit_linestring
 
 
-    def __get_all(self) -> list[DepositLinestringDTO]:
+    def __get_all(self) -> None:
         """ Retrieve all deposit_linestring. """
         query = f""" SELECT id, deposit_doi, ST_AsText(footprint_linestring)
                      FROM {self.table_name};

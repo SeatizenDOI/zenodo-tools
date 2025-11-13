@@ -4,7 +4,7 @@ import requests
 from pathlib import Path
 
 from ..utils.lib_tools import md5
-from ..utils.constants import ZENODO_LINK_WITHOUT_TOKEN
+from ..utils.constants import ZENODO_LINK_WITHOUT_TOKEN, MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE
 
 from .za_base_function import file_downloader
 
@@ -145,18 +145,27 @@ def extract_session_name(datas: list[dict]) -> str | None:
     return session_name
 
 
-def get_session_in_communities(url: str) -> list:
+def get_session_in_communities(url: str, from_date: str | None = None) -> list:
     """ Retrieve all seatizen sessions from a community. """
 
     next_url = url
     list_session = []
 
     while next_url != None:
-        print(f"Parsing {next_url}")
-        r = requests.get(next_url)
+        
+        shouldIAsk, harassingCounter = True, 0 
 
-        if not r.ok:
-            raise NameError(f"Cannot fetch url {next_url}, we get error {r.status_code}")
+        while shouldIAsk:
+            print(f"{harassingCounter} / {MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE}: Parsing {next_url}")
+            r = requests.get(next_url)
+
+            if r.ok:
+                shouldIAsk = False
+            else:
+                harassingCounter += 1
+
+            if harassingCounter >= MAX_RETRY_TO_UPLOAD_DOWNLOAD_FILE:
+                raise NameError(f"Cannot fetch url {next_url}, we get error {r.status_code}")
 
 
         data = r.json()
@@ -169,6 +178,8 @@ def get_session_in_communities(url: str) -> list:
             list_identifier_dict = session["metadata"].get("related_identifiers", []) + session["metadata"].get("alternate_identifiers", [])
             session_name = extract_session_name(list_identifier_dict)
             if session_name == None: continue
+
+            if from_date and session["metadata"].get("publication_date") < from_date: continue
         
             list_session.append((conceptrecid, session_name))
 

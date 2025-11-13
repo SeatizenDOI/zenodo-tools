@@ -14,7 +14,7 @@ def seatizen_atlas_metadata(config_json: dict, metadata_json_path: str) -> None:
     zenodoAPI.edit_metadata(metadata)
     
 
-def build_metadata(metadata_json_path: str) -> dict:
+def build_metadata(metadata_json_path: str, version: str | None = None) -> dict:
 
     metadata_json_path = Path(metadata_json_path)
     if not Path.exists(metadata_json_path) or not metadata_json_path.is_file():
@@ -36,7 +36,7 @@ def build_metadata(metadata_json_path: str) -> dict:
             'language': "eng",
             'description': get_description(metadata_json["description"]),
             'access_right': 'open',
-            'version': metadata_json["version"],
+            'version': version if version != None else metadata_json["version"],
             'license': metadata_json["license"],
             'communities': None if len(communities) == 0 else communities
         }

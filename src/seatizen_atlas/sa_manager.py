@@ -13,6 +13,8 @@ from ..zenodo_api.za_tokenless import download_manager_without_token, get_versio
 
 from ..sql_connector.sc_connector import SQLiteConnector
 
+from ..models.etl_runs_model import ETLRunsDAO
+
 class AtlasManager:
     def __init__(self, config: dict, seatizen_folder_path: str, from_local: bool, force_regenerate: bool) -> None:
         
@@ -122,7 +124,7 @@ class AtlasManager:
                 self.importer.multilabel_annotation_importer(file)
 
 
-    def publish(self, metadata_json_path) -> None:
+    def publish(self, metadata_json_path: str, version: str | None = None) -> None:
         """ Publish seatzizen folder content. """
 
         # ! Cheatsheet command to just publish folder: python zenodo-manager.py -ulo -eno -ne -cp
@@ -130,7 +132,7 @@ class AtlasManager:
             print("Config file not found. We cannot processed.")
             return
 
-        metadata = build_metadata(metadata_json_path)
+        metadata = build_metadata(metadata_json_path, version)
 
         zenodoAPI = ZenodoAPI("seatizen-atlas", self.config)
 
@@ -145,6 +147,8 @@ class AtlasManager:
 
         if not sql_script_number.isnumeric() or int(sql_script_number) < 0: return
 
+        etl_run_dao = ETLRunsDAO()
+
         for file in Path(Path.cwd(), "src/sql_connector").iterdir():
             if file.suffix != ".sql": continue
 
@@ -152,4 +156,8 @@ class AtlasManager:
 
             if not start_number.isnumeric() or int(start_number) != int(sql_script_number): continue
             
+            # Apply the script in database.
             self.sql_connector.apply_script(file)
+
+            # Update the number in etl run.
+            etl_run_dao.update(sql_script_number=sql_script_number)

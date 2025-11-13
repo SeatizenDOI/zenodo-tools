@@ -1,5 +1,6 @@
 import enum
 import hashlib
+import traceback
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -9,6 +10,11 @@ class Sources(enum.Enum):
     CSV_SESSION = 0
     FOLDER = 1
     SESSION = 2
+
+class SemanticVersioningLevel(enum.Enum):
+    MAJOR = "major"
+    MINOR = "minor"
+    PATCH = "patch"
 
 def get_mode_from_opt(opt) -> Sources | None:
     """ Retrieve mode from input option """
@@ -212,3 +218,23 @@ def compute_duration(start_date: datetime, stop_date: datetime) -> str:
     datestring += f"{hours}h {minutes}min {seconds}sec"
 
     return datestring
+
+def increment_semantic_versioning_at_patch_level(version: str, level: SemanticVersioningLevel) -> str:
+    """ Increment semantic versionning at patch level. https://semver.org/lang/fr/"""
+    try:
+        major, minor, patch = version.replace("v", "").split(".")
+
+        if level == SemanticVersioningLevel.MAJOR:
+            major = int(major) + 1
+        elif level == SemanticVersioningLevel.MINOR:
+            minor = int(minor) + 1
+        elif level == SemanticVersioningLevel.PATCH:
+            patch = int(patch) + 1
+        else:
+            raise NameError(f"SemanticVersioningLevel not implemented for level {level}")
+
+        version = f"v{major}.{minor}.{patch}"
+    except :
+        print(traceback.format_exc(), end="\n\n")
+    
+    return version
