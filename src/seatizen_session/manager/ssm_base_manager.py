@@ -113,7 +113,7 @@ class BaseSessionManager(ABC):
         return self.move_into_subfolder_if_needed()
         
     
-    def prepare_processed_data(self, processed_folder: list, needFrames: bool = False, with_file_at_root_folder: bool = False) -> None:
+    def prepare_processed_data(self, processed_folder: list, needFrames: bool = False, all_frames: bool = False, with_file_at_root_folder: bool = False) -> None:
         """ Zip all processed data in tmp folder. """
         self.cleanup()
         print("-- Prepare processed data... ")
@@ -122,7 +122,7 @@ class BaseSessionManager(ABC):
             self._zip_folder(folder)
 
         if needFrames:
-            self._zip_processed_frames_or_dcim()
+            self._zip_processed_frames_or_dcim(all_frames)
 
         # Copy all file in root session like pdf or other file.
         if with_file_at_root_folder:
@@ -208,7 +208,7 @@ class BaseSessionManager(ABC):
         print(f"Successful zipped DCIM folder in {datetime.now() - t_start} split in {zipper.nb_zip_file} archive\n")
 
 
-    def _zip_processed_frames_or_dcim(self) -> None:
+    def _zip_processed_frames_or_dcim(self, all_frames: bool) -> None:
         """ Zip frames folder without useless frames """
 
         # Retrieve relative path of frame.
@@ -232,7 +232,7 @@ class BaseSessionManager(ABC):
         print(f"Preparing FRAMES folder")
         with ZipFile(frames_zip_path, "w") as zip_object:
             for file in tqdm(frames_list):
-                if file.filename in useful_frames:
+                if all_frames or file.filename in useful_frames:
                     zip_object.write(file.frame_path, file.frame_path.relative_to(frames_folder))
         print(f"Successful zipped FRAMES folder in {datetime.now() - t_start}\n")
 
@@ -725,7 +725,8 @@ class BaseSessionManager(ABC):
                 "PADDLE": "Paddle",
                 "UVC": "Underwater Vision Census",
                 "BOAT": "Boat",
-                "HIKE": "Hike"
+                "HIKE": "Hike",
+                "AUV": "Autonomous Underwater Vehicle",
             }
             mcf_dict["acquisition"]["platforms"][0]["identifier"] = self.platform
             mcf_dict["acquisition"]["platforms"][0]["description"] = platform_description[self.platform]

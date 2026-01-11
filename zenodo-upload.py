@@ -50,6 +50,7 @@ def parse_args():
     parser.add_argument("--confirm_upload_multiple_processed_version", action="store_true", help="Confirm to upload a new processed version")
     parser.add_argument("--pd_dont_keep_files_from_previous_version", action="store_true", help="Processed data - Don't keep files from previous version")
     parser.add_argument("-sandbox", "--zenodo_sandbox", action="store_true", help="Upload session on zenodo sandbox to test.")
+    parser.add_argument("--all_frames_without_filtering_by_useful", action="store_true", help="Processed data - Keep all frames without using Jacques")
 
 
     return parser.parse_args()
@@ -128,7 +129,7 @@ def main(opt):
                     plancha_session.generate_metadata_iso19115(processed_metadata, zenodoAPI.get_conceptrecid_specific_deposit())
 
                 # Prepare, zip and move folder/file in tmp folder.
-                plancha_session.prepare_processed_data(folders, needFrames, with_file_at_root_folder=True)
+                plancha_session.prepare_processed_data(folders, needFrames, all_frames=opt.all_frames_without_filtering_by_useful, with_file_at_root_folder=True)
 
                 # Remove all processed files.
                 files_to_not_keep = plancha_session.get_restricted_files_on_zenodo()

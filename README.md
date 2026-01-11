@@ -91,7 +91,8 @@ python zenodo-manager.py -eno -cp -ne
 
 python zenodo-manager.py -eno -ssn 4 # Extralinestring for deposit
 
-
+python zenodo-upload.py -efol -pfol ./recif3D_sessions_folder/ -ur -up pmf -pmj ./metadata/metadata_recif3D.json --all_frames_without_filtering_by_useful
+python zenodo-upload.py -efol -pfol /media/bioeos/E/recif3D/sessions -um -pmj ./metadata/metadata_recif3D.json # Update metadata for all recif3D sessions
 ```
 
 # Qgis command to load data

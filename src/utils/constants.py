@@ -1,4 +1,4 @@
-TMP_PATH = "/tmp/00_plancha"
+TMP_PATH = "/media/bioeos/E/tmp"
 IMG_EXTENSION = ('.png', '.jpg', '.jpeg') # Image extension in lower case
 BYTE_TO_GIGA_BYTE = 1000000000
 

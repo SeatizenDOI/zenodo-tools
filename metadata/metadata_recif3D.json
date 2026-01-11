@@ -1,0 +1,52 @@
+{
+    "_NB": "Underwater / Aerial",
+    "image_type": "Underwater",
+    "_NB": "Platform and human readable platform compute from the session name. Add your options, key always in capital",
+    "platform": {
+        "AUV": "Autonomous Underwater Vehicle"
+    },
+    "project_name": "Recif3D",
+    "csv_session_name_name_abbr_path": "./metadata/contributors/suivi_session_recif3D.csv",
+    "csv_contributors_path": "./metadata/contributors/contributors_recif3D.csv",
+    "related_identifiers": [
+        {
+            "identifier": "https://zenodo.org/doi/10.5281/zenodo.11125847",
+            "relation": "isMetadataFor",
+            "resource_type": "dataset"
+        }
+    ],
+    "_NB": "open, restricted",
+    "access_right": "open",
+    "_NB": "Work with open, ",
+    "license": "cc-by-4.0",
+    "_NB": "Add place, human_readable_platform, platform ",
+    "keywords": [
+        "Coral Reef",
+        "Coral Reef Habitat",
+        "Computer Vision",
+        "Ecology",
+        "Mapping",
+        "Remote Sensing",
+        "GeoAI",
+        "Indian Ocean",
+        "Global Coral Reef Monitoring Network",
+        "Reef Ecosystem",
+        "Marine Biodiversity",
+        "Marine Conservation",
+        "Coastal Ecosystems",
+        "Environmental Monitoring",
+        "Open Science",
+        "Western Indian Ocean",
+        "Photogrammetry"
+    ],
+    "workflow-link": "github.com/SeatizenDOI/recif3D-workflow",
+    "inference-link": "",
+    "zenodo-link": "https://github.com/SeatizenDOI/zenodo-tools",
+    "software-link": "https://github.com/SeatizenDOI",
+    "fundings": [
+        "Projet cofinancé par la préfecture de la Réunion au titre du contrat de convergence et de transformation 2019-2022 mesure 3.5.1.1 du volet « territoires résilients »"
+    ],
+    "communities": [
+        "seatizen-data"
+    ]
+}

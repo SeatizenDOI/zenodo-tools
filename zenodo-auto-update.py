@@ -1,4 +1,5 @@
 import json
+import time
 import shutil
 import argparse
 import traceback
@@ -56,6 +57,7 @@ def main(opt):
 
         list_session_in_communities = get_session_in_communities(url, last_etl_run.last_zenodo_harvest_at)
         for i, (conceptrecid, session_name) in enumerate(list_session_in_communities):
+            time.sleep(0.5) # Sleep 0.5 sec to avoid hitting max rate limit on Zenodo. 
             cpt_sessions += 1
             try:
                 print(f"\n\n({i}/{len(list_session_in_communities)}) Working with session {session_name}")
@@ -98,8 +100,8 @@ def main(opt):
                         print("[WARNING] We don't found METADATA.zip or PROCESSED_DATA.zip to download, no data to import in DB, we continue.")
                         continue # We didn't found files to download. 
 
-                    # Actually for UAV, we don't have jacques predictions. We need to force frame insertion inside db.
-                    force_frame_insertion = "UAV" in session_name
+                    # Actually for UAV and AUV, we don't have jacques predictions. We need to force frame insertion inside db.
+                    force_frame_insertion = "UAV" in session_name or "AUV" in session_name
 
                     # Import the session in the database.
                     seatizenManager.import_session(session_path, force_frame_insertion)
@@ -127,10 +129,10 @@ def main(opt):
     etl_run_manager.update(zenodo_harvest_at=date_now, version=new_version)
 
     # Export all value we wants.
-    # seatizenManager.export_csv()
+    seatizenManager.export_csv()
     
     # Upload all data.
-    # seatizenManager.publish(opt.path_metadata_json, new_version)
+    seatizenManager.publish(opt.path_metadata_json, new_version)
 
     # Close database connection.
     seatizenManager.sql_connector.close()
