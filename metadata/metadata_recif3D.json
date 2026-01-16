@@ -44,7 +44,8 @@
     "zenodo-link": "https://github.com/SeatizenDOI/zenodo-tools",
     "software-link": "https://github.com/SeatizenDOI",
     "fundings": [
-        "Projet cofinancé par la préfecture de la Réunion au titre du contrat de convergence et de transformation 2019-2022 mesure 3.5.1.1 du volet « territoires résilients »"
+        "RECIF 3D : Projet cofinancé par la préfecture de La Réunion au titre du contrat de convergence et de transformation 2019-2022 mesure 3.5.1.1 du volet « territoires résilients »",
+        "PLANCHA : Projet cofinancé par la préfecture de La Réunion au titre du contrat de convergence et de transformation 2019-2022 mesure 3.3.1.1 du volet « territoires résilients »"
     ],
     "communities": [
         "seatizen-data"

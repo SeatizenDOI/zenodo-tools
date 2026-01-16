@@ -1,7 +1,4 @@
-import geopandas as gpd
 from pathlib import Path
-from datetime import datetime
-from shapely.geometry import Polygon
 
 from .ssm_base_manager import BaseSessionManager
 
@@ -27,7 +24,9 @@ class AUVSession(BaseSessionManager):
 
     def build_raw_description(self) -> str:
         return f"""
-
+<br>
+This dataset was collected by an Autonomous Underwater Vehicle, Réunion - 2021-12 (project RECIF 3D) <br>
+This dataset was processed with tools developped by different subsequent projects  - 2025-12 (projects PLANCHA, ...) <br>
 3D reconstruction and mapping of Reunion coral ecosystems from underwater images.<br>
 
 
@@ -37,7 +36,9 @@ class AUVSession(BaseSessionManager):
 
     def build_processed_description(self) -> str:
         return f"""
-
+<br>
+This dataset was collected by an Autonomous Underwater Vehicle, Réunion - 2021-12 (project RECIF 3D) <br>
+This dataset was processed with tools developped by different subsequent projects  - 2025-12 (projects PLANCHA, ...) <br>
 3D reconstruction and mapping of Reunion coral ecosystems from underwater images.<br>
 
 

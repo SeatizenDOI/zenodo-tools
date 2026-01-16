@@ -1,12 +1,17 @@
 id,name,affiliation,orcid
-FC,Fari Chloe,"Ifremer DOI, La Réunion, France",
+CF,Chloe Fari ,"Ifremer DOI, La Réunion, France",
 MD,Magali Duval,"Ifremer DOI, La Réunion, France",0000-0002-6425-7724
-SP,Salvatico Pauline,"Ifremer DOI, La Réunion, France",
-TC,Treguier Cathy,"Ifremer DOI, La Réunion, France",0000-0001-8928-6700
+BB,Blandine Brisset,"Ifremer DOI, La Réunion, France",
+CT,Cathy Treguier,"Ifremer DOI, La Réunion, France",0000-0001-8928-6700
 VI,Victor Illien,"Ifremer DOI, La Réunion, France",0009-0007-2143-8027
 SBO,Sylvain Bonhommeau,"Ifremer DOI, La Réunion, France",0000-0002-0882-5918
-BT,Bajjouk Touria,"Ifremer, Brest, France",
-BL,Brignone Lorenzo,"Ifremer, Brest, France",
-PR,Piasco Romain,"Ifremer, Brest, France",
-AA,Arnaubec Aurelien,"Ifremer, Brest, France",
-MT,Martin Thibault ,"Ifremer, Brest, France",
+TB,Touria Bajjouk ,"Ifremer, Brest, France",
+LB,Lorenzo Brignone ,"Ifremer, La Seyne sur Mer, France",
+RP,Romain Piasco ,"Ifremer, La Seyne sur Mer, France",
+AA,Aurelien Arnaubec,"Ifremer, La Seyne sur Mer, France",
+TM,Thibault Martin,"Ifremer, La Seyne sur Mer, France",
+MF,Maxime Ferrera,"Ifremer, La Seyne sur Mer, France",0000-0002-1024-4151
+PM,Pascal Mouquet,"IRD, UMR EspaceDEV, La Réunion, France",0000-0003-0361-4131
+JBN,Jean-Benoit Nicet,"Marex, La Réunion, France",
+LBI,Lionel Bigot,"Université de la Réunion, UMR Entropie, La Réunion, France",
+SB,Sophie Bureau,"Université de la Réunion, UMR Entropie, La Réunion, France",0009-0007-6388-1932
